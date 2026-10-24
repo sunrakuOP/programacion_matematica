@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1 · Matemáticas · Ruta al FEM</title>
+<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+.materia{scroll-margin-top:60px;margin-top:1.8em;padding-top:1.4em;border-top:1px dashed var(--line)}
+.materia h4{color:var(--accent-soft);font-size:1.05rem;margin-bottom:.5em}
+.ejemplo{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1em 0}
+.ejemplo .k{font-size:.68rem;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:6px}
+.katex-display{margin:.6em 0 1em;overflow-x:auto;overflow-y:hidden}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta al FEM</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill active" href="1-matematicas.html" title="Matemáticas">1</a>
+    <a class="pill" href="2-algoritmos.html" title="Estructuras de datos y algoritmos">2</a>
+    <a class="pill" href="3-mecanica.html" title="Mecánica estructural">3</a>
+    <a class="pill" href="4-elementos-finitos.html" title="Elementos finitos">4</a>
+    <a class="pill" href="5-geometria.html" title="Geometría y gráficos">5</a>
+    <a class="pill" href="6-fortran.html" title="De C++ a Fortran">6</a>
+    <a class="pill" href="7-proyecto-papa.html" title="El proyecto de tu papá">7</a>
+    <a class="pill" href="8-tesis.html" title="Proyecto de grado">8</a>
+    <a class="pill" href="9-biblioteca.html" title="Biblioteca">9</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/38</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 1</div>
+<h1 class="hero">Matemáticas — la base absoluta</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> tener el lenguaje matemático completo antes de tocar física estructural o FEM. <strong>Pre-requisito:</strong> ninguno. <strong>Se puede avanzar en paralelo con:</strong> Fase 2 y Fase 6.</p></blockquote>
+
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#m111">1.1.1 Vectores</a></li>
+<li><a href="#m112">1.1.2 Matrices y operaciones</a></li>
+<li><a href="#m113">1.1.3 Sistemas de ecuaciones lineales</a></li>
+<li><a href="#m114">1.1.4 Determinantes</a></li>
+<li><a href="#m115">1.1.5 Espacios vectoriales, independencia y base</a></li>
+<li><a href="#m116">1.1.6 Eigenvalores y eigenvectores</a></li>
+<li><a href="#m117">1.1.7 Rango, espacio nulo, sistemas singulares</a></li>
+<li><a href="#m118">1.1.8 Ortogonalidad y mínimos cuadrados</a></li>
+<li><a href="#m119">1.1.9 Matrices simétricas y definidas positivas</a></li>
+<li><a href="#m1110">1.1.10 Diagonalización</a></li>
+<li><a href="#m121">1.2.1 Derivadas parciales</a></li>
+<li><a href="#m122">1.2.2 Gradiente, divergencia, rotacional</a></li>
+<li><a href="#m123">1.2.3 Integrales dobles y triples</a></li>
+<li><a href="#m124">1.2.4 Teorema de la divergencia</a></li>
+<li><a href="#m125">1.2.5 Regla de la cadena multivariable</a></li>
+<li><a href="#m126">1.2.6 Jacobiano y cambio de variable ★</a></li>
+<li><a href="#m127">1.2.7 Teorema de Green</a></li>
+<li><a href="#m131">1.3.1 EDOs de primer orden</a></li>
+<li><a href="#m132">1.3.2 EDOs lineales de segundo orden</a></li>
+<li><a href="#m133">1.3.3 Aplicación: la ecuación de la viga</a></li>
+<li><a href="#m134">1.3.4 Clasificación de EDPs</a></li>
+<li><a href="#m135">1.3.5 EDOs no homogéneas</a></li>
+<li><a href="#m136">1.3.6 Sistemas de EDOs</a></li>
+<li><a href="#m137">1.3.7 Euler y Runge-Kutta</a></li>
+<li><a href="#m141">1.4.1 Eliminación gaussiana y LU</a></li>
+<li><a href="#m142">1.4.2 Métodos iterativos</a></li>
+<li><a href="#m143">1.4.3 Eigenvalores numéricos (método de la potencia)</a></li>
+<li><a href="#m144">1.4.4 Integración numérica</a></li>
+<li><a href="#m145">1.4.5 Búsqueda de raíces (Newton-Raphson)</a></li>
+<li><a href="#m146">1.4.6 Interpolación de Lagrange ★</a></li>
+<li><a href="#m147">1.4.7 Descomposición de Cholesky</a></li>
+<li><a href="#m151">1.5.1 Producto cruz y normales</a></li>
+<li><a href="#m152">1.5.2 Ecuación de un plano</a></li>
+<li><a href="#m153">1.5.3 Matrices de rotación</a></li>
+<li><a href="#m154">1.5.4 Coordenadas homogéneas</a></li>
+<li><a href="#m155">1.5.5 Coordenadas baricéntricas ★</a></li>
+</ol>
+<p class="sans" style="margin:10px 0 0;font-size:.78rem;color:var(--muted)">★ = conexión directa y crítica con las funciones de forma de FEM (Fase 4)</p>
+</div>
+
+<h2 class="withrule">1.1 · Álgebra lineal</h2>
+<p>Todo modelo estructural termina siendo un sistema <span>\(K u = F\)</span>. Esta subfase construye, desde cero, cada pieza de esa ecuación: qué es un vector, qué es una matriz, cómo se resuelve un sistema, y qué son los eigenvalores que van a reaparecer en dinámica (Fase 3) y en mallado (Fase 4).</p>
+
+<div class="topic materia" id="m111">
+<h3><span class="badge MAT">MAT</span> 1.1.1 — Vectores</h3>
+<p>Un vector es una cantidad con magnitud y dirección — a diferencia de un escalar (solo magnitud, como la temperatura). En 2D se escribe <span>\(\vec v = (v_x, v_y)\)</span>, en 3D <span>\(\vec v = (v_x, v_y, v_z)\)</span>. Geométricamente es una flecha; algebraicamente es una lista de números.</p>
+<h4>Operaciones básicas</h4>
+<ul>
+<li><strong>Suma:</strong> componente a componente, <span>\((a_x,a_y)+(b_x,b_y) = (a_x+b_x,\ a_y+b_y)\)</span>. Geométricamente: poner la cola de un vector en la punta del otro.</li>
+<li><strong>Multiplicación por escalar:</strong> <span>\(c\vec v = (cv_x, cv_y)\)</span> — estira o encoge el vector, y si <span>\(c<0\)</span> lo invierte.</li>
+<li><strong>Magnitud (norma):</strong> <span>\(\|\vec v\| = \sqrt{v_x^2+v_y^2+v_z^2}\)</span> — el teorema de Pitágoras aplicado.</li>
+<li><strong>Producto punto (escalar):</strong> <span>\(\vec a \cdot \vec b = a_xb_x+a_yb_y+a_zb_z = \|\vec a\|\|\vec b\|\cos\theta\)</span>. Da un número, no un vector. Si el resultado es 0, los vectores son perpendiculares — esta es la forma más rápida de comprobar perpendicularidad, y se usa constantemente en geometría de mallas (Fase 5).</li>
+<li><strong>Producto cruz (vectorial):</strong> solo existe en 3D, <span>\(\vec a \times \vec b\)</span> da un vector perpendicular a ambos, con magnitud <span>\(\|\vec a\|\|\vec b\|\sin\theta\)</span>. Desarrollo completo en el tema 1.5.1, porque es la base para calcular normales de superficies.</li>
+</ul>
+<div class="ejemplo"><span class="k">Ejemplo</span>Con <span>\(\vec a=(3,4)\)</span> y <span>\(\vec b=(1,2)\)</span>: <span>\(\vec a+\vec b=(4,6)\)</span>, <span>\(\|\vec a\| = \sqrt{9+16}=5\)</span>, <span>\(\vec a\cdot\vec b = 3(1)+4(2)=11\)</span>.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés calcular el ángulo entre <span>\(\vec a=(3,4)\)</span> y <span>\(\vec b=(1,2)\)</span> usando el producto punto? (despejá <span>\(\theta\)</span> de la fórmula de arriba)</div>
+</div>
+
+<div class="topic materia" id="m112">
+<h3><span class="badge MAT">MAT</span> 1.1.2 — Matrices y operaciones</h3>
+<p>Una matriz es una tabla rectangular de números, <span>\(m\times n\)</span> (m filas, n columnas). Un vector es, técnicamente, una matriz de una sola columna. Las matrices son la forma de representar transformaciones lineales — y, en FEM, de representar la rigidez de todo un sistema a la vez.</p>
+<h4>Multiplicación matriz-vector y matriz-matriz</h4>
+<p>Para multiplicar <span>\(A\)</span> (m×n) por <span>\(B\)</span> (n×p), cada elemento del resultado es el producto punto de una fila de <span>\(A\)</span> con una columna de <span>\(B\)</span>. El número de columnas de <span>\(A\)</span> DEBE igualar el número de filas de <span>\(B\)</span> — si no, la multiplicación no está definida.</p>
+<div class="ejemplo"><span class="k">Ejemplo</span>
+$$A=\begin{bmatrix}2&1\\0&3\end{bmatrix},\quad \vec x=\begin{bmatrix}5\\1\end{bmatrix}\quad\Rightarrow\quad A\vec x=\begin{bmatrix}2(5)+1(1)\\0(5)+3(1)\end{bmatrix}=\begin{bmatrix}11\\3\end{bmatrix}$$
+</div>
+<p><strong>Transpuesta</strong> <span>\(A^T\)</span>: intercambia filas por columnas. <strong>Matriz identidad</strong> <span>\(I\)</span>: unos en la diagonal, ceros en el resto — es el "1" de las matrices (<span>\(AI=A\)</span>). <strong>Inversa</strong> <span>\(A^{-1}\)</span>: la matriz tal que <span>\(AA^{-1}=I\)</span> — existe solo si <span>\(\det(A)\neq 0\)</span> (tema 1.1.4). Para una matriz 2×2:</p>
+$$A=\begin{bmatrix}a&b\\c&d\end{bmatrix} \quad\Rightarrow\quad A^{-1}=\frac{1}{ad-bc}\begin{bmatrix}d&-b\\-c&a\end{bmatrix}$$
+<p><strong>Simetría:</strong> <span>\(A=A^T\)</span> — la propiedad que tiene, casi siempre, una matriz de rigidez real (la rigidez entre el nodo i y el nodo j es la misma en ambas direcciones).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés calcular la inversa de <span>\(\begin{bmatrix}2&1\\0&3\end{bmatrix}\)</span> con la fórmula de arriba, y verificar multiplicándola por la original?</div>
+</div>
+
+<div class="topic materia" id="m113">
+<h3><span class="badge MAT">MAT</span> 1.1.3 — Sistemas de ecuaciones lineales</h3>
+<p>Todo <span>\(Ku=F\)</span> es esto: un conjunto de ecuaciones lineales, escrito en forma matricial. <strong>Eliminación gaussiana</strong> es el método sistemático para resolverlo: usar una ecuación para eliminar una variable de las demás, repetir hasta que quede triangular, y despejar de abajo hacia arriba (sustitución hacia atrás).</p>
+<div class="ejemplo"><span class="k">Ejemplo completo, paso a paso</span>
+$$\begin{aligned} x+y+z&=6\\ 2x-y+z&=3\\ x+2y-z&=2 \end{aligned}$$
+<p>Paso 1 — eliminar <span>\(x\)</span> de la ecuación 2 (restarle 2×ecuación 1) y de la ecuación 3 (restarle 1×ecuación 1):</p>
+$$\begin{aligned} -3y-z&=-9 \quad\text{(ec. 2')}\\ y-2z&=-4 \quad\text{(ec. 3')} \end{aligned}$$
+<p>Paso 2 — de ec. 2': <span>\(z=9-3y\)</span>. Sustituyendo en ec. 3': <span>\(y-2(9-3y)=-4 \Rightarrow 7y=14 \Rightarrow y=2\)</span>.</p>
+<p>Paso 3 — sustitución hacia atrás: <span>\(z=9-3(2)=3\)</span>, y <span>\(x=6-y-z=6-2-3=1\)</span>.</p>
+<p><strong>Solución:</strong> <span>\(x=1,\ y=2,\ z=3\)</span> — verificable sustituyendo en las 3 ecuaciones originales.</p>
+</div>
+<p>Un sistema puede tener <strong>solución única</strong> (el caso de arriba), <strong>infinitas soluciones</strong> (una ecuación es combinación de las otras — el sistema es "deficiente") o <strong>ninguna solución</strong> (ecuaciones contradictorias). En FEM, un sistema sin apoyos suficientes (una estructura que puede moverse como cuerpo rígido) produce exactamente el caso "infinitas soluciones" — la matriz es singular.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Resolvé por eliminación gaussiana: <span>\(2x+y=5,\ x-y=1\)</span>. (Resultado esperado: x=2, y=1)</div>
+</div>
+
+<div class="topic materia" id="m114">
+<h3><span class="badge MAT">MAT</span> 1.1.4 — Determinantes</h3>
+<p>El determinante es un número asociado a una matriz cuadrada que dice si es invertible (<span>\(\det\neq0\)</span>) y, geométricamente, cuánto "estira" el área/volumen una transformación.</p>
+$$\det\begin{bmatrix}a&b\\c&d\end{bmatrix}=ad-bc$$
+$$\det\begin{bmatrix}a&b&c\\d&e&f\\g&h&i\end{bmatrix}=a(ei-fh)-b(di-fg)+c(dh-eg)\quad\text{(regla de Sarrus / expansión por cofactores)}$$
+<p>Propiedad clave para FEM: si <span>\(\det(K)=0\)</span>, el sistema <span>\(Ku=F\)</span> no tiene solución única — físicamente, la estructura tiene un mecanismo (puede moverse libremente en alguna dirección sin resistencia, casi siempre por falta de apoyos).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Es invertible <span>\(\begin{bmatrix}2&4\\1&2\end{bmatrix}\)</span>? Calculá el determinante y explicá qué significa que dé 0 (mirá las filas: ¿una es múltiplo de la otra?).</div>
+</div>
+
+<div class="topic materia" id="m115">
+<h3><span class="badge MAT">MAT</span> 1.1.5 — Espacios vectoriales, independencia y base</h3>
+<p>Un conjunto de vectores es <strong>linealmente independiente</strong> si ninguno se puede escribir como combinación de los demás — la única forma de que <span>\(c_1\vec v_1+c_2\vec v_2+\dots=\vec 0\)</span> es con todos los <span>\(c_i=0\)</span>. Una <strong>base</strong> de un espacio es un conjunto de vectores independientes que, combinados, generan cualquier vector del espacio — el número de vectores en la base es la <strong>dimensión</strong>.</p>
+<p>Por qué importa para esta ruta, de forma concreta: cuando DELOS-3D construye un "marco local" para una superficie inclinada (tema 1.5), lo que hace es elegir una <em>base</em> de 2 vectores independientes dentro del plano — cualquier punto del plano se escribe como combinación de esos dos, sin necesitar la tercera dimensión.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Son independientes <span>\((1,2)\)</span> y <span>\((2,4)\)</span>? ¿Y <span>\((1,2)\)</span> y <span>\((3,1)\)</span>?</div>
+</div>
+
+<div class="topic materia" id="m116">
+<h3><span class="badge MAT">MAT</span> 1.1.6 — Eigenvalores y eigenvectores</h3>
+<p>Un eigenvector de <span>\(A\)</span> es un vector que, al multiplicarlo por <span>\(A\)</span>, no cambia de dirección — solo se escala: <span>\(A\vec v = \lambda \vec v\)</span>. El escalar <span>\(\lambda\)</span> es el eigenvalor. La mayoría de los vectores SÍ rotan al multiplicarlos por <span>\(A\)</span>; los eigenvectores son las direcciones especiales que no lo hacen.</p>
+<h4>Cómo calcularlos</h4>
+<p>De <span>\(A\vec v=\lambda\vec v\)</span> se obtiene <span>\((A-\lambda I)\vec v=\vec 0\)</span>, que solo tiene solución no trivial si <span>\(\det(A-\lambda I)=0\)</span> — el <strong>polinomio característico</strong>.</p>
+<div class="ejemplo"><span class="k">Ejemplo completo</span>
+$$A=\begin{bmatrix}4&1\\2&3\end{bmatrix}\quad\Rightarrow\quad \det(A-\lambda I)=(4-\lambda)(3-\lambda)-2=\lambda^2-7\lambda+10=0$$
+<p>Factorizando: <span>\((\lambda-5)(\lambda-2)=0 \Rightarrow \lambda_1=5,\ \lambda_2=2\)</span>.</p>
+<p>Para <span>\(\lambda_1=5\)</span>: <span>\((A-5I)\vec v=0 \Rightarrow -v_1+v_2=0 \Rightarrow \vec v_1=(1,1)\)</span>.</p>
+<p>Para <span>\(\lambda_2=2\)</span>: <span>\((A-2I)\vec v=0 \Rightarrow 2v_1+v_2=0 \Rightarrow \vec v_2=(1,-2)\)</span>.</p>
+</div>
+<p>Por qué importa: en dinámica estructural (Fase 3, tema 3.5), los eigenvalores de <span>\((K,M)\)</span> son las frecuencias naturales al cuadrado, y los eigenvectores son las formas modales — cómo se deforma el edificio en cada modo de vibración. En métodos numéricos (tema 1.4.3) se calculan sin resolver el polinomio a mano, con el método de la potencia.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con esta misma matriz, verificá a mano que <span>\(A(1,1)=5(1,1)\)</span> y <span>\(A(1,-2)=2(1,-2)\)</span>.</div>
+</div>
+
+<div class="topic materia" id="m117">
+<h3><span class="badge MAT">MAT</span> 1.1.7 — Rango, espacio nulo y sistemas singulares</h3>
+<p>El <strong>rango</strong> de una matriz es el número de filas (o columnas) realmente independientes — cuántas ecuaciones de un sistema aportan información nueva. El <strong>espacio nulo</strong> son todos los vectores <span>\(\vec v\)</span> tales que <span>\(A\vec v=\vec 0\)</span>: si el espacio nulo contiene algo más que el vector cero, la matriz NO es invertible (rango < n).</p>
+<div class="ejemplo"><span class="k">Ejemplo</span>
+$$A=\begin{bmatrix}1&2\\2&4\end{bmatrix}$$
+<p>La segunda fila es 2× la primera — no aporta información nueva. Rango = 1 (no 2). El espacio nulo: <span>\(A\vec v=0 \Rightarrow v_1+2v_2=0 \Rightarrow \vec v=(-2,1)\)</span> (y sus múltiplos) — infinitos vectores no nulos lo satisfacen.</p>
+</div>
+<p>Esta es la formalización exacta de lo que en el tema 1.1.4 llamé "mecanismo": una matriz de rigidez <span>\(K\)</span> de rango deficiente significa que existe un vector de desplazamiento <span>\(\vec v\neq 0\)</span> en su espacio nulo — la estructura puede moverse en esa dirección con energía de deformación cero (un cuerpo rígido sin apoyar, o un mecanismo real).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuál es el rango de <span>\(\begin{bmatrix}1&0&0\\0&1&0\\0&0&0\end{bmatrix}\)</span>? ¿Qué vector no nulo está en su espacio nulo?</div>
+</div>
+
+<div class="topic materia" id="m118">
+<h3><span class="badge MAT">MAT</span> 1.1.8 — Ortogonalidad y mínimos cuadrados</h3>
+<p>Dos vectores son <strong>ortogonales</strong> si su producto punto es 0 (tema 1.1.1). Cuando un sistema <span>\(A\vec x=\vec b\)</span> tiene MÁS ecuaciones que incógnitas (sobredeterminado — el caso típico de ajustar una curva a datos con ruido), casi nunca tiene solución exacta. La mejor aproximación posible ("mínimos cuadrados") se obtiene resolviendo las <strong>ecuaciones normales</strong>:</p>
+$$A^TA\,\vec x = A^T\vec b$$
+<div class="ejemplo"><span class="k">Ejemplo verificado — ajustar una recta <span>\(y=mx+c\)</span> a 3 puntos</span>
+<p>Puntos <span>\((0,1),(1,2),(2,2)\)</span>. Planteado como sistema (cada fila es <span>\(mx_i+c=y_i\)</span>):</p>
+$$A=\begin{bmatrix}0&1\\1&1\\2&1\end{bmatrix},\quad \vec b=\begin{bmatrix}1\\2\\2\end{bmatrix}$$
+<p>Resolviendo <span>\(A^TA\vec x=A^T\vec b\)</span>: <span>\(A^TA=\begin{bmatrix}5&3\\3&3\end{bmatrix}\)</span>, <span>\(A^T\vec b=\begin{bmatrix}6\\5\end{bmatrix}\)</span>, y la solución es <span>\(m=0.5,\ c=1.1\overline{6}\)</span> — la mejor recta posible, en el sentido de minimizar la suma de errores al cuadrado.</p>
+</div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Este es exactamente el mecanismo matemático detrás del "ajuste de plano por mínimos cuadrados" del tema 1.5.2 (y de <code>delos_geometry.f90</code>) — ahí el sistema tiene 3 incógnitas (los coeficientes del plano) en vez de 2, pero la idea — <span>\(A^TA\vec x=A^T\vec b\)</span> — es idéntica.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué un sistema con más ecuaciones que incógnitas normalmente NO tiene solución exacta?</div>
+</div>
+
+<div class="topic materia" id="m119">
+<h3><span class="badge MAT">MAT</span> 1.1.9 — Matrices simétricas y definidas positivas</h3>
+<p><span>\(A\)</span> es <strong>definida positiva</strong> si <span>\(\vec x^TA\vec x>0\)</span> para todo <span>\(\vec x\neq 0\)</span>. Para una matriz simétrica 2×2, alcanza con verificar que los <strong>menores principales</strong> (los determinantes de las submatrices de la esquina superior izquierda) sean todos positivos.</p>
+<div class="ejemplo"><span class="k">Ejemplo</span>
+$$K=\begin{bmatrix}2&1\\1&2\end{bmatrix}$$
+<p>Primer menor: <span>\(2>0\)</span> ✓. Segundo menor (el determinante completo): <span>\(4-1=3>0\)</span> ✓. Definida positiva.</p>
+</div>
+<p>Por qué importa, en física, no solo en álgebra: <span>\(\vec x^TK\vec x\)</span> es, literalmente, el DOBLE de la energía de deformación elástica almacenada cuando la estructura tiene desplazamiento <span>\(\vec x\)</span>. Una matriz de rigidez bien apoyada (sin mecanismos, tema 1.1.7) es siempre simétrica y definida positiva — la energía de deformar una estructura real, en cualquier dirección posible, nunca puede ser negativa ni cero (salvo en reposo). Esta propiedad es también la que permite usar Cholesky (tema 1.4.7), mucho más barato que Gauss general.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Es <span>\(\begin{bmatrix}1&2\\2&1\end{bmatrix}\)</span> definida positiva? Calculá los menores principales.</div>
+</div>
+
+<div class="topic materia" id="m1110">
+<h3><span class="badge MAT">MAT</span> 1.1.10 — Diagonalización</h3>
+<p>Si una matriz <span>\(n\times n\)</span> tiene <span>\(n\)</span> eigenvectores independientes, se puede escribir como <span>\(A=PDP^{-1}\)</span>, donde <span>\(P\)</span> tiene los eigenvectores como columnas y <span>\(D\)</span> es diagonal con los eigenvalores. Es la forma "más simple" posible de <span>\(A\)</span>: en la base de sus propios eigenvectores, <span>\(A\)</span> actúa solo escalando cada eje, sin rotar nada.</p>
+<div class="ejemplo"><span class="k">Ejemplo verificado — misma matriz de los temas 1.1.6 y 1.4.3</span>
+$$A=\begin{bmatrix}4&1\\2&3\end{bmatrix}=PDP^{-1},\quad P=\begin{bmatrix}1&1\\1&-2\end{bmatrix},\quad D=\begin{bmatrix}5&0\\0&2\end{bmatrix}$$
+<p>(<span>\(P\)</span> son los dos eigenvectores del tema 1.1.6 puestos como columnas; multiplicar <span>\(PDP^{-1}\)</span> devuelve exactamente <span>\(A\)</span>, verificado numéricamente.)</p>
+</div>
+<p>En dinámica estructural (Fase 3, tema 3.5), diagonalizar el par <span>\((K,M)\)</span> es <strong>descomponer la respuesta del edificio en sus modos de vibración</strong>: en vez de resolver un sistema acoplado enorme, se resuelve cada modo por separado (cada uno es, matemáticamente, un simple oscilador de 1 grado de libertad) y se suman los resultados — la técnica se llama superposición modal, y solo es posible porque <span>\(K\)</span> y <span>\(M\)</span> son diagonalizables.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué diagonalizar simplifica resolver un sistema — qué hace fácil una matriz diagonal que una matriz llena no?</div>
+</div>
+
+<h2 class="withrule">1.2 · Cálculo multivariable</h2>
+<p>FEM minimiza una <em>energía</em> definida sobre toda una región 2D o 3D — para eso hace falta cálculo en varias variables, no solo en una.</p>
+
+<div class="topic materia" id="m121">
+<h3><span class="badge MAT">MAT</span> 1.2.1 — Funciones de varias variables y derivadas parciales</h3>
+<p>Una función como <span>\(f(x,y)\)</span> (por ejemplo, la temperatura en cada punto de una placa) tiene una <strong>derivada parcial</strong> respecto a cada variable: <span>\(\frac{\partial f}{\partial x}\)</span> mide cómo cambia <span>\(f\)</span> moviéndose en <span>\(x\)</span>, manteniendo <span>\(y\)</span> fija (literalmente: tratás <span>\(y\)</span> como una constante y derivás como siempre).</p>
+<div class="ejemplo"><span class="k">Ejemplo</span>Con <span>\(f(x,y)=x^2y+3y^3\)</span>: <span>\(\frac{\partial f}{\partial x}=2xy\)</span> (derivás <span>\(x^2\)</span>, <span>\(y\)</span> es constante), <span>\(\frac{\partial f}{\partial y}=x^2+9y^2\)</span>.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Calculá las dos derivadas parciales de <span>\(f(x,y)=x^3y^2\)</span>.</div>
+</div>
+
+<div class="topic materia" id="m122">
+<h3><span class="badge MAT">MAT</span> 1.2.2 — Gradiente, divergencia y rotacional</h3>
+<p>El <strong>gradiente</strong> de <span>\(f\)</span> es el vector de todas sus derivadas parciales: <span>\(\nabla f = (\frac{\partial f}{\partial x}, \frac{\partial f}{\partial y}, \frac{\partial f}{\partial z})\)</span> — apunta en la dirección de máximo crecimiento de <span>\(f\)</span>. Para un campo vectorial <span>\(\vec F=(F_x,F_y,F_z)\)</span>:</p>
+<ul>
+<li><strong>Divergencia</strong> <span>\(\nabla\cdot\vec F = \frac{\partial F_x}{\partial x}+\frac{\partial F_y}{\partial y}+\frac{\partial F_z}{\partial z}\)</span> — un número en cada punto, mide si el campo "diverge" (fuente) o "converge" (sumidero) ahí.</li>
+<li><strong>Rotacional</strong> <span>\(\nabla\times\vec F\)</span> — un vector, mide la tendencia del campo a "girar" en cada punto.</li>
+</ul>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés calcular <span>\(\nabla f\)</span> para <span>\(f(x,y)=x^2+y^2\)</span> y explicar por qué siempre apunta "hacia afuera" del origen?</div>
+</div>
+
+<div class="topic materia" id="m123">
+<h3><span class="badge MAT">MAT</span> 1.2.3 — Integrales dobles y triples</h3>
+<p>Así como una integral simple <span>\(\int f(x)\,dx\)</span> suma valores a lo largo de una línea, una integral doble <span>\(\iint_R f(x,y)\,dA\)</span> suma valores sobre una región 2D (área), y una triple <span>\(\iiint_V f\,dV\)</span> sobre un volumen. Se calculan integrando una variable a la vez, de adentro hacia afuera.</p>
+<div class="ejemplo"><span class="k">Ejemplo</span>Área de un rectángulo <span>\([0,2]\times[0,3]\)</span> con <span>\(f=1\)</span>: <span>\(\int_0^2\int_0^3 1\,dy\,dx = \int_0^2 3\,dx = 6\)</span> — el área real del rectángulo, confirmando la idea.</div>
+<p>En FEM, la <strong>rigidez de un elemento</strong> es literalmente una integral doble o triple sobre la región de ese elemento — por eso las funciones de forma (Fase 4) se integran, y por eso elementos con forma rara (muy alargados) dan integrales numéricamente inestables.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés calcular <span>\(\int_0^1\int_0^1 xy \,dx\,dy\)</span>?</div>
+</div>
+
+<div class="topic materia" id="m124">
+<h3><span class="badge MAT">MAT</span> 1.2.4 — Teorema de la divergencia</h3>
+<p>El teorema de la divergencia (Gauss) dice que la integral de la divergencia de un campo sobre un volumen es igual al flujo del campo a través de la superficie que lo encierra:</p>
+$$\iiint_V (\nabla\cdot\vec F)\,dV = \oiint_S \vec F\cdot\hat n\,dA$$
+<p>Convierte una integral de VOLUMEN en una integral de SUPERFICIE (le baja un orden de derivada al problema). Esto es, exactamente, el paso matemático que en FEM transforma la ecuación diferencial fuerte (que exige derivadas de segundo orden, difíciles de aproximar bien con funciones simples) en la "forma débil" (Fase 4, tema 4.1), que solo exige derivadas de primer orden — mucho más fácil de aproximar con funciones lineales por elemento.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés explicar con tus palabras por qué "bajarle un orden de derivada" hace que un elemento finito lineal (los más simples) sea viable?</div>
+</div>
+
+<div class="topic materia" id="m125">
+<h3><span class="badge MAT">MAT</span> 1.2.5 — Regla de la cadena multivariable</h3>
+<p>Si <span>\(z=f(x,y)\)</span> y a su vez <span>\(x=x(t)\)</span>, <span>\(y=y(t)\)</span> (ambas dependen de un parámetro <span>\(t\)</span>), la tasa de cambio total de <span>\(z\)</span> respecto a <span>\(t\)</span> es:</p>
+$$\frac{dz}{dt}=\frac{\partial z}{\partial x}\frac{dx}{dt}+\frac{\partial z}{\partial y}\frac{dy}{dt}$$
+<div class="ejemplo"><span class="k">Ejemplo</span>Con <span>\(z=x^2y\)</span>, <span>\(x=t\)</span>, <span>\(y=t^2\)</span>: por sustitución directa, <span>\(z=t^2\cdot t^2=t^4 \Rightarrow dz/dt=4t^3\)</span>. Por la regla de la cadena: <span>\(\frac{\partial z}{\partial x}=2xy=2t\cdot t^2=2t^3\)</span>, <span>\(\frac{dx}{dt}=1\)</span>, <span>\(\frac{\partial z}{\partial y}=x^2=t^2\)</span>, <span>\(\frac{dy}{dt}=2t\)</span> → <span>\(dz/dt=2t^3(1)+t^2(2t)=4t^3\)</span>. Coincide.</div>
+<p>Esta regla es la herramienta que hace posible el siguiente tema — sin ella no se puede derivar una función definida en un sistema de coordenadas (<span>\(\xi,\eta\)</span>, de un elemento de referencia) respecto a otro sistema (<span>\(x,y\)</span>, coordenadas reales).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con <span>\(z=xy^2\)</span>, <span>\(x=2t\)</span>, <span>\(y=t+1\)</span>, calculá <span>\(dz/dt\)</span> en <span>\(t=1\)</span> por la regla de la cadena.</div>
+</div>
+
+<div class="topic materia" id="m126">
+<h3><span class="badge MAT">MAT</span> 1.2.6 — Jacobiano y cambio de variable</h3>
+<p><strong>Este es, probablemente, el tema matemático más importante de toda la Fase 1 para entender FEM de verdad — y el que más fácil es saltarse por accidente.</strong></p>
+<p>Cuando una integral se calcula en un sistema de coordenadas distinto al original — por ejemplo, coordenadas polares <span>\((r,\theta)\)</span> en vez de cartesianas <span>\((x,y)\)</span> — un elemento de área NO se transforma 1 a 1: hay que multiplicar por un factor de corrección, el <strong>determinante del Jacobiano</strong>, la matriz de todas las derivadas parciales de la transformación:</p>
+$$J=\begin{bmatrix}\dfrac{\partial x}{\partial u}&\dfrac{\partial x}{\partial v}\\[4pt]\dfrac{\partial y}{\partial u}&\dfrac{\partial y}{\partial v}\end{bmatrix}\qquad\Rightarrow\qquad dA_{xy}=|\det J|\;dA_{uv}$$
+<div class="ejemplo"><span class="k">Ejemplo clásico — coordenadas polares</span>
+<p>Con <span>\(x=r\cos\theta,\ y=r\sin\theta\)</span>:</p>
+$$J=\begin{bmatrix}\cos\theta&-r\sin\theta\\ \sin\theta&r\cos\theta\end{bmatrix}\quad\Rightarrow\quad \det J=r\cos^2\theta+r\sin^2\theta=r$$
+<p>Por eso en coordenadas polares un elemento de área es <span>\(dA=r\,dr\,d\theta\)</span> — ese "<span>\(r\)</span>" extra que quizás ya memorizaste sin saber de dónde salía, sale exactamente de acá.</p>
+</div>
+<h4>La conexión directa con FEM (Fase 4)</h4>
+<p>Cuando un mallador o un programa de FEM trabaja con un elemento "de referencia" (un triángulo o cuadrado perfecto, en coordenadas <span>\((\xi,\eta)\)</span>, siempre igual, para poder integrar las funciones de forma una sola vez) y lo <strong>mapea</strong> a la forma real y distorsionada del elemento físico en el modelo (coordenadas <span>\((x,y)\)</span> reales) — ese mapeo es <em>exactamente</em> este cambio de variable, y su Jacobiano aparece en cada integral de rigidez que se calcula. <strong>Cuando <span>\(\det J\)</span> se acerca a 0 (o se vuelve negativo), el elemento está tan distorsionado/plegado sobre sí mismo que la integral deja de tener sentido físico</strong> — esta es la explicación matemática precisa, no solo intuitiva, de por qué un "triángulo flaco" (tema 4.4) arruina un cálculo de FEM: no es solo que "se vea mal", es que su Jacobiano de mapeo se acerca a singular.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <span>\(\det J=0\)</span> en un punto significa que ahí la transformación "aplasta" un área a cero?</div>
+</div>
+
+<div class="topic materia" id="m127">
+<h3><span class="badge MAT">MAT</span> 1.2.7 — Teorema de Green</h3>
+<p>Es la versión en 2D del teorema de la divergencia (tema 1.2.4): relaciona una integral doble sobre una región plana con una integral de línea a lo largo de su borde.</p>
+$$\oint_C (P\,dx+Q\,dy) = \iint_R\left(\frac{\partial Q}{\partial x}-\frac{\partial P}{\partial y}\right)dA$$
+<p>Igual que su versión 3D, es el paso que permite bajar el orden de derivada necesario en un problema 2D — relevante para cualquier análisis de placas o membranas planas.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés explicar en una frase la diferencia entre lo que relaciona el teorema de Green (2D) y el de la divergencia (3D)?</div>
+</div>
+
+<h2 class="withrule">1.3 · Ecuaciones diferenciales</h2>
+<p>Toda la física estructural (Fase 3) se escribe como ecuación diferencial. Esta subfase da las herramientas para resolverlas a mano en los casos simples — los mismos que FEM resuelve automáticamente en los casos complicados.</p>
+
+<div class="topic materia" id="m131">
+<h3><span class="badge MAT">MAT</span> 1.3.1 — EDOs de primer orden</h3>
+<p>Una ecuación diferencial ordinaria (EDO) relaciona una función con sus derivadas: <span>\(\frac{dy}{dx}=f(x,y)\)</span>. El tipo más simple, <strong>separable</strong>, se resuelve pasando todas las <span>\(y\)</span> a un lado y las <span>\(x\)</span> al otro, e integrando ambos lados.</p>
+<div class="ejemplo"><span class="k">Ejemplo</span><span>\(\frac{dy}{dx}=ky\)</span> (crecimiento/decaimiento proporcional) se separa: <span>\(\frac{dy}{y}=k\,dx\)</span>, se integra: <span>\(\ln|y|=kx+C\)</span>, se despeja: <span>\(y=Ae^{kx}\)</span>.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Resolvé <span>\(\frac{dy}{dx}=2x\)</span> con <span>\(y(0)=3\)</span>.</div>
+</div>
+
+<div class="topic materia" id="m132">
+<h3><span class="badge MAT">MAT</span> 1.3.2 — EDOs lineales de segundo orden</h3>
+<p>Forma <span>\(ay''+by'+cy=0\)</span> (coeficientes constantes) — exactamente la forma de vibración libre de un sistema masa-resorte, y de la ecuación de una viga sin carga. Se resuelve proponiendo <span>\(y=e^{rx}\)</span>, lo que da la <strong>ecuación característica</strong> <span>\(ar^2+br+c=0\)</span>. Según el discriminante: raíces reales distintas (solución exponencial), raíz doble, o raíces complejas (solución oscilatoria — <span>\(\sin\)</span>/<span>\(\cos\)</span>, el caso de vibración).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué tipo de solución (exponencial u oscilatoria) esperás para <span>\(y''+4y=0\)</span>? Resolvé la ecuación característica para confirmar.</div>
+</div>
+
+<div class="topic materia" id="m133">
+<h3><span class="badge MAT">MAT</span> 1.3.3 — Aplicación: la ecuación de la viga</h3>
+<p>La ecuación de Euler-Bernoulli para una viga bajo carga distribuida <span>\(q(x)\)</span> es una EDO de <strong>cuarto</strong> orden:</p>
+$$EI\,y''''(x) = q(x)$$
+<p>donde <span>\(E\)</span> es el módulo de elasticidad (Fase 3, tema 3.2) e <span>\(I\)</span> el momento de inercia de la sección. Se resuelve integrando 4 veces, con 4 condiciones de frontera (2 en cada extremo: desplazamiento y/o momento, según el tipo de apoyo).</p>
+<div class="ejemplo"><span class="k">Resultado conocido</span>Para una viga simplemente apoyada, longitud <span>\(L\)</span>, carga uniforme <span>\(q\)</span>, con <span>\(y(0)=y(L)=0\)</span> (sin desplazamiento en los apoyos) y <span>\(y''(0)=y''(L)=0\)</span> (sin momento en un apoyo simple): la deflexión máxima, en el centro, es <span>\(y_{max} = \dfrac{5qL^4}{384EI}\)</span> — un resultado que vas a reencontrar en cualquier libro de mecánica de materiales, ahora sabiendo de dónde sale.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si duplicás la longitud <span>\(L\)</span> de una viga, manteniendo todo lo demás igual, ¿por qué factor crece la deflexión máxima? (mirá el exponente de <span>\(L\)</span>)</div>
+</div>
+
+<div class="topic materia" id="m134">
+<h3><span class="badge MAT">MAT</span> 1.3.4 — Clasificación de EDPs</h3>
+<p>Cuando la incógnita depende de más de una variable (posición Y tiempo, por ejemplo), la ecuación es una EDP (parcial). Las tres familias clásicas, según su comportamiento:</p>
+<ul>
+<li><strong>Elíptica</strong> (ej. la ecuación de Laplace, <span>\(\nabla^2 u=0\)</span>): problemas de equilibrio ESTÁTICO — la solución en un punto depende de TODO el dominio a la vez. Es la familia de un análisis estructural estático.</li>
+<li><strong>Parabólica</strong> (ej. la ecuación del calor): procesos que se difunden en el tiempo hacia un equilibrio.</li>
+<li><strong>Hiperbólica</strong> (ej. la ecuación de onda): propagación con velocidad finita — la familia de un análisis dinámico/sísmico (Fase 3, tema 3.5).</li>
+</ul>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Un análisis estático de una losa bajo carga fija, ¿a qué familia pertenece? ¿Y la respuesta de un edificio durante un sismo?</div>
+</div>
+
+<div class="topic materia" id="m135">
+<h3><span class="badge MAT">MAT</span> 1.3.5 — EDOs no homogéneas</h3>
+<p>El tema 1.3.2 solo resolvió el caso <em>sin</em> fuerza externa (<span>\(=0\)</span> a la derecha). Con una carga real, la ecuación es <span>\(ay''+by'+cy=g(x)\)</span>. La solución general es <strong>solución homogénea + solución particular</strong>: <span>\(y=y_h+y_p\)</span>, donde <span>\(y_h\)</span> ya se sabe resolver (tema 1.3.2) y <span>\(y_p\)</span> es CUALQUIER solución que satisfaga la ecuación completa — el método de <strong>coeficientes indeterminados</strong> la encuentra proponiendo una forma similar a <span>\(g(x)\)</span> con constantes por determinar.</p>
+<div class="ejemplo"><span class="k">Ejemplo</span><span>\(y''+4y=8\)</span> (fuerza constante). Homogénea (del tema 1.3.2, <span>\(\omega^2=4\)</span>): <span>\(y_h=C_1\cos2x+C_2\sin2x\)</span>. Particular: proponer <span>\(y_p=A\)</span> (constante) → <span>\(0+4A=8 \Rightarrow A=2\)</span>. Solución general: <span>\(y=C_1\cos2x+C_2\sin2x+2\)</span>.</div>
+<p>Físicamente: <span>\(y_h\)</span> es la vibración libre (lo que pasaría sin fuerza, solo por las condiciones iniciales) y <span>\(y_p\)</span> es la respuesta permanente forzada por la carga — la suma de ambas es la vibración real de una estructura con carga sostenida.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Para <span>\(y''+9y=18\)</span>, ¿cuál es la solución particular <span>\(y_p\)</span>?</div>
+</div>
+
+<div class="topic materia" id="m136">
+<h3><span class="badge MAT">MAT</span> 1.3.6 — Sistemas de EDOs</h3>
+<p>Cualquier EDO de orden superior se puede reescribir como un SISTEMA de EDOs de primer orden, en forma matricial <span>\(\vec y'=A\vec y\)</span> — la forma que de verdad usa un programa para resolver dinámica, porque es la forma que sabe integrar numéricamente (tema 1.3.7).</p>
+<div class="ejemplo"><span class="k">Ejemplo — reescribir <span>\(y''+4y=0\)</span> como sistema</span>Definiendo <span>\(y_1=y\)</span>, <span>\(y_2=y'\)</span>: <span>\(y_1'=y_2\)</span>, <span>\(y_2'=y''=-4y_1\)</span>. En forma matricial:
+$$\begin{bmatrix}y_1\\y_2\end{bmatrix}'=\begin{bmatrix}0&1\\-4&0\end{bmatrix}\begin{bmatrix}y_1\\y_2\end{bmatrix}$$
+</div>
+<p>La ecuación de dinámica estructural completa, <span>\(M\ddot u+C\dot u+Ku=F(t)\)</span> (Fase 3, tema 3.5), se reescribe exactamente así antes de integrarla en el tiempo: como un sistema de primer orden en <span>\((u,\dot u)\)</span>.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Reescribí <span>\(y''-3y'+2y=0\)</span> como un sistema de dos ecuaciones de primer orden.</div>
+</div>
+
+<div class="topic materia" id="m137">
+<h3><span class="badge MAT">MAT</span> 1.3.7 — Métodos numéricos para EDOs: Euler y Runge-Kutta</h3>
+<p>La mayoría de las EDOs reales (no lineales, o sistemas grandes como el de dinámica estructural) no tienen solución exacta a mano — se integran numéricamente, paso a paso en el tiempo. <strong>Euler</strong> es el método más simple: usar la pendiente actual para dar un paso:</p>
+$$y_{n+1}=y_n+h\,f(x_n,y_n)$$
+<div class="ejemplo"><span class="k">Ejemplo verificado — <span>\(y'=y,\ y(0)=1\)</span> (solución exacta: <span>\(y=e^x\)</span>), paso <span>\(h=0.1\)</span></span>
+<div class="tablewrap"><table class="numtable"><thead><tr><th>x</th><th>Euler</th><th>Exacto (<span>\(e^x\)</span>)</th></tr></thead><tbody>
+<tr><td>0.1</td><td>1.10000</td><td>1.10517</td></tr>
+<tr><td>0.2</td><td>1.21000</td><td>1.22140</td></tr>
+<tr><td>0.3</td><td>1.33100</td><td>1.34986</td></tr>
+<tr><td>0.4</td><td>1.46410</td><td>1.49182</td></tr>
+<tr><td>0.5</td><td>1.61051</td><td>1.64872</td></tr>
+</tbody></table></div>
+<p>El error crece con cada paso — Euler es simple pero poco preciso.</p>
+</div>
+<p><strong>Runge-Kutta de 4º orden (RK4)</strong> es el estándar real en la práctica: en vez de usar solo la pendiente al inicio del paso, promedia 4 estimaciones de pendiente (inicio, dos en la mitad, fin) — mucho más preciso con el mismo tamaño de paso. Esta es la familia de método (Euler/RK) que un análisis dinámico usa para "avanzar en el tiempo" la respuesta de una estructura ante un sismo, paso a paso.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el error de Euler en la tabla crece con cada paso, en vez de mantenerse constante?</div>
+</div>
+
+<h2 class="withrule">1.4 · Métodos numéricos</h2>
+<p>Cómo un computador hace, con números, lo que en 1.1-1.3 hiciste a mano con símbolos.</p>
+
+<div class="topic materia" id="m141">
+<h3><span class="badge MAT">MAT</span> 1.4.1 — Eliminación gaussiana y LU</h3>
+<p>El algoritmo del tema 1.1.3, pero mecanizado y contado en operaciones: eliminación gaussiana sobre un sistema <span>\(n\times n\)</span> cuesta <span>\(O(n^3)\)</span> — la fila más cara de la tabla del tema 2.1 de la Fase 2. La <strong>descomposición LU</strong> factoriza <span>\(A=LU\)</span> (triangular inferior × triangular superior) UNA vez, y después resolver para cualquier <span>\(F\)</span> nuevo cuesta solo <span>\(O(n^2)\)</span> — la razón por la que un programa de FEM real factoriza <span>\(K\)</span> una vez y la reutiliza para cada caso de carga, en vez de resolver el sistema completo de cero cada vez.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si tenés que resolver el mismo sistema <span>\(Ku=F\)</span> para 50 vectores de carga distintos, ¿por qué LU es mucho más barato que 50 eliminaciones gaussianas independientes?</div>
+</div>
+
+<div class="topic materia" id="m142">
+<h3><span class="badge MAT">MAT</span> 1.4.2 — Métodos iterativos</h3>
+<p>En vez de resolver exacto (Gauss/LU), un método iterativo arranca con una estimación y la va corrigiendo. <strong>Gauss-Seidel</strong>: despejar cada <span>\(x_i\)</span> de su propia ecuación usando los valores MÁS RECIENTES de las demás variables, repetir hasta que casi no cambien.</p>
+<div class="ejemplo"><span class="k">Ejemplo (verificado numéricamente)</span>Con <span>\(4x-y=7,\ -x+3y=5\)</span>: despejando, <span>\(x=(7+y)/4\)</span>, <span>\(y=(5+x)/3\)</span>. Arrancando en <span>\(x=0,y=0\)</span>:
+<div class="tablewrap"><table class="numtable"><thead><tr><th>Iteración</th><th>x</th><th>y</th></tr></thead><tbody>
+<tr><td>1</td><td>1.7500</td><td>2.2500</td></tr>
+<tr><td>2</td><td>2.3125</td><td>2.4375</td></tr>
+<tr><td>3</td><td>2.3594</td><td>2.4531</td></tr>
+<tr><td>4</td><td>2.3633</td><td>2.4544</td></tr>
+</tbody></table></div>
+Converge hacia la solución exacta <span>\(x=2.3636...,\ y=2.4545...\)</span> — ya en la 4ª iteración el error es menor al 0.02%.</div>
+<p>Para un sistema disperso enorme (millones de nodos), factorizar exacto puede ser demasiado caro incluso con LU — ahí un método iterativo (o el gradiente conjugado, su primo más sofisticado) puede ganar, aceptando una respuesta aproximada pero mucho más rápida.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué un método iterativo puede ser mejor que uno directo para un sistema con un millón de incógnitas?</div>
+</div>
+
+<div class="topic materia" id="m143">
+<h3><span class="badge MAT">MAT</span> 1.4.3 — Eigenvalores numéricos: método de la potencia</h3>
+<p>Calcular el polinomio característico a mano (tema 1.1.6) es inviable para una matriz de miles de filas. El <strong>método de la potencia</strong> encuentra el eigenvalor MÁS GRANDE (dominante) sin el polinomio: multiplicar repetidamente por <span>\(A\)</span> y normalizar — el vector converge hacia el eigenvector dominante, y el factor de escala converge hacia el eigenvalor dominante.</p>
+<div class="ejemplo"><span class="k">Ejemplo, misma matriz del tema 1.1.6</span>
+$$A=\begin{bmatrix}4&1\\2&3\end{bmatrix}\ (\lambda_{max}=5 \text{ ya conocido})$$
+<div class="tablewrap"><table class="numtable"><thead><tr><th>Iteración</th><th>Vector (normalizado)</th><th>Factor de escala</th></tr></thead><tbody>
+<tr><td>x₀</td><td>(1, 0)</td><td>—</td></tr>
+<tr><td>x₁ = Ax₀</td><td>(1, 0.5000)</td><td>4.0000</td></tr>
+<tr><td>x₂ = Ax₁</td><td>(1, 0.7778)</td><td>4.5000</td></tr>
+<tr><td>x₃ = Ax₂</td><td>(1, 0.9070)</td><td>4.7778</td></tr>
+<tr><td>x₄ = Ax₃</td><td>(1, 0.9623)</td><td>4.9070</td></tr>
+</tbody></table></div>
+<p>El vector se acerca a <span>\((1,1)\)</span> (el eigenvector real) y el factor de escala se acerca a <span>\(5\)</span> (el eigenvalor real) — cada iteración mejora la aproximación, sin resolver ningún polinomio.</p>
+</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Seguí una iteración más a mano (x₅ = Ax₄) y confirmá que el factor de escala se acerca aún más a 5.</div>
+</div>
+
+<div class="topic materia" id="m144">
+<h3><span class="badge MAT">MAT</span> 1.4.4 — Integración numérica</h3>
+<p>Cuando una integral (tema 1.2.3) no tiene solución cerrada simple — el caso normal en un elemento finito real — se aproxima numéricamente.</p>
+<ul>
+<li><strong>Regla del trapecio:</strong> aproxima el área bajo la curva con trapecios: <span>\(\int_a^b f\,dx \approx \frac{b-a}{2}[f(a)+f(b)]\)</span> (versión de un solo intervalo).</li>
+<li><strong>Regla de Simpson:</strong> usa una parábola en vez de una línea recta — mucho más precisa para la misma cantidad de evaluaciones.</li>
+<li><strong>Cuadratura de Gauss:</strong> la que de verdad usa FEM — elige puntos de evaluación (no equiespaciados) que maximizan la precisión para un número dado de evaluaciones. Con solo 1, 3 o 4 puntos por elemento triangular, integra exactamente polinomios de bajo grado.</li>
+</ul>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué evaluar la función EN MENOS puntos, pero elegidos con cuidado (cuadratura de Gauss), puede ser más preciso que evaluarla en muchos puntos equiespaciados?</div>
+</div>
+
+<div class="topic materia" id="m145">
+<h3><span class="badge MAT">MAT</span> 1.4.5 — Búsqueda de raíces: Newton-Raphson</h3>
+<p>Encontrar dónde <span>\(f(x)=0\)</span> sin poder despejar <span>\(x\)</span> algebraicamente. Newton-Raphson usa la tangente en el punto actual como aproximación local, y salta a donde esa tangente cruza el eje x:</p>
+$$x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}$$
+<div class="ejemplo"><span class="k">Ejemplo verificado — calcular <span>\(\sqrt{2}\)</span> sin usar la tecla de raíz</span>
+<p>Buscar la raíz de <span>\(f(x)=x^2-2\)</span> (<span>\(f'(x)=2x\)</span>), arrancando en <span>\(x_0=1\)</span>:</p>
+<div class="tablewrap"><table class="numtable"><thead><tr><th>Iteración</th><th>x</th></tr></thead><tbody>
+<tr><td>1</td><td>1.50000000</td></tr>
+<tr><td>2</td><td>1.41666667</td></tr>
+<tr><td>3</td><td>1.41421569</td></tr>
+<tr><td>4</td><td>1.41421356</td></tr>
+</tbody></table></div>
+<p>4 iteraciones y ya coincide con <span>\(\sqrt{2}=1.41421356...\)</span> hasta la 8ª cifra — convergencia muy rápida (cuadrática) cuando el punto de partida es razonable.</p>
+</div>
+<p>Aunque este proyecto (FEM lineal) no lo necesita todo el tiempo, es el método que cualquier solver de FEM <em>no lineal</em> (materiales que no responden proporcional a la carga, grandes deformaciones) usa en cada paso de carga — vale conocerlo aunque no aparezca en el alcance actual de DELOS-3D/IFC-Bridge.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué pasa si <span>\(f'(x_n)=0\)</span> en algún paso? ¿Por qué la fórmula se rompe ahí?</div>
+</div>
+
+<div class="topic materia" id="m146">
+<h3><span class="badge MAT">MAT</span> 1.4.6 — Interpolación de Lagrange</h3>
+<p><strong>Este tema es, en un sentido muy literal, la matemática exacta detrás de las "funciones de forma" de FEM (Fase 4, tema 4.2) — no una analogía, es la misma fórmula.</strong></p>
+<p>Dado un conjunto de puntos <span>\((x_1,y_1),\dots,(x_n,y_n)\)</span>, el polinomio de Lagrange es el ÚNICO polinomio de grado <span>\(n-1\)</span> que pasa exactamente por todos ellos, construido como una combinación de <strong>polinomios base</strong> <span>\(L_i(x)\)</span>, cada uno diseñado para valer 1 en su propio punto y 0 en todos los demás:</p>
+$$L_i(x)=\prod_{j\neq i}\frac{x-x_j}{x_i-x_j}\qquad\qquad P(x)=\sum_i y_i\,L_i(x)$$
+<div class="ejemplo"><span class="k">Ejemplo — el caso de 2 puntos (interpolación LINEAL)</span>
+<p>Con solo <span>\(x_1,x_2\)</span>: <span>\(L_1(x)=\dfrac{x-x_2}{x_1-x_2}\)</span>, <span>\(L_2(x)=\dfrac{x-x_1}{x_2-x_1}\)</span>. Compará esto, término a término, con las funciones de forma del elemento barra de 2 nodos (Fase 3, tema 3.4) — <span>\(L_1\)</span> vale 1 en el nodo 1 y 0 en el nodo 2, exactamente la definición del tema 4.2. <strong>Las funciones de forma de un elemento finito de 2 nodos SON los polinomios base de Lagrange de grado 1.</strong></p>
+</div>
+<p>Cuando un elemento tiene 3 nodos (elemento cuadrático), sus funciones de forma son los polinomios de Lagrange de grado 2 para esos 3 puntos — el patrón se generaliza exactamente igual. Esto es lo que hace que el checkpoint del tema 4.2 ("¿las 3 funciones de forma de un triángulo suman 1?") deje de ser un hecho para memorizar: es una propiedad que Lagrange garantiza por construcción — evaluá <span>\(\sum_i L_i(x)\)</span> en cualquier <span>\(x_j\)</span> y da exactamente 1, porque todos los <span>\(L_i\)</span> con <span>\(i\neq j\)</span> valen 0 ahí.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con nodos en <span>\(x_1=0\)</span> y <span>\(x_2=2\)</span>, escribí <span>\(L_1(x)\)</span> y <span>\(L_2(x)\)</span>, y verificá que <span>\(L_1(0)=1\)</span>, <span>\(L_1(2)=0\)</span>.</div>
+</div>
+
+<div class="topic materia" id="m147">
+<h3><span class="badge MAT">MAT</span> 1.4.7 — Descomposición de Cholesky</h3>
+<p>Para una matriz simétrica y definida positiva (tema 1.1.9 — exactamente la forma de una matriz de rigidez bien apoyada), existe una factorización más barata que LU general: <span>\(K=LL^T\)</span>, con <span>\(L\)</span> triangular inferior. Aprovecha la simetría para hacer, aproximadamente, la MITAD del trabajo de una LU genérica — la razón concreta por la que un solver de FEM real usa Cholesky y no LU genérico cuando puede.</p>
+<div class="ejemplo"><span class="k">Ejemplo</span>
+$$K=\begin{bmatrix}4&2\\2&5\end{bmatrix}=LL^T,\quad L=\begin{bmatrix}2&0\\1&2\end{bmatrix}$$
+<p>(verificable: <span>\(LL^T=\begin{bmatrix}2&0\\1&2\end{bmatrix}\begin{bmatrix}2&1\\0&2\end{bmatrix}=\begin{bmatrix}4&2\\2&5\end{bmatrix}\)</span> ✓)</p>
+</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué Cholesky solo funciona para matrices simétricas y definidas positivas, y no para cualquier matriz?</div>
+</div>
+
+<h2 class="withrule">1.5 · Geometría 3D y transformaciones</h2>
+<p>Cómo se describe una posición, una dirección y una rotación en el espacio — la base de mallado (Fase 4) y de gráficos (Fase 5).</p>
+
+<div class="topic materia" id="m151">
+<h3><span class="badge MAT">MAT</span> 1.5.1 — Producto cruz y vectores normales</h3>
+<p>El producto cruz de dos vectores 3D da un tercer vector perpendicular a ambos:</p>
+$$\vec a\times\vec b = (a_yb_z-a_zb_y,\ a_zb_x-a_xb_z,\ a_xb_y-a_yb_x)$$
+<p>Dados tres puntos no colineales <span>\(P_1,P_2,P_3\)</span> de un plano (o de un triángulo de una malla), el vector normal se calcula con dos vectores del plano: <span>\(\vec n = (P_2-P_1)\times(P_3-P_1)\)</span>. Normalizado (dividido por su magnitud), da la dirección "hacia afuera" de esa cara — exactamente lo que un motor gráfico necesita para saber de qué lado ilumina un triángulo.</p>
+<div class="ejemplo"><span class="k">Ejemplo</span>Con <span>\(P_1=(0,0,0)\)</span>, <span>\(P_2=(1,0,0)\)</span>, <span>\(P_3=(0,1,0)\)</span>: <span>\((P_2-P_1)=(1,0,0)\)</span>, <span>\((P_3-P_1)=(0,1,0)\)</span>, <span>\(\vec n=(0\cdot0-0\cdot1,\ 0\cdot0-1\cdot0,\ 1\cdot1-0\cdot0)=(0,0,1)\)</span> — el eje Z, correcto para un triángulo en el plano XY.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Calculá la normal del triángulo con <span>\(P_1=(0,0,0)\)</span>, <span>\(P_2=(1,0,0)\)</span>, <span>\(P_3=(0,0,1)\)</span>.</div>
+</div>
+
+<div class="topic materia" id="m152">
+<h3><span class="badge MAT">MAT</span> 1.5.2 — Ecuación de un plano y ajuste por mínimos cuadrados</h3>
+<p>Un plano se define por un punto <span>\(P_0\)</span> y una normal <span>\(\vec n\)</span>: <span>\(\vec n\cdot(P-P_0)=0\)</span> para cualquier punto <span>\(P\)</span> del plano. Cuando los puntos NO son exactamente coplanares (ruido de medición, o una superficie curva que se aproxima localmente), se usa <strong>ajuste por mínimos cuadrados</strong>: encontrar el plano que minimiza la suma de las distancias al cuadrado de todos los puntos al plano — exactamente lo que hace <code>delos_geometry.f90</code> de DELOS-3D antes de triangular una región.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué "mínimos cuadrados" (elevar al cuadrado la distancia) en vez de sumar la distancia directa?</div>
+</div>
+
+<div class="topic materia" id="m153">
+<h3><span class="badge MAT">MAT</span> 1.5.3 — Matrices de rotación</h3>
+<p>Rotar un vector <span>\(\theta\)</span> radianes alrededor del eje Z (en 3D, dejando Z fijo):</p>
+$$R_z(\theta)=\begin{bmatrix}\cos\theta&-\sin\theta&0\\ \sin\theta&\cos\theta&0\\ 0&0&1\end{bmatrix}$$
+<p>Multiplicar esta matriz por un vector lo rota, preservando su longitud (una propiedad que define a las matrices de rotación: son <em>ortogonales</em>, <span>\(R^TR=I\)</span>). Rotaciones alrededor de X o Y tienen la misma forma, con el 1 fijo en la diagonal correspondiente al eje de giro.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué una matriz de rotación nunca cambia la magnitud de un vector, sin importar el ángulo?</div>
+</div>
+
+<div class="topic materia" id="m154">
+<h3><span class="badge MAT">MAT</span> 1.5.4 — Coordenadas homogéneas</h3>
+<p>Una matriz de rotación 3×3 NO puede representar una traslación (mover un punto) — multiplicar por una matriz siempre deja el origen fijo. La solución: agregar una cuarta coordenada (siempre 1) a cada punto, y usar matrices 4×4, donde la traslación vive en la última columna:</p>
+$$\begin{bmatrix}x'\\y'\\z'\\1\end{bmatrix}=\begin{bmatrix}R_{11}&R_{12}&R_{13}&t_x\\R_{21}&R_{22}&R_{23}&t_y\\R_{31}&R_{32}&R_{33}&t_z\\0&0&0&1\end{bmatrix}\begin{bmatrix}x\\y\\z\\1\end{bmatrix}$$
+<p>Con esto, rotación Y traslación se aplican con UNA sola multiplicación de matriz, y encadenar transformaciones (Fase 5, tema 5.1) es simplemente multiplicar varias matrices 4×4 en orden. Es el formato que usa internamente cualquier motor gráfico (OpenGL incluido, Fase 5).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la última fila de la matriz 4×4 de arriba es siempre <span>\((0,0,0,1)\)</span>?</div>
+</div>
+
+<div class="topic materia" id="m155">
+<h3><span class="badge MAT">MAT</span> 1.5.5 — Coordenadas baricéntricas</h3>
+<p><strong>Segunda conexión directa y literal con las funciones de forma de FEM (junto con Lagrange, tema 1.4.6) — de hecho, para un triángulo, son la MISMA fórmula vista desde la geometría en vez de desde el álgebra.</strong></p>
+<p>Dado un triángulo con vértices <span>\(P_1,P_2,P_3\)</span>, cualquier punto <span>\(P\)</span> dentro de él se puede escribir como combinación de los tres vértices, con pesos <span>\(\lambda_1,\lambda_2,\lambda_3\)</span> que suman exactamente 1:</p>
+$$P=\lambda_1P_1+\lambda_2P_2+\lambda_3P_3,\qquad \lambda_1+\lambda_2+\lambda_3=1$$
+<p>Cada <span>\(\lambda_i\)</span> tiene un significado geométrico directo: es la proporción del área total del triángulo que ocupa el sub-triángulo formado por <span>\(P\)</span> y los DOS vértices que NO son <span>\(P_i\)</span>:</p>
+$$\lambda_i = \frac{\text{Área del sub-triángulo opuesto a }P_i}{\text{Área total del triángulo}}$$
+<div class="ejemplo"><span class="k">Por qué esto ya no es nuevo</span>Fijate: <span>\(\lambda_i\)</span> vale exactamente 1 cuando <span>\(P=P_i\)</span> (el sub-triángulo opuesto ocupa toda el área) y vale 0 en los otros dos vértices — es EXACTAMENTE la definición de una función de forma del tema 4.2 ("vale 1 en un nodo, 0 en los demás"), y sus tres valores siempre suman 1 por construcción — la misma propiedad que en el tema 1.4.6 salía de Lagrange, acá sale de pura geometría de áreas.</div>
+<p><strong>Para un elemento triangular de FEM, las coordenadas baricéntricas SON las funciones de forma.</strong> Esto cierra, con una demostración real en vez de una afirmación a memorizar, el checkpoint del tema 4.2 y la nota de obra del tema 4.4 (por qué un triángulo "flaco" es un problema: sus áreas de sub-triángulo se vuelven numéricamente inestables de calcular con precisión).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si <span>\(P\)</span> es el punto medio de la arista entre <span>\(P_1\)</span> y <span>\(P_2\)</span> (y no toca <span>\(P_3\)</span> para nada), ¿cuánto valen <span>\(\lambda_1,\lambda_2,\lambda_3\)</span>?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="0-indice.html"><span>Anterior</span><b>← Índice</b></a>
+  <a class="pn next" href="2-algoritmos.html"><span>Siguiente</span><b>Fase 2 — Algoritmos →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "\\(", right: "\\)", display: false}
+      ],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

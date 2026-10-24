@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B4 · Elementos finitos · Ruta al FEM</title>
+<link rel="stylesheet" href="estilo.css">
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta al FEM</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-matematicas.html" title="Matemáticas">1</a>
+    <a class="pill" href="2-algoritmos.html" title="Estructuras de datos y algoritmos">2</a>
+    <a class="pill" href="3-mecanica.html" title="Mecánica estructural">3</a>
+    <a class="pill active" href="4-elementos-finitos.html" title="Elementos finitos">4</a>
+    <a class="pill" href="5-geometria.html" title="Geometría y gráficos">5</a>
+    <a class="pill" href="6-fortran.html" title="De C++ a Fortran">6</a>
+    <a class="pill" href="7-proyecto-papa.html" title="El proyecto de tu papá">7</a>
+    <a class="pill" href="8-tesis.html" title="Proyecto de grado">8</a>
+    <a class="pill" href="9-biblioteca.html" title="Biblioteca">L</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/38</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Bloque 4</div>
+<h1 class="hero">El método de elementos finitos</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> generalizar el análisis matricial (tema 3.4) a geometrías arbitrarias — triángulos, cuadriláteros y tetraedros en vez de barras y vigas con solución cerrada. <strong>Pre-requisito:</strong> Bloque 1, tema 3.4.</p></blockquote>
+
+<div class="topic" id="t15" data-topic="t15">
+<div class="topichead"><h3><span class="badge FEM">FEM · 4.1</span> De la ecuación diferencial a la "forma débil"</h3><label class="checklabel"><input type="checkbox" data-t="t15"><small class="sans">hecho</small></label></div>
+<p>El paso más conceptual y el que más fricción da la primera vez: en vez de exigir que la ecuación diferencial se cumpla en <em>cada punto</em> exacto (forma fuerte, casi imposible en geometrías reales), se exige que se cumpla "en promedio, pesado por una función de prueba" (forma débil / Galerkin) — el mismo teorema de la divergencia del tema 1.2, usado para bajarle un orden de derivada a la ecuación.</p>
+<div class="recursos">
+<div class="r"><span class="k">Libro gratis</span><a href="https://archive.org/details/firstcourseinfin0000loga" target="_blank" rel="noopener">Logan, <em>A First Course in the Finite Element Method</em> — Internet Archive</a></div>
+<div class="r"><span class="k">Curso gratis</span><a href="https://www.coursera.org/learn/finite-element-method" target="_blank" rel="noopener">Univ. de Michigan — FEM for Problems in Physics (Coursera, auditable)</a></div>
+</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué "forma débil" no significa "menos exacta", sino "exigida de otra manera"?</div>
+</div>
+
+<div class="topic" id="t16" data-topic="t16">
+<div class="topichead"><h3><span class="badge FEM">FEM · 4.2</span> Funciones de forma y elementos</h3><label class="checklabel"><input type="checkbox" data-t="t16"><small class="sans">hecho</small></label></div>
+<p>Dentro de cada elemento pequeño, la solución se aproxima con una función simple —casi siempre un polinomio de bajo grado— que vale 1 en un nodo y 0 en los demás: la pieza de Lego con la que se construye toda la solución global.</p>
+<ul><li>Escribir las funciones de forma lineales de un triángulo de 3 nodos.</li></ul>
+<div class="recursos"><div class="r"><span class="k">Libro</span><span>Logan, capítulos 3-6</span></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés verificar a mano que las 3 funciones de forma de un triángulo suman exactamente 1 en cualquier punto interior?</div>
+</div>
+
+<div class="topic" id="t17" data-topic="t17">
+<div class="topichead"><h3><span class="badge FEM">FEM · 4.3</span> Ensamblaje y condiciones de frontera</h3><label class="checklabel"><input type="checkbox" data-t="t17"><small class="sans">hecho</small></label></div>
+<p>Igual que en el tema 3.4, pero con miles o millones de elementos: cada matriz de elemento se suma en la posición correcta de una matriz global. La diferencia es de escala — por eso el tema 2.1 (Big-O) y las matrices dispersas importan tanto.</p>
+<ul><li>Ensamblar a mano dos triángulos que comparten una arista.</li></ul>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés dibujar el patrón de ceros/no-ceros de la matriz global de 5 triángulos en línea?</div>
+</div>
+
+<div class="topic" id="t18" data-topic="t18">
+<div class="topichead"><h3><span class="badge FEM">FEM · 4.4</span> Mallado (mesh generation)</h3><label class="checklabel"><input type="checkbox" data-t="t18"><small class="sans">hecho</small></label></div>
+<p>Antes de ensamblar, hay que dividir la geometría en triángulos pequeños — este es el "convergir figuras" del que te acordás que hablaba tu papá: triangulación de Delaunay, la técnica más usada del mundo para mallas de buena calidad automáticas.</p>
+<ul><li>Explicar la propiedad del círculo circunscrito vacío de Delaunay y por qué evita triángulos flacos.</li></ul>
+<div class="obra"><span class="tag sans">Nota de obra</span><code>docs/algorithm.md</code> de DELOS-3D explica su propio algoritmo (Bowyer-Watson incremental + recuperación de bordes por "diagonal flips" + suavizado laplaciano); 4 ejemplos reales corriendo en <code>examples/ex01</code>-<code>ex04</code>. Cuando llegues al Bloque 7, este es el primer archivo que vamos a leer juntos.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué un triángulo muy "flaco" arruina la precisión de FEM, aunque cubra el área correcta?</div>
+</div>
+
+<div class="topic" id="t19" data-topic="t19">
+<div class="topichead"><h3><span class="badge FEM">FEM · 4.5</span> Resolver sistemas grandes</h3><label class="checklabel"><input type="checkbox" data-t="t19"><small class="sans">hecho</small></label></div>
+<p>Con la malla ensamblada, queda <code>Ku=F</code> con decenas de miles de incógnitas: Cholesky disperso, renumeración de nodos para minimizar el "ancho de banda" de la matriz.</p>
+<div class="obra"><span class="tag sans">Nota de obra</span><code>delos_renumber.f90</code> (Fase 7 de DELOS-3D) — ver Bloque 2, tema 2.3 para la explicación completa de por qué esto es, sin disfraz, un BFS sobre el grafo de la malla.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué una numeración "mala" de nodos hace que una matriz dispersa en el papel se comporte como llena en memoria?</div>
+</div>
+
+<div class="topic" id="t20" data-topic="t20">
+<div class="topichead"><h3><span class="badge FEM">FEM · 4.6</span> Post-proceso e interpretación de resultados</h3><label class="checklabel"><input type="checkbox" data-t="t20"><small class="sans">hecho</small></label></div>
+<p>Resolver <code>Ku=F</code> da desplazamientos nodales — números crudos. Post-proceso: transformarlos en esfuerzo por elemento, factores de seguridad, deformación exagerada visualmente. Puente directo al bloque de gráficos.</p>
+<div class="recursos"><div class="r"><span class="k">Herramienta</span><span>ParaView — filtro "Warp by Vector" para exagerar la deformación</span></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el esfuerzo dentro de un elemento lineal de 3 nodos siempre sale constante?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="3-mecanica.html"><span>Anterior</span><b>← Bloque 3 — Mecánica</b></a>
+  <a class="pn next" href="5-geometria.html"><span>Siguiente</span><b>Bloque 5 — Geometría →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

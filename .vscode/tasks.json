@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "C/C++: compilar y correr (suma los .cpp de apoyo de la carpeta)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.vscode/compilar.sh \"${file}\"",
+            "problemMatcher": ["$gcc"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        }
+    ]
+}

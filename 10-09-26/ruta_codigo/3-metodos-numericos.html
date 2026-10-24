@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3 · Métodos numéricos en código · Ruta de Código</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de Código</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-estructuras-de-datos.html" title="Estructuras de datos">1</a>
+    <a class="pill" href="2-arboles-grafos.html" title="Árboles y grafos">2</a>
+    <a class="pill active" href="3-metodos-numericos.html" title="Métodos numéricos en código">3</a>
+    <a class="pill" href="4-graficos-interfaces.html" title="Gráficos e interfaces">4</a>
+    <a class="pill" href="5-opengl-avanzado.html" title="OpenGL avanzado: hacia un visualizador FEM">5</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/43</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 3</div>
+<h1 class="hero">Métodos numéricos en código</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> implementar, en C++, cada método numérico que ya viste en teoría en <a href="../ruta-fem/1-matematicas.html">Ruta al FEM, Bloque 1</a> — con los mismos números, para verificar que el código da exactamente lo que calculaste a mano. <strong>Pre-requisito:</strong> Fase 1 de acá + tema 1.4 de matemáticas.</p></blockquote>
+
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#c301">3.1 Vectores y matrices en código</a></li>
+<li><a href="#c302">3.2 Eliminación gaussiana</a></li>
+<li><a href="#c303">3.3 Métodos iterativos (Gauss-Seidel)</a></li>
+<li><a href="#c304">3.4 Eigenvalores (método de la potencia)</a></li>
+<li><a href="#c305">3.5 Interpolación de Lagrange</a></li>
+<li><a href="#c306">3.6 Integración numérica</a></li>
+<li><a href="#c307">3.7 Búsqueda de raíces (Newton-Raphson)</a></li>
+<li><a href="#c308">3.8 Matrices dispersas (CSR)</a></li>
+</ol>
+</div>
+
+<div class="topic" id="c301" data-topic="c301">
+<div class="topichead"><h3><span class="badge PRG">3.1</span> Vectores y matrices en código</h3><label class="checklabel"><input type="checkbox" data-t="c301"><small class="sans">hecho</small></label></div>
+<p>Sin librerías todavía: una matriz es <code>vector&lt;vector&lt;double&gt;&gt;</code>, y multiplicar es, literalmente, el producto punto del tema 1.1.1 de matemáticas repetido fila por fila.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">matrices.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">using</span> Matriz = <span class="t">std::vector</span>&lt;<span class="t">std::vector</span>&lt;<span class="k">double</span>&gt;&gt;;
+<span class="k">using</span> Vector = <span class="t">std::vector</span>&lt;<span class="k">double</span>&gt;;
+
+Vector <span class="fn">multiplicar</span>(<span class="k">const</span> Matriz&amp; A, <span class="k">const</span> Vector&amp; x) {
+    <span class="k">int</span> n = A.size(), m = A[<span class="n">0</span>].size();
+    Vector resultado(n, <span class="n">0.0</span>);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; i++)
+        <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; m; j++)
+            resultado[i] += A[i][j] * x[j];
+    <span class="k">return</span> resultado;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — mismo ejemplo del tema 1.1.2 de matemáticas</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">A*x = [11, 3]  (esperado: [11, 3])</pre></div>
+<p>Para proyectos reales, esto se reemplaza por una librería como <strong>Eigen</strong> (solo headers, gratis, <code>#include &lt;Eigen/Dense&gt;</code>) que hace lo mismo pero optimizado y con sintaxis matemática (<code>A*x</code> literalmente funciona). Vale la pena escribirlo a mano primero — así entendés qué hace Eigen por debajo en vez de tratarlo como caja negra.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la función de multiplicar matriz×matriz necesita 3 loops anidados en vez de 2?</div>
+</div>
+
+<div class="topic" id="c302" data-topic="c302">
+<div class="topichead"><h3><span class="badge PRG">3.2</span> Eliminación gaussiana</h3><label class="checklabel"><input type="checkbox" data-t="c302"><small class="sans">hecho</small></label></div>
+<p>El algoritmo exacto del tema 1.1.3/1.4.1 de matemáticas, en código: eliminar hacia abajo, después sustitución hacia atrás.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">gauss.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>Vector <span class="fn">eliminacionGaussiana</span>(Matriz A, Vector b) {
+    <span class="k">int</span> n = A.size();
+    <span class="k">for</span> (<span class="k">int</span> col = <span class="n">0</span>; col &lt; n; col++)
+        <span class="k">for</span> (<span class="k">int</span> fila = col+<span class="n">1</span>; fila &lt; n; fila++) {
+            <span class="k">double</span> factor = A[fila][col] / A[col][col];
+            <span class="k">for</span> (<span class="k">int</span> k = col; k &lt; n; k++) A[fila][k] -= factor * A[col][k];
+            b[fila] -= factor * b[col];
+        }
+    Vector x(n);
+    <span class="k">for</span> (<span class="k">int</span> i = n-<span class="n">1</span>; i &gt;= <span class="n">0</span>; i--) {           <span class="c">// sustitucion hacia atras</span>
+        <span class="k">double</span> suma = b[i];
+        <span class="k">for</span> (<span class="k">int</span> j = i+<span class="n">1</span>; j &lt; n; j++) suma -= A[i][j]*x[j];
+        x[i] = suma / A[i][i];
+    }
+    <span class="k">return</span> x;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — el mismo sistema 3×3 del tema 1.1.3</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">solucion: x=1 y=2 z=3 (esperado: 1,2,3)</pre></div>
+<p>Nota: <code>A[col][col]</code> es el "pivote" — si es 0 (o muy chico), el algoritmo se rompe (división por cero o error numérico grande). Una implementación robusta de verdad hace <strong>pivoteo parcial</strong>: antes de eliminar, intercambia filas para poner el valor más grande posible en la posición del pivote. No lo incluí acá para no oscurecer el algoritmo base, pero es lo primero que le faltaría a este código para ser production-ready.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué pasaría si <code>A[col][col]</code> fuera exactamente 0 al calcular <code>factor</code>?</div>
+</div>
+
+<div class="topic" id="c303" data-topic="c303">
+<div class="topichead"><h3><span class="badge PRG">3.3</span> Métodos iterativos: Gauss-Seidel</h3><label class="checklabel"><input type="checkbox" data-t="c303"><small class="sans">hecho</small></label></div>
+<p>El mismo sistema y el mismo procedimiento del tema 1.4.2 de matemáticas, en código — despejar cada variable de su ecuación, iterar usando siempre el valor más reciente.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">gauss_seidel.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">double</span> x = <span class="n">0</span>, y = <span class="n">0</span>;
+<span class="k">for</span> (<span class="k">int</span> i = <span class="n">1</span>; i &lt;= <span class="n">4</span>; i++) {
+    x = (<span class="n">7</span> + y) / <span class="n">4.0</span>;
+    y = (<span class="n">5</span> + x) / <span class="n">3.0</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">iter 1: x=1.7500 y=2.2500
+iter 2: x=2.3125 y=2.4375
+iter 3: x=2.3594 y=2.4531
+iter 4: x=2.3633 y=2.4544
+exacto: x=2.3636 y=2.4545</pre></div>
+<p>Coincide, cifra por cifra, con la tabla del tema 1.4.2. La condición real para que Gauss-Seidel converja (no siempre lo hace) es que la matriz sea <strong>diagonalmente dominante</strong> — en cada fila, el elemento de la diagonal es mayor en valor absoluto que la suma de los demás de esa fila. Vale la pena verificar esto ANTES de confiar en la convergencia, no asumirlo.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Es diagonalmente dominante la matriz <span>\(\begin{bmatrix}4&-1\\-1&3\end{bmatrix}\)</span> de este ejemplo? Verificá fila por fila.</div>
+</div>
+
+<div class="topic" id="c304" data-topic="c304">
+<div class="topichead"><h3><span class="badge PRG">3.4</span> Eigenvalores: método de la potencia</h3><label class="checklabel"><input type="checkbox" data-t="c304"><small class="sans">hecho</small></label></div>
+<p>Misma matriz, mismo procedimiento del tema 1.4.3 — multiplicar repetidamente, normalizar por el componente más grande.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">potencia.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">double</span> A[<span class="n">2</span>][<span class="n">2</span>] = {{<span class="n">4</span>,<span class="n">1</span>},{<span class="n">2</span>,<span class="n">3</span>}};
+<span class="k">double</span> x[<span class="n">2</span>] = {<span class="n">1</span>,<span class="n">0</span>};
+<span class="k">for</span> (<span class="k">int</span> it = <span class="n">1</span>; it &lt;= <span class="n">4</span>; it++) {
+    <span class="k">double</span> nuevo[<span class="n">2</span>] = {A[<span class="n">0</span>][<span class="n">0</span>]*x[<span class="n">0</span>]+A[<span class="n">0</span>][<span class="n">1</span>]*x[<span class="n">1</span>], A[<span class="n">1</span>][<span class="n">0</span>]*x[<span class="n">0</span>]+A[<span class="n">1</span>][<span class="n">1</span>]*x[<span class="n">1</span>]};
+    <span class="k">double</span> escala = <span class="t">std::fabs</span>(nuevo[<span class="n">0</span>]) &gt; <span class="t">std::fabs</span>(nuevo[<span class="n">1</span>]) ? nuevo[<span class="n">0</span>] : nuevo[<span class="n">1</span>];
+    x[<span class="n">0</span>] = nuevo[<span class="n">0</span>]/escala; x[<span class="n">1</span>] = nuevo[<span class="n">1</span>]/escala;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">iter 1: vector=(1.0000, 0.5000), escala=4.0000
+iter 2: vector=(1.0000, 0.7778), escala=4.5000
+iter 3: vector=(1.0000, 0.9070), escala=4.7778
+iter 4: vector=(1.0000, 0.9621), escala=4.9070
+esperado: converge a vector (1,1), eigenvalor 5</pre></div>
+<p>Idéntico, número por número, a la tabla del tema 1.4.3. Este es el método que un programa de dinámica estructural usaría para encontrar la frecuencia natural dominante sin resolver el polinomio característico completo — inviable para una matriz de miles de filas.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué normalizar en CADA iteración (dividir por <code>escala</code>) es necesario — qué pasaría con los números después de 20 iteraciones sin normalizar?</div>
+</div>
+
+<div class="topic" id="c305" data-topic="c305">
+<div class="topichead"><h3><span class="badge PRG">3.5</span> Interpolación de Lagrange</h3><label class="checklabel"><input type="checkbox" data-t="c305"><small class="sans">hecho</small></label></div>
+<p>La fórmula general del tema 1.4.6, para cualquier cantidad de puntos — la misma fórmula que, restringida a 2 o 3 puntos, son las funciones de forma de un elemento finito.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">lagrange.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">double</span> <span class="fn">interpolarLagrange</span>(<span class="k">const</span> Vector&amp; xs, <span class="k">const</span> Vector&amp; ys, <span class="k">double</span> xEval) {
+    <span class="k">double</span> resultado = <span class="n">0.0</span>;
+    <span class="k">int</span> n = xs.size();
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; i++) {
+        <span class="k">double</span> Li = <span class="n">1.0</span>;
+        <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; n; j++) {
+            <span class="k">if</span> (j == i) <span class="k">continue</span>;
+            Li *= (xEval - xs[j]) / (xs[i] - xs[j]);
+        }
+        resultado += ys[i] * Li;
+    }
+    <span class="k">return</span> resultado;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — 3 puntos de <span>\(y=x^2\)</span> en <span>\(x=0,1,2\)</span>, evaluado en puntos nuevos</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">P(0.5) = 0.25  (x^2 real = 0.25)
+P(1.5) = 2.25  (x^2 real = 2.25)
+P(3) = 9       (x^2 real = 9)</pre></div>
+<p>Con solo 3 puntos, el polinomio reconstruye <span>\(x^2\)</span> EXACTO en cualquier punto — incluso fuera del rango original (<span>\(x=3\)</span>). Esto no es casualidad: como <span>\(x^2\)</span> es, de por sí, un polinomio de grado 2, y Lagrange con 3 puntos construye exactamente ESE grado, no hay error de aproximación posible. Con una función que NO sea polinomial (como <span>\(\sin x\)</span>), sí habría error, más grande cuanto más lejos del rango de los puntos originales.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué evaluar en <span>\(x=3\)</span> (fuera del rango 0-2 de los puntos originales) es más arriesgado en general, aunque acá haya dado exacto?</div>
+</div>
+
+<div class="topic" id="c306" data-topic="c306">
+<div class="topichead"><h3><span class="badge PRG">3.6</span> Integración numérica</h3><label class="checklabel"><input type="checkbox" data-t="c306"><small class="sans">hecho</small></label></div>
+<p>Trapecio y Simpson (tema 1.4.4), probados contra una integral que se puede calcular a mano para verificar el error de cada uno.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">integracion.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">double</span> <span class="fn">f</span>(<span class="k">double</span> x) { <span class="k">return</span> x*x; }  <span class="c">// integral de 0 a 1 = 1/3</span>
+
+<span class="k">double</span> <span class="fn">trapecio</span>(<span class="k">double</span> a, <span class="k">double</span> b, <span class="k">int</span> n) {
+    <span class="k">double</span> h = (b-a)/n, suma = (f(a)+f(b))/<span class="n">2.0</span>;
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">1</span>; i &lt; n; i++) suma += f(a+i*h);
+    <span class="k">return</span> suma*h;
+}
+
+<span class="k">double</span> <span class="fn">simpson</span>(<span class="k">double</span> a, <span class="k">double</span> b, <span class="k">int</span> n) {  <span class="c">// n debe ser par</span>
+    <span class="k">double</span> h = (b-a)/n, suma = f(a)+f(b);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">1</span>; i &lt; n; i++) suma += f(a+i*h) * (i%<span class="n">2</span>==<span class="n">0</span> ? <span class="n">2</span> : <span class="n">4</span>);
+    <span class="k">return</span> suma*h/<span class="n">3.0</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — <span>\(\int_0^1 x^2\,dx\)</span>, 10 subdivisiones</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">trapecio (n=10): 0.335000
+simpson  (n=10): 0.333333
+exacto (1/3):    0.333333</pre></div>
+<p>Simpson da el valor EXACTO con solo 10 subdivisiones; trapecio se queda con un error de ~0.5%. La razón: Simpson usa una parábola en cada tramo, y <span>\(x^2\)</span> ES una parábola — error cero por construcción. Con una curva más complicada que una parábola, Simpson seguiría siendo más preciso que trapecio para el mismo <span>\(n\)</span>, pero no exacto.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué Simpson necesita <span>\(n\)</span> par (número de subdivisiones), y trapecio no tiene esa restricción?</div>
+</div>
+
+<div class="topic" id="c307" data-topic="c307">
+<div class="topichead"><h3><span class="badge PRG">3.7</span> Búsqueda de raíces: Newton-Raphson</h3><label class="checklabel"><input type="checkbox" data-t="c307"><small class="sans">hecho</small></label></div>
+<p>El mismo ejemplo exacto del tema 1.4.5 de matemáticas — calcular <span>\(\sqrt2\)</span> sin usar la función de raíz del lenguaje.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">newton.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">double</span> <span class="fn">f</span>(<span class="k">double</span> x)  { <span class="k">return</span> x*x - <span class="n">2</span>; }
+<span class="k">double</span> <span class="fn">fp</span>(<span class="k">double</span> x) { <span class="k">return</span> <span class="n">2</span>*x; }
+
+<span class="k">double</span> x = <span class="n">1.0</span>;
+<span class="k">for</span> (<span class="k">int</span> i = <span class="n">1</span>; i &lt;= <span class="n">4</span>; i++)
+    x = x - f(x)/fp(x);</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">iter 1: x=1.50000000
+iter 2: x=1.41666667
+iter 3: x=1.41421569
+iter 4: x=1.41421356
+sqrt(2) real: 1.41421356</pre></div>
+<p>Idéntico al ejemplo a mano del tema 1.4.5, hasta la 8ª cifra decimal.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Cambiá <code>f(x)</code> y <code>fp(x)</code> para calcular <span>\(\sqrt3\)</span> en vez de <span>\(\sqrt2\)</span> — ¿qué cambia en el código?</div>
+</div>
+
+<div class="topic" id="c308" data-topic="c308">
+<div class="topichead"><h3><span class="badge PRG">3.8</span> Matrices dispersas (CSR)</h3><label class="checklabel"><input type="checkbox" data-t="c308"><small class="sans">hecho</small></label></div>
+<p>Una matriz de rigidez real (de miles o millones de nodos) es <strong>dispersa</strong>: cada nodo se conecta solo con un puñado de vecinos, así que casi todos sus valores son cero. Guardarla como <code>vector&lt;vector&lt;double&gt;&gt;</code> (llena) desperdicia memoria de forma brutal. El formato <strong>CSR</strong> (Compressed Sparse Row) guarda solo los valores no-cero, más dos arrays de índices para saber a qué fila/columna pertenece cada uno.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">csr.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">struct</span> MatrizCSR {
+    <span class="t">std::vector</span>&lt;<span class="k">double</span>&gt; valores;      <span class="c">// valores no-cero, en orden por fila</span>
+    <span class="t">std::vector</span>&lt;<span class="k">int</span>&gt; columnas;        <span class="c">// a que columna pertenece cada valor</span>
+    <span class="t">std::vector</span>&lt;<span class="k">int</span>&gt; inicioFila;      <span class="c">// donde empieza cada fila en "valores"</span>
+
+    Vector <span class="fn">multiplicar</span>(<span class="k">const</span> Vector&amp; x) <span class="k">const</span> {
+        <span class="k">int</span> n = inicioFila.size() - <span class="n">1</span>;
+        Vector resultado(n, <span class="n">0.0</span>);
+        <span class="k">for</span> (<span class="k">int</span> fila = <span class="n">0</span>; fila &lt; n; fila++)
+            <span class="k">for</span> (<span class="k">int</span> idx = inicioFila[fila]; idx &lt; inicioFila[fila+<span class="n">1</span>]; idx++)
+                resultado[fila] += valores[idx] * x[columnas[idx]];   <span class="c">// nunca toca los ceros</span>
+        <span class="k">return</span> resultado;
+    }
+};</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — matriz tridiagonal 5×5 (como una cadena de resortes), <span>\(x=(1,1,1,1,1)\)</span></span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">K*x = 1 0 0 0 1
+memoria llena (5x5): 25 numeros
+memoria CSR: 32 numeros (13 no-cero + indices)</pre></div>
+<p><strong>Con n=5, CSR pierde</strong> — 32 números contra 25. Esto es real, no un error: para una matriz TAN chica, el costo de los índices supera el ahorro de no guardar ceros. La ganancia de CSR es <em>asintótica</em>, no inmediata — recién se nota en escala real:</p>
+<div class="tablewrap"><table class="numtable"><thead><tr><th>n (nodos)</th><th>Llena (n²)</th><th>CSR (≈7n, misma dispersión)</th></tr></thead><tbody>
+<tr><td>5</td><td>25</td><td>32</td></tr>
+<tr><td>10</td><td>100</td><td>67</td></tr>
+<tr><td>100</td><td>10.000</td><td>697</td></tr>
+<tr><td>1.000</td><td>1.000.000</td><td>6.997</td></tr>
+<tr><td>10.000</td><td>100.000.000</td><td>69.997</td></tr>
+</tbody></table></div>
+<p>El cruce pasa entre n=5 y n=10; a partir de ahí, la ventaja de CSR crece sin límite. Con 10.000 nodos, CSR usa <strong>1400 veces menos memoria</strong> que una matriz llena — la diferencia entre un modelo real que corre y uno que no entra en la RAM de la máquina.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la ventaja de CSR crece con <span>\(n\)</span> — qué término del formato llena (<span>\(n^2\)</span>) crece mucho más rápido que el de CSR (<span>\(\approx 7n\)</span>)?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="2-arboles-grafos.html"><span>Anterior</span><b>← Fase 2 — Árboles y grafos</b></a>
+  <a class="pn next" href="4-graficos-interfaces.html"><span>Siguiente</span><b>Fase 4 — Gráficos e interfaces →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

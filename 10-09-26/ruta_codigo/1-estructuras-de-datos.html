@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1 · Estructuras de datos · Ruta de Código</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de Código</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill active" href="1-estructuras-de-datos.html" title="Estructuras de datos">1</a>
+    <a class="pill" href="2-arboles-grafos.html" title="Árboles y grafos">2</a>
+    <a class="pill" href="3-metodos-numericos.html" title="Métodos numéricos en código">3</a>
+    <a class="pill" href="4-graficos-interfaces.html" title="Gráficos e interfaces">4</a>
+    <a class="pill" href="5-opengl-avanzado.html" title="OpenGL avanzado: hacia un visualizador FEM">5</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/43</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 1</div>
+<h1 class="hero">Estructuras de datos</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> la base absoluta de programación que necesita todo lo que sigue — memoria, arrays, structs, listas, pilas, colas, búsqueda, ordenamiento y tablas hash — en C++, con cada ejemplo compilado y corrido de verdad. <strong>Pre-requisito:</strong> C++ básico (ya lo tenés). <strong>Se puede avanzar en paralelo con:</strong> Matemáticas y Mecánica de <a href="../ruta-fem/0-indice.html">Ruta al FEM</a>.</p></blockquote>
+
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#c101">1.1 Memoria, punteros y referencias</a></li>
+<li><a href="#c102">1.2 Arrays estáticos y dinámicos</a></li>
+<li><a href="#c103">1.3 Complejidad algorítmica (Big-O)</a></li>
+<li><a href="#c104">1.4 Structs y clases</a></li>
+<li><a href="#c105">1.5 Listas enlazadas (simple, circular, doble, centinela)</a></li>
+<li><a href="#c106">1.6 Pilas y colas (TAD + arreglo circular + ejercicios)</a></li>
+<li><a href="#c107">1.7 Búsqueda: lineal y binaria</a></li>
+<li><a href="#c108">1.8 Ordenamiento</a></li>
+<li><a href="#c109">1.9 Tablas hash</a></li>
+<li><a href="#c110">1.10 Complejidad formal (sumatorias y demostraciones)</a></li>
+<li><a href="#c111">1.11 STL y lambdas</a></li>
+</ol>
+</div>
+
+<div class="topic" id="c101" data-topic="c101">
+<div class="topichead"><h3><span class="badge PRG">1.1</span> Memoria, punteros y referencias</h3><label class="checklabel"><input type="checkbox" data-t="c101"><small class="sans">hecho</small></label></div>
+<p>Antes de cualquier estructura de datos hay que entender dónde viven los datos. Una variable normal vive en la <strong>pila</strong> (stack) — memoria automática, rápida, que se libera sola al salir de la función. Un <strong>puntero</strong> (<code>int* p</code>) guarda una dirección de memoria, no un valor — <code>&x</code> te da la dirección de <code>x</code>, <code>*p</code> ("desreferenciar") te da el valor guardado en esa dirección. Una <strong>referencia</strong> (<code>int&amp; r</code>) es un alias de otra variable — más segura que un puntero (no puede ser nula, no se puede "reasignar" a otra cosa) pero menos flexible.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">punteros.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">void</span> <span class="fn">intercambiarPorPuntero</span>(<span class="k">int</span>* a, <span class="k">int</span>* b) {
+    <span class="k">int</span> temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+<span class="k">void</span> <span class="fn">intercambiarPorReferencia</span>(<span class="k">int</span>&amp; a, <span class="k">int</span>&amp; b) {
+    <span class="k">int</span> temp = a;
+    a = b;
+    b = temp;
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">int</span> x = <span class="n">5</span>, y = <span class="n">10</span>;
+    intercambiarPorPuntero(&amp;x, &amp;y);   <span class="c">// hay que pasar direcciones</span>
+    intercambiarPorReferencia(x, y);   <span class="c">// se pasa la variable misma</span>
+
+    <span class="k">int</span> arr[<span class="n">5</span>] = {<span class="n">10</span>,<span class="n">20</span>,<span class="n">30</span>,<span class="n">40</span>,<span class="n">50</span>};
+    <span class="k">int</span>* p = arr;                     <span class="c">// un array "decae" a puntero a su primer elemento</span>
+    <span class="c">// arr[2] y *(p+2) son EXACTAMENTE la misma operacion</span>
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">antes: x=5 y=10
+despues de puntero: x=10 y=5
+despues de referencia: x=5 y=10
+arr[2] = 30, *(p+2) = 30</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Esto es exactamente lo que vas a traducir en el Bloque 6 de <code>ruta-fem</code>: en Fortran, TODO argumento de una <code>subroutine</code> se pasa "por referencia" por defecto (a diferencia de C++, donde por defecto es por VALOR) — por eso <code>intent(in)/intent(out)</code> existe: es la forma que tiene Fortran de decirle al compilador qué hacer con esa referencia implícita.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>intercambiarPorValor(int a, int b)</code> (sin punteros ni referencias) NO intercambiaría nada, aunque el código adentro se vea idéntico?</div>
+</div>
+
+<div class="topic" id="c102" data-topic="c102">
+<div class="topichead"><h3><span class="badge PRG">1.2</span> Arrays estáticos y dinámicos</h3><label class="checklabel"><input type="checkbox" data-t="c102"><small class="sans">hecho</small></label></div>
+<p>Un array estático (<code>int arr[5]</code>) tiene tamaño fijo, conocido en tiempo de compilación. Un <code>std::vector</code> crece dinámicamente — pero <strong>NO</strong> reserva memoria nueva en cada <code>push_back</code>: duplica su capacidad cuando se queda sin espacio, y copia los elementos viejos a la memoria nueva. Esto es "crecimiento por doblado amortizado" — la razón exacta por la que agregar <code>n</code> elementos a un vector cuesta <code>O(n)</code> en total, no <code>O(n²)</code>, aunque de vez en cuando una sola inserción sea cara (cuando toca duplicar).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">arrays.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="t">std::vector</span>&lt;<span class="k">int</span>&gt; v;
+<span class="k">for</span> (<span class="k">int</span> i = <span class="n">1</span>; i &lt;= <span class="n">10</span>; i++) {
+    v.push_back(i * <span class="n">10</span>);
+    <span class="c">// v.capacity() crece SOLO quando hace falta, nunca de a uno</span>
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — mirá cómo salta la capacidad, nunca sube de a uno</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">size=1 -> capacity crecio a 1
+size=2 -> capacity crecio a 2
+size=3 -> capacity crecio a 4
+size=5 -> capacity crecio a 8
+size=9 -> capacity crecio a 16</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>La memoria del proyecto IFC-Bridge registra esta regla explícita: "amortised-doubling growth for every growable pool; never reallocate-per-insert" — exactamente este mecanismo, aplicado a los pools de entidades de un archivo IFC de cientos de MB.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la capacidad no crece de 8 a 9 cuando insertás el 9º elemento, sino que salta directo a 16?</div>
+</div>
+
+<div class="topic" id="c103" data-topic="c103">
+<div class="topichead"><h3><span class="badge PRG">1.3</span> Complejidad algorítmica (Big-O)</h3><label class="checklabel"><input type="checkbox" data-t="c103"><small class="sans">hecho</small></label></div>
+<p>Ya está desarrollado a fondo, con tabla numérica y el porqué exacto, en <a href="../ruta-fem/2-algoritmos.html#t06">Ruta al FEM, tema 2.1</a> — no lo repito acá, pero es prerrequisito real para 1.7 y 1.8 (búsqueda y ordenamiento): sin Big-O no hay forma de justificar por qué un algoritmo es mejor que otro más allá de "se siente más rápido".</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Repasá la tabla del tema 2.1 de <code>ruta-fem</code> antes de seguir — ¿tenés claro qué significa cada fila?</div>
+</div>
+
+<div class="topic" id="c104" data-topic="c104">
+<div class="topichead"><h3><span class="badge PRG">1.4</span> Structs y clases</h3><label class="checklabel"><input type="checkbox" data-t="c104"><small class="sans">hecho</small></label></div>
+<p>Un <code>struct</code> agrupa datos relacionados bajo un solo nombre — el mismo rol que <code>type</code> en Fortran (Bloque 6 de <code>ruta-fem</code>, tema 6.7). Una <code>class</code> es lo mismo, pero agrega funciones miembro y control de acceso (público/privado) — no hace falta profundizar en POO completa para esta ruta, con structs simples alcanza para modelar nodos, elementos y mallas.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">nodo.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">struct</span> Nodo {
+    <span class="k">double</span> x, y, z;
+};
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    Nodo p1{<span class="n">1.0</span>, <span class="n">2.0</span>, <span class="n">0.0</span>};
+    <span class="c">// std::cout &lt;&lt; p1.x &lt;&lt; ...</span>
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">p1 = (1, 2, 0)</pre></div>
+<p>Compará esto directamente con el <code>type :: Nodo</code> de Fortran del tema 6.7 de <code>ruta-fem</code> — es, campo por campo, la misma idea.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés escribir un <code>struct Triangulo</code> con 3 campos <code>Nodo</code>? (el mismo ejercicio que te dejé pendiente en Fortran, ahora en C++)</div>
+</div>
+
+<div class="topic" id="c105" data-topic="c105">
+<div class="topichead"><h3><span class="badge PRG">1.5</span> Listas enlazadas (simple, circular, doble, centinela)</h3><label class="checklabel"><input type="checkbox" data-t="c105"><small class="sans">hecho</small></label></div>
+<p>Un array guarda elementos en posiciones de memoria CONSECUTIVAS: acceso por índice <code>O(1)</code>, pero insertar/eliminar en el medio es <code>O(n)</code> porque hay que correr todo lo que sigue. Una lista enlazada invierte el trade-off: cada nodo vive en cualquier parte de la memoria y apunta explícitamente al siguiente — acceder al elemento <code>i</code> es <code>O(n)</code> (no hay "saltar directo"), pero insertar/eliminar cuando ya tenés el puntero al lugar correcto es <code>O(1)</code> real, sin mover nada más.</p>
+
+<h4>El contrato TAD Lista (antes de cualquier implementación)</h4>
+<p>Un Tipo Abstracto de Datos define QUÉ operaciones existen y QUÉ hacen, sin decir CÓMO están armadas por dentro. El TAD Lista exige, como mínimo: <code>crear()</code> (lista vacía), <code>esVacia()</code>, <code>insertar(valor, posición)</code>, <code>eliminar(valor o posición)</code>, <code>buscar(valor)</code>, <code>tamaño()</code> y <code>recorrer()</code>. Todo lo que sigue — simple, circular, doble, con centinela — implementa EXACTAMENTE esa misma interfaz. Lo único que cambia es el costo de cada operación según cómo esté conectada la memoria por dentro. Esa distinción (interfaz vs. implementación) es la que separa "sé hacer una lista" de "entender las listas" — y es la pregunta que un examen formal te va a hacer: no "escribí insertar", sino "¿por qué esta operación cuesta lo que cuesta en ESTA implementación del TAD?".</p>
+
+<h4>1.5.1 — Lista simple</h4>
+<p>Cada nodo apunta solo al <code>siguiente</code>; el último apunta a <code>nullptr</code>. Insertar al frente es <code>O(1)</code> siempre. Insertar al final es <code>O(n)</code> (hay que recorrer hasta encontrar el último) salvo que se mantenga un puntero <code>cola</code> aparte — eso lo baja a <code>O(1)</code>, al costo de tener que mantenerlo sincronizado en cada operación que toque el final (si te olvidás de actualizarlo en un solo lugar, queda apuntando a un nodo viejo y todo lo que insertes "al final" después se pierde).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">lista_simple.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>struct Nodo {
+    int valor;
+    Nodo* siguiente;
+};
+
+Nodo* insertarAlInicio(Nodo* cabeza, int valor) {
+    return new Nodo{valor, cabeza};   // O(1): nunca hay que correr nada
+}
+
+Nodo* eliminarPorValor(int valorComparar, Nodo* cabeza) {
+    Nodo* anterior = nullptr;
+    Nodo* auxiliar = cabeza;
+    while (auxiliar != nullptr) {
+        Nodo* siguienteReal = auxiliar->siguiente;   // guardar ANTES de delete
+        if (auxiliar->valor == valorComparar) {
+            if (anterior == nullptr) cabeza = auxiliar->siguiente;  // borra la cabeza
+            else anterior->siguiente = auxiliar->siguiente;
+            delete auxiliar;
+        } else {
+            anterior = auxiliar;
+        }
+        auxiliar = siguienteReal;
+    }
+    return cabeza;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — tu propio código, compilado y corrido (`eliminar_valor.cpp`, `insertarEnMedio.cpp`)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">insertar 8,20,8,3,8 al frente (queda 8,3,8,20,8), eliminar TODOS los 8:
+antes:    8 3 8 20 8
+despues:  3 20
+
+insertar en indice 1 sobre 12,3,8:
+Valor: 12 -> Valor: 99 -> Valor: 3 -> Valor: 8</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué insertar al FRENTE es <code>O(1)</code>, pero insertar al FINAL (sin un puntero <code>cola</code>) es <code>O(n)</code>?</div>
+
+<h4>1.5.2 — Lista circular</h4>
+<p>Igual que la simple, pero el último nodo no apunta a <code>nullptr</code> — apunta de vuelta a la <code>cabeza</code>, cerrando el círculo. Eso agrega una complicación real que la lista simple no tiene: para insertar o eliminar la cabeza, hay que encontrar primero QUIÉN cierra el círculo (el nodo cuyo <code>siguiente</code> es la cabeza vieja) para reconectarlo al nodo nuevo. Encontrar ese nodo es <code>O(n)</code> salvo que mantengas un puntero <code>cola</code> (igual que en la simple, pero acá <code>cola-&gt;siguiente</code> siempre es la cabeza, así que insertar al final con <code>cola</code> es <code>O(1)</code> sin tener que buscar el cierre).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">lista_circular.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>Nodo* insertarAlInicioCircular(Nodo* cabeza, int valor) {
+    if (cabeza == nullptr) {
+        Nodo* nuevo = new Nodo{valor, nullptr};
+        nuevo->siguiente = nuevo;           // se apunta a si mismo
+        return nuevo;
+    }
+    Nodo* cierre = cabeza;
+    while (cierre->siguiente != cabeza) cierre = cierre->siguiente;  // encontrar quien cierra
+    Nodo* nuevo = new Nodo{valor, cabeza};
+    cierre->siguiente = nuevo;               // el cierre ahora apunta al nuevo
+    return nuevo;                            // el nuevo es la nueva cabeza
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — tu propio código (`listasCirculares.cpp`, `listasCircularesCola.cpp`)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">insertar 8, luego 3 al inicio (circular): 3, 8
+insertar 20 al final (circular):          3, 8, 20
+eliminar el 8 (del medio):                3, 20
+eliminar el 3 (cabeza, quedan 2 nodos):    20
+
+con cola (O(1), sin recorrer para cerrar): 8, 3, 20</pre></div>
+<div class="legal warn"><span class="tag sans">Pendiente real, no un bug inventado</span>Tu función <code>insertarMedioCircularPorIndice</code> (en <code>verificarConceptos1.cpp</code>) quedó con un bug de <strong>off-by-one en el corte del recorrido</strong>: el loop insertaba DESPUÉS del nodo encontrado en vez de ANTES, inconsistente con la convención que ya usás en la versión simple (donde el loop para un paso antes del índice pedido, con <code>while(cuenta &lt; indice-1)</code>). Lo identificaste vos mismo y arrancaste una reescritura limpia (<code>insertarCircularPorIndiceV2</code> en <code>practicaEstructuras.cpp</code>), que quedó incompleta. Queda anotado acá para cerrarlo — es el mismo patrón de bug recurrente de off-by-one, no una estructura nueva.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué insertar la CABEZA en una circular es <code>O(n)</code> (sin <code>cola</code>), cuando en una lista simple insertar la cabeza es siempre <code>O(1)</code>?</div>
+
+<h4>1.5.3 — Lista doblemente enlazada</h4>
+<p>Cada nodo tiene DOS punteros: <code>siguiente</code> Y <code>anterior</code>. Eso resuelve el problema estructural de simples/circulares: para eliminar un nodo necesitabas el puntero al anterior, y conseguirlo significaba recorrer desde la cabeza aunque ya tuvieras el nodo en la mano. Con <code>anterior</code>, cada nodo conoce a su vecino de atrás directamente — el costo es memoria extra (un puntero más por nodo) y el doble de punteros para mantener sincronizados en cada operación.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">lista_doble.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>struct Nodo {
+    int valor;
+    Nodo* siguiente;
+    Nodo* anterior;
+};
+
+Nodo* insertarAlInicio(int valor, Nodo* cabeza) {
+    Nodo* nuevo = new Nodo{valor, cabeza, nullptr};
+    if (cabeza != nullptr) cabeza->anterior = nuevo;   // el viejo primero mira hacia atras al nuevo
+    return nuevo;
+}
+
+// bug clasico (slide de Gonzalo): comparar con == para encontrar, nunca asignar con =;
+// y guardar el siguiente ANTES del delete, nunca usar el puntero despues de borrarlo
+Nodo* eliminarPorValor(Nodo* cabeza, int valorBuscado) {
+    Nodo* aux = cabeza;
+    while (aux != nullptr) {
+        if (aux->valor == valorBuscado) {
+            Nodo* siguienteReal = aux->siguiente;        // guardado ANTES del delete
+            if (aux->anterior != nullptr) aux->anterior->siguiente = aux->siguiente;
+            else cabeza = aux->siguiente;                 // era la cabeza
+            if (aux->siguiente != nullptr) aux->siguiente->anterior = aux->anterior;
+            delete aux;
+            aux = siguienteReal;
+        } else {
+            aux = aux->siguiente;
+        }
+    }
+    return cabeza;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido) — el ejemplo canónico 5&lt;-&gt;9&lt;-&gt;2</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">5&lt;-&gt;9&lt;-&gt;2, insertando 7 en indice 0:
+7 &lt;-&gt; 5 &lt;-&gt; 9 &lt;-&gt; 2 -&gt; null
+
+insertando 4 en indice 2 (entre 9 y 2):
+7 &lt;-&gt; 5 &lt;-&gt; 4 &lt;-&gt; 9 &lt;-&gt; 2 -&gt; null
+
+recorrido hacia atras desde la cola:
+2 &lt;-&gt; 9 &lt;-&gt; 4 &lt;-&gt; 5 &lt;-&gt; 7 -&gt; null
+
+eliminando el 9:
+7 &lt;-&gt; 5 &lt;-&gt; 4 &lt;-&gt; 2 -&gt; null
+
+eliminando la cabeza (7):
+5 &lt;-&gt; 4 &lt;-&gt; 2 -&gt; null</pre></div>
+<div class="legal warn"><span class="tag sans">El bug del slide 17 de Gonzalo (para reconocerlo si aparece)</span><code>bool encontrado = false;</code> escrito sin querer como <code>bool encontrado == false;</code> (comparación en vez de asignación — no compila como esperás, o compila y nunca hace lo que creés) y <code>actual = actual-&gt;siguiente;</code> ESCRITO DESPUÉS de un <code>delete actual;</code> (use-after-free: leer memoria ya liberada). Es exactamente el patrón <code>=</code> vs <code>==</code> y "usar el puntero después de borrarlo" que ya te salió antes en listas simples — mismo bug, estructura distinta.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Insertando <code>[7]</code> antes de <code>[5]</code> en <code>5&lt;-&gt;9&lt;-&gt;2</code>: ¿cuántos punteros totales hay que actualizar (contando los que ya existían y los nuevos)?</div>
+
+<h4>1.5.4 — Lista con centinela (nodo cabecera)</h4>
+<p>Una lista con centinela agrega un nodo "falso" que SIEMPRE existe, incluso en una lista vacía — <code>cabeza</code> nunca es <code>nullptr</code>, apunta al centinela, y el primer nodo real es <code>centinela-&gt;siguiente</code>. La ganancia: todas las ramas especiales que escribiste para "¿es la cabeza?" o "¿la lista está vacía?" desaparecen, porque insertar/eliminar en la posición 0 deja de ser un caso distinto — siempre hay un nodo antes de donde estás parado. El costo es un nodo de memoria que no representa un dato real y hay que recordar ignorar en los recorridos/impresión. <em>Todavía no la viste en clase — si Gonzalo la da, este es el lugar para el código real cuando llegue.</em></p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>En <code>eliminarPorValor</code> de la lista simple (arriba), la rama <code>if (anterior == nullptr)</code> existe solo por el caso "borro la cabeza". Si hubiera un centinela, ¿esa rama seguiría siendo necesaria?</div>
+
+<h4>1.5.5 — Cuándo usar cada tipo (la pregunta que de verdad importa)</h4>
+<div class="tablewrap"><table class="numtable">
+<thead><tr><th>Tipo</th><th>Insertar/eliminar cabeza</th><th>Insertar/eliminar cola</th><th>Recorrido</th><th>Memoria extra</th><th>Caso de uso real</th></tr></thead>
+<tbody>
+<tr><td>Simple</td><td>O(1)</td><td>O(n), O(1) con <code>cola</code></td><td>Solo hacia adelante</td><td>1 puntero/nodo</td><td>Pilas, recorridos de un solo sentido</td></tr>
+<tr><td>Circular</td><td>O(n), O(1) con <code>cola</code></td><td>O(n), O(1) con <code>cola</code></td><td>Infinito en un sentido (round-robin)</td><td>1 puntero/nodo</td><td>Turnos (CPU scheduling), buffers circulares, juegos por turnos</td></tr>
+<tr><td>Doble</td><td>O(1)</td><td>O(1) con <code>cola</code></td><td>Los dos sentidos</td><td>2 punteros/nodo</td><td><code>std::list</code>, deshacer/rehacer, navegación adelante/atrás</td></tr>
+<tr><td>Con centinela</td><td>O(1), sin casos especiales</td><td>O(1) con <code>cola</code>, sin casos especiales</td><td>Depende de la base (simple/doble)</td><td>+1 nodo fijo</td><td>Cuando el código se llena de <code>if (cabeza == nullptr)</code> repetidos</td></tr>
+</tbody></table></div>
+<p>La pregunta de examen real no es "¿qué es una lista circular?" — es "dado este problema (ej. turnos round-robin, o deshacer/rehacer de un editor), ¿qué tipo de lista minimiza el costo de las operaciones que ese problema necesita?".</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Para implementar el botón "deshacer" de un editor de texto (necesitás moverte hacia atrás Y hacia adelante en el historial), ¿qué tipo de lista usarías, y por qué NO alcanzaría una simple?</div>
+</div>
+
+<div class="topic" id="c106" data-topic="c106">
+<div class="topichead"><h3><span class="badge PRG">1.6</span> Pilas y colas (TAD + arreglo circular + ejercicios)</h3><label class="checklabel"><input type="checkbox" data-t="c106"><small class="sans">hecho</small></label></div>
+<p>Una <strong>pila</strong> (stack) es LIFO — último en entrar, primero en salir. El TAD exige <code>push</code>, <code>pop</code>, <code>top</code>, <code>esVacia</code>. Una <strong>cola</strong> (queue) es FIFO — primero en entrar, primero en salir. El TAD exige <code>encolar</code>, <code>desencolar</code>, <code>front</code>, <code>esVacia</code>. Los dos son la base de DFS y BFS (Fase 2): DFS usa una pila (o recursión, que ES una pila implícita), BFS usa una cola.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">pilas_colas.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>std::stack&lt;int&gt; pila;
+pila.push(1); pila.push(2); pila.push(3);
+// pila.top() da 3, pila.pop() lo saca
+
+std::queue&lt;int&gt; cola;
+cola.push(1); cola.push(2); cola.push(3);
+// cola.front() da 1, cola.pop() lo saca</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">pila (LIFO): 3 2 1
+cola (FIFO): 1 2 3</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Comparalo con la <code>bfs.f90</code> del tema 2.3 de <code>ruta-fem</code>: los arrays <code>cola</code>/<code>inicio_cola</code>/<code>fin_cola</code> de ese código Fortran son, literalmente, una cola implementada a mano con un array — porque Fortran no tiene <code>std::queue</code> nativo. El tema de abajo (arreglo circular) es exactamente ese mecanismo, explicado a fondo.</div>
+
+<h4>Implementación con arreglo circular (la versión de verdad, no la STL)</h4>
+<p>Implementar una cola con un array normal tiene un problema: si <code>desencolar</code> mueve el "inicio" hacia adelante sin mover todo el contenido, las posiciones de atrás quedan desperdiciadas para siempre. La solución es que los índices <code>inicio</code> y <code>fin</code> "envuelvan" (wrap around) con el operador módulo — cuando llegan al final del array, el <code>% capacidad</code> los manda de vuelta a la posición 0, reciclando el espacio libre. Es la misma idea que una lista circular (tema 1.5.2), pero sobre memoria contigua en vez de punteros.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">cola_circular.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>struct ColaCircular {
+    int* datos;
+    int capacidad, inicio = 0, fin = 0, cantidad = 0;
+
+    bool esVacia() const { return cantidad == 0; }
+    bool esLlena() const { return cantidad == capacidad; }
+
+    bool encolar(int valor) {
+        if (esLlena()) return false;
+        datos[fin] = valor;
+        fin = (fin + 1) % capacidad;   // el modulo es lo que "envuelve" el indice
+        cantidad++;
+        return true;
+    }
+    bool desencolar(int&amp; valor) {
+        if (esVacia()) return false;
+        valor = datos[inicio];
+        inicio = (inicio + 1) % capacidad;
+        cantidad--;
+        return true;
+    }
+};</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido) — capacidad 4</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">encolar 10,20,30,40 -> llena? si
+desencolar -> 10, luego 20   (inicio avanza a la posicion 2)
+encolar 50 -> va a la posicion 0 (fin dio la vuelta con el modulo)
+encolar 60 -> va a la posicion 1 -> llena otra vez? si
+orden final de salida: 30 40 50 60</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Sin el operador <code>%</code> (si <code>fin</code> solo creciera sin volver nunca a 0), ¿qué pasaría después de varias vueltas de encolar/desencolar, aunque la cola nunca tenga más de 2 elementos adentro?</div>
+
+<h4>Los 4 ejercicios clásicos (Gonzalo)</h4>
+<p><strong>Paréntesis balanceados:</strong> recorrer el string, empujar cada apertura a una pila, y al encontrar un cierre, verificar que el tope de la pila sea la apertura correspondiente (si la pila está vacía o no coincide, no está balanceado). Al final, la pila debe quedar vacía.</p>
+<p><strong>Notación postfija</strong> (ej. <code>3 4 +</code> = 7): recorrer token por token; si es un número, a la pila; si es un operador, sacar los DOS últimos números de la pila, aplicar el operador, y el resultado vuelve a la pila. El último valor que queda en la pila es la respuesta — ningún paréntesis necesario, por eso las calculadoras viejas (HP) usaban esta notación.</p>
+<p><strong>Papa caliente</strong> (Josephus con cola circular): todos en una cola, rotás <code>k-1</code> veces (sacar del frente, meter atrás), y al que queda al frente en la vuelta <code>k</code> se elimina. Se repite hasta que queda uno solo.</p>
+<p><strong>Cola con dos pilas:</strong> <code>encolar</code> siempre va a la pila "entrada". <code>desencolar</code>: si la pila "salida" está vacía, volcás TODA la "entrada" en la "salida" (eso invierte el orden una vez), y sacás de "salida". El truco: cada elemento se invierte exactamente una vez en toda su vida, así que el costo amortizado sigue siendo O(1) por operación, aunque un volcado puntual sea O(n).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">ejercicios_pilas_colas.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>int evaluarPostfija(const std::string&amp; expr) {
+    std::stack&lt;int&gt; pila;
+    std::istringstream iss(expr);
+    std::string token;
+    while (iss &gt;&gt; token) {
+        if (token == "+" || token == "-" || token == "*" || token == "/") {
+            int b = pila.top(); pila.pop();
+            int a = pila.top(); pila.pop();
+            if (token == "+") pila.push(a + b);
+            else if (token == "-") pila.push(a - b);
+            else if (token == "*") pila.push(a * b);
+            else pila.push(a / b);
+        } else {
+            pila.push(std::stoi(token));
+        }
+    }
+    return pila.top();
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido, los 4 ejercicios)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">parentesis "([{}])" -> balanceado
+parentesis "([)]"    -> NO balanceado
+
+postfija "3 4 +"                  = 7
+postfija "5 1 2 + 4 * + 3 -"      = 14
+
+papa caliente, 5 personas (Ana,Beto,Caro,Dani,Eva), k=2:
+  eliminado: Beto
+  eliminado: Dani
+  eliminado: Ana
+  eliminado: Eva   (queda Caro, ganador)
+
+cola con dos pilas: encolar 1,2,3 -> sale 1; encolar 4 -> sale 2, 3, 4</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>En "cola con dos pilas", ¿por qué el costo AMORTIZADO de <code>desencolar</code> sigue siendo O(1), si de vez en cuando un solo <code>desencolar</code> hace un volcado completo O(n)? (mismo argumento que el crecimiento por doblado del tema 1.2)</div>
+</div>
+
+<div class="topic" id="c107" data-topic="c107">
+<div class="topichead"><h3><span class="badge PRG">1.7</span> Búsqueda: lineal y binaria</h3><label class="checklabel"><input type="checkbox" data-t="c107"><small class="sans">hecho</small></label></div>
+<p><strong>Búsqueda lineal:</strong> revisar uno por uno, <code>O(n)</code>. <strong>Búsqueda binaria:</strong> SOLO funciona en datos ORDENADOS — comparar contra el elemento del medio, descartar la mitad, repetir: <code>O(log n)</code>. Es el mismo principio del árbol binario de búsqueda (Fase 2), aplicado a un array plano en vez de una estructura enlazada.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">busqueda.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">int</span> <span class="fn">busquedaBinaria</span>(<span class="k">const</span> <span class="t">std::vector</span>&lt;<span class="k">int</span>&gt;&amp; v, <span class="k">int</span> objetivo) {
+    <span class="k">int</span> izq = <span class="n">0</span>, der = (<span class="k">int</span>)v.size() - <span class="n">1</span>;
+    <span class="k">while</span> (izq &lt;= der) {
+        <span class="k">int</span> medio = izq + (der - izq) / <span class="n">2</span>;
+        <span class="k">if</span> (v[medio] == objetivo) <span class="k">return</span> medio;
+        <span class="k">else if</span> (v[medio] &lt; objetivo) izq = medio + <span class="n">1</span>;
+        <span class="k">else</span> der = medio - <span class="n">1</span>;
+    }
+    <span class="k">return</span> -<span class="n">1</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — buscar en {1,3,5,7,9,11,13,15}</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">buscar 7 -> indice 3
+buscar 4 -> indice -1 (no existe)</pre></div>
+<div class="legal warn"><span class="tag sans">Por qué <code>izq + (der - izq) / 2</code> y no <code>(izq + der) / 2</code></span>Con arrays gigantes, <code>izq + der</code> puede desbordar el rango de <code>int</code> antes de dividir por 2 — un bug real y clásico. La primera forma nunca desborda.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué búsqueda binaria NO funciona si el array no está ordenado primero?</div>
+</div>
+
+<div class="topic" id="c108" data-topic="c108">
+<div class="topichead"><h3><span class="badge PRG">1.8</span> Ordenamiento</h3><label class="checklabel"><input type="checkbox" data-t="c108"><small class="sans">hecho</small></label></div>
+<p><strong>Ordenamiento por inserción</strong> (<code>O(n²)</code>): tomar cada elemento y correrlo hacia atrás hasta su posición correcta entre los ya ordenados — simple, bueno para arrays casi ordenados o muy chicos, malo para arrays grandes.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">insercion.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">void</span> <span class="fn">ordenamientoPorInsercion</span>(<span class="t">std::vector</span>&lt;<span class="k">int</span>&gt;&amp; v) {
+    <span class="k">for</span> (<span class="k">size_t</span> i = <span class="n">1</span>; i &lt; v.size(); i++) {
+        <span class="k">int</span> clave = v[i];
+        <span class="k">int</span> j = (<span class="k">int</span>)i - <span class="n">1</span>;
+        <span class="k">while</span> (j &gt;= <span class="n">0</span> &amp;&amp; v[j] &gt; clave) {
+            v[j+<span class="n">1</span>] = v[j];
+            j--;
+        }
+        v[j+<span class="n">1</span>] = clave;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — ordenar {5,2,8,1,9,3}</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">insercion: 1 2 3 5 8 9
+std::sort: 1 2 3 5 8 9</pre></div>
+<p>Para arrays grandes, tres familias <code>O(n log n)</code> (la fila buena de la tabla de complejidad):</p>
+<ul>
+<li><strong>Mergesort:</strong> divide el array a la mitad recursivamente, ordena cada mitad, mezcla — estable, predecible, siempre <code>O(n log n)</code>.</li>
+<li><strong>Quicksort:</strong> elige un "pivote", particiona en menores/mayores, recursión — en promedio muy rápido, en el peor caso <code>O(n²)</code> (poco común con buena elección de pivote).</li>
+<li><strong>Heapsort:</strong> construye un heap (Fase 2, tema 2.3) y va extrayendo el máximo — <code>O(n log n)</code> garantizado SIEMPRE, sin caso peor malo, y sin memoria extra (a diferencia de mergesort).</li>
+</ul>
+<div class="obra"><span class="tag sans">Nota de obra</span><code>delos_topology.f90</code> (Fase 2 de DELOS-3D) usa exactamente heapsort para encontrar conectividad entre triángulos — la elección no es arbitraria: heapsort garantiza <code>O(n log n)</code> siempre, sin el riesgo de caso-peor de quicksort, que importa cuando el input es una malla real con estructura geométrica (no aleatoria) que podría, en teoría, disparar el peor caso de un quicksort mal elegido.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué DELOS-3D preferiría heapsort (garantía siempre O(n log n)) sobre quicksort (rápido en promedio, pero con un peor caso O(n²) real) para procesar una malla?</div>
+</div>
+
+<div class="topic" id="c109" data-topic="c109">
+<div class="topichead"><h3><span class="badge PRG">1.9</span> Tablas hash (<code>std::unordered_map</code>)</h3><label class="checklabel"><input type="checkbox" data-t="c109"><small class="sans">hecho</small></label></div>
+<p>Ya viste 3 formas de acceder a datos: por <strong>índice</strong> (array/vector, <code>O(1)</code>, pero solo con posiciones 0,1,2...), por <strong>recorrido</strong> (lista enlazada, <code>O(n)</code>, buscando valor por valor), y por <strong>búsqueda binaria</strong> (<code>O(log n)</code>, pero exige tener todo ordenado). Una <strong>tabla hash</strong> es una cuarta forma: acceso por una <strong>clave arbitraria</strong> (un número de ID, un texto, lo que sea) en tiempo <code>O(1)</code> promedio — ni hace falta que esté ordenado, ni que la clave sea un índice secuencial.</p>
+<p><strong>Cómo funciona, por dentro:</strong> una función de <em>hash</em> convierte la clave (por ejemplo, el entero <code>4521</code>) en un número, que se usa como índice dentro de un array interno — así, buscar por clave termina siendo, en el fondo, acceso por índice, disfrazado. Cuando dos claves distintas caen en la misma posición (una "colisión"), cada posición del array interno guarda una <strong>lista enlazada</strong> chiquita con las claves que colisionaron ahí — el mismo <code>NodoLista</code> del tema 1.5, trabajando como pieza interna de una estructura más grande, igual que <code>Matriz&lt;T&gt;</code> lo fue de <code>ElementoBarra</code>.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">hash1.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">struct</span> Entidad {
+    <span class="k">int</span> idExterno;
+    <span class="t">std::string</span> tipo;
+};
+
+<span class="t">std::vector</span>&lt;Entidad&gt; entidades = {{<span class="n">4521</span>, <span class="s">"IFCWALL"</span>}, {<span class="n">103</span>, <span class="s">"IFCBEAM"</span>}, {<span class="n">88</span>, <span class="s">"IFCCOLUMN"</span>}};
+
+<span class="t">std::unordered_map</span>&lt;<span class="k">int</span>, <span class="k">int</span>&gt; idAIndice;   <span class="c">// idExterno -&gt; posicion real en el vector</span>
+<span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; (<span class="k">int</span>)entidades.size(); i++) {
+    idAIndice[entidades[i].idExterno] = i;
+}
+
+<span class="k">int</span> buscado = <span class="n">103</span>;
+<span class="k">auto</span> it = idAIndice.find(buscado);
+<span class="k">if</span> (it != idAIndice.end()) {
+    <span class="k">int</span> idx = it-&gt;second;
+    <span class="c">// entidades[idx] -- acceso directo, sin recorrer nada</span>
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">Entidad #103 encontrada en indice 1 (tipo IFCBEAM)</pre></div>
+<p><strong>El número que de verdad importa — medido, no supuesto:</strong> 2.000 búsquedas del mismo id externo, entre 200.000 entidades, comparando recorrer el vector entero cada vez contra preguntarle al <code>unordered_map</code>:</p>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido, -O2)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">lineal (vector, O(n) cada vez):  214 ms
+hash   (unordered_map, O(1)):      0 ms</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Esto no es un ejercicio de práctica sin aplicación real — el tema 2.1 de esta misma ruta ya cita la regla explícita que dejó registrada la memoria del proyecto IFC-Bridge: <em>"resolver una referencia de entidad siempre O(1) por hash, nunca búsqueda lineal"</em>. Un archivo IFC real pesa cientos de MB con millones de entidades cruzándose por referencia — el benchmark de arriba, a esa escala, es la diferencia entre un import que tarda milisegundos y uno que no termina nunca.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué buscar por índice en un <code>vector</code> (<code>O(1)</code>) NO sirve para este caso, si <code>vector</code> ya es "instantáneo"? (pista: pensá qué es el índice de una entidad IFC real, y qué es su ID externo — ¿son la misma cosa?)</div>
+</div>
+
+<div class="topic" id="c110" data-topic="c110">
+<div class="topichead"><h3><span class="badge PRG">1.10</span> Complejidad formal: sumatorias y demostraciones</h3><label class="checklabel"><input type="checkbox" data-t="c110"><small class="sans">hecho</small></label></div>
+<p>El tema 1.3 (Big-O) te da la intuición. Esto es la versión formal que un examen te puede pedir demostrar, no solo intuir.</p>
+<h4>Ciclos dependientes: la sumatoria resuelve el conteo</h4>
+<p>Cuando el límite del ciclo interno depende de la variable del externo (<code>for j = 0; j &lt; i</code>, no <code>j &lt; n</code>), el número de iteraciones NO es <code>n * n</code> — hay que sumar cuántas veces corre el interno para cada valor del externo: <code>T(n) = Σ(i=0 hasta n-1) i = 0+1+2+...+(n-1) = n(n-1)/2</code>. Esa es la fórmula de Gauss, y el resultado sigue siendo <code>O(n²)</code> (el término dominante de un polinomio de grado 2), aunque el conteo exacto sea la mitad de un ciclo cuadrado completo.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">complejidad_formal.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>long contarTriangular(int n) {
+    long contador = 0;
+    for (int i = 0; i &lt; n; i++) {
+        for (int j = 0; j &lt; i; j++) {   // OJO: j &lt; i, no j &lt; n
+            contador++;
+        }
+    }
+    return contador;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido) — contador real vs. fórmula n(n-1)/2</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">n=5   -> contador=10,   formula=10
+n=10  -> contador=45,   formula=45
+n=100 -> contador=4950, formula=4950</pre></div>
+
+<h4>Notación O: la demostración formal (no "se ve O(n²)")</h4>
+<p>La definición real: <code>f(n) = O(g(n))</code> si existen constantes <code>c &gt; 0</code> y <code>n₀</code> tales que <code>f(n) ≤ c·g(n)</code> para todo <code>n ≥ n₀</code>. Ejemplo demostrado: <code>f(n) = 3n² + 5n + 2</code> es <code>O(n²)</code>. Para <code>n ≥ 1</code>: <code>5n ≤ 5n²</code> y <code>2 ≤ 2n²</code>, entonces <code>f(n) ≤ 3n² + 5n² + 2n² = 10n²</code>. Con <code>c = 10</code> y <code>n₀ = 1</code>, la desigualdad se cumple siempre — queda demostrado, no "parece".</p>
+
+<h4><code>while</code>: el conteo sale de cómo cambia la variable de control</h4>
+<p>En un <code>for</code>, el número de iteraciones suele ser obvio por el límite. En un <code>while</code>, hay que mirar CÓMO cambia la condición para saber cuántas vueltas da. Si <code>n</code> se divide a la mitad cada vuelta (<code>n = n / 2</code>), después de <code>k</code> vueltas queda <code>n / 2^k</code> — el loop termina cuando eso llega a 1, es decir <code>k = log₂(n)</code>. Por eso búsqueda binaria (tema 1.7) es <code>O(log n)</code>: cada vuelta divide el espacio de búsqueda a la mitad.</p>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido) — iteraciones de un <code>while</code> que divide a la mitad, vs. log₂(n)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">n=8        -> iteraciones=3   (log2(8)=3)
+n=16       -> iteraciones=4   (log2(16)=4)
+n=100      -> iteraciones=6   (log2(100)=6.64, redondeado)
+n=1000000  -> iteraciones=19  (log2(1000000)=19.9, redondeado)</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés demostrar formalmente (con <code>c</code> y <code>n₀</code>) que <code>f(n) = n² + 100</code> es <code>O(n²)</code>?</div>
+</div>
+
+<div class="topic" id="c111" data-topic="c111">
+<div class="topichead"><h3><span class="badge PRG">1.11</span> STL y lambdas</h3><label class="checklabel"><input type="checkbox" data-t="c111"><small class="sans">hecho</small></label></div>
+<p>Hasta ahora escribiste todo a mano (<code>struct</code> + punteros crudos) para entender el mecanismo interno. La STL (<code>std::vector</code>, <code>std::stack</code>, <code>std::queue</code>, <code>std::list</code>) es la misma interfaz, ya optimizada y probada — se usa en código real una vez que el mecanismo ya se entiende, nunca como atajo para saltarse el aprendizaje. Una <strong>lambda</strong> (<code>[](...){...}</code>) es una función anónima que se pasa como argumento — la forma moderna de decirle a un algoritmo "ordená con ESTE criterio" sin escribir una función aparte con nombre.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">stl_algoritmos.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>struct Estudiante { std::string nombre; int semestre; };
+std::vector&lt;Estudiante&gt; est = {{"Ana",3},{"Beto",7},{"Caro",1},{"Dani",7},{"Eva",5}};
+
+// sort con criterio propio: la lambda dice "quien va primero"
+std::sort(est.begin(), est.end(), [](const Estudiante&amp; a, const Estudiante&amp; b) {
+    return a.semestre &lt; b.semestre;
+});
+
+// lower_bound: primer elemento >= objetivo, en O(log n), SOLO si ya esta ordenado
+auto it = std::lower_bound(semestres.begin(), semestres.end(), 5);
+
+// accumulate: reduce todo el rango a un solo valor (aca, una suma)
+int suma = std::accumulate(semestres.begin(), semestres.end(), 0);
+
+// unique: compacta repetidos CONSECUTIVOS al final del rango (hay que erase() lo que sobra)
+auto fin = std::unique(copia.begin(), copia.end());
+copia.erase(fin, copia.end());</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">sort por semestre: Caro(1) Ana(3) Eva(5) Beto(7) Dani(7)
+lower_bound(5): indice=2 valor=5
+accumulate (suma de semestres): 23
+unique (sobre 1,3,5,7,7 ordenado): 1 3 5 7</pre></div>
+<div class="legal warn"><span class="tag sans">Por qué <code>std::list</code> no reemplaza lo que ya escribiste a mano</span><code>std::list</code> ES una lista doblemente enlazada ya hecha — pero usarla sin haber escrito la tuya a mano antes es memorizar una API sin entender por qué <code>insert</code> es O(1) con iterador pero O(n) para llegar a ese iterador. El orden que seguiste (mano primero, STL después) es el correcto para que el examen de la materia no te agarre en blanco cuando pida el mecanismo interno.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>std::lower_bound</code> es <code>O(log n)</code> solo si el rango ya está ordenado — qué pasaría si lo usaras sobre un vector desordenado? (no da error de compilación, pero da una respuesta sin sentido)</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="0-indice.html"><span>Anterior</span><b>← Índice</b></a>
+  <a class="pn next" href="2-arboles-grafos.html"><span>Siguiente</span><b>Fase 2 — Árboles y grafos →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

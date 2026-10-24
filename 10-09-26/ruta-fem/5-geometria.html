@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B5 · Geometría y gráficos · Ruta al FEM</title>
+<link rel="stylesheet" href="estilo.css">
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta al FEM</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-matematicas.html" title="Matemáticas">1</a>
+    <a class="pill" href="2-algoritmos.html" title="Estructuras de datos y algoritmos">2</a>
+    <a class="pill" href="3-mecanica.html" title="Mecánica estructural">3</a>
+    <a class="pill" href="4-elementos-finitos.html" title="Elementos finitos">4</a>
+    <a class="pill active" href="5-geometria.html" title="Geometría y gráficos">5</a>
+    <a class="pill" href="6-fortran.html" title="De C++ a Fortran">6</a>
+    <a class="pill" href="7-proyecto-papa.html" title="El proyecto de tu papá">7</a>
+    <a class="pill" href="8-tesis.html" title="Proyecto de grado">8</a>
+    <a class="pill" href="9-biblioteca.html" title="Biblioteca">L</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/38</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Bloque 5</div>
+<h1 class="hero">Geometría computacional y gráficos 3D</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> cómo un programa dibuja y rota un modelo en pantalla. <strong>Pre-requisito:</strong> tema 1.5.</p></blockquote>
+
+<div class="topic" id="t21" data-topic="t21">
+<div class="topichead"><h3><span class="badge GEO">GEO · 5.1</span> Transformaciones 3D en la práctica</h3><label class="checklabel"><input type="checkbox" data-t="t21"><small class="sans">hecho</small></label></div>
+<p>Mover, rotar y escalar un objeto se hace multiplicando su geometría por matrices 4×4 (coordenadas homogéneas); encadenar transformaciones es multiplicar varias matrices en el orden correcto.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué rotar-y-luego-trasladar no da el mismo resultado que trasladar-y-luego-rotar?</div>
+</div>
+
+<div class="topic" id="t22" data-topic="t22">
+<div class="topichead"><h3><span class="badge GEO">GEO · 5.2</span> Proyección y cámara</h3><label class="checklabel"><input type="checkbox" data-t="t22"><small class="sans">hecho</small></label></div>
+<p>Cómo un mundo 3D se convierte en una imagen 2D: proyección ortográfica (sin perspectiva, típica en planos CAD) vs. en perspectiva (como el ojo humano).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué un plano estructural se dibuja siempre en proyección ortográfica?</div>
+</div>
+
+<div class="topic" id="t23" data-topic="t23">
+<div class="topichead"><h3><span class="badge GEO">GEO · 5.3</span> Estructuras de datos para mallas</h3><label class="checklabel"><input type="checkbox" data-t="t23"><small class="sans">hecho</small></label></div>
+<p>Lista de nodos (coordenadas) + lista de elementos (qué nodos conecta cada triángulo) + conectividad (qué elementos comparten un borde).</p>
+<div class="obra"><span class="tag sans">Nota de obra</span><code>delos_topology.f90</code> (Fase 2 de DELOS-3D) resuelve esto con un ordenamiento por heapsort para encontrar conectividad sin comparar cada par de triángulos — de nuevo la disciplina del tema 2.1.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Dada una lista de triángulos por sus 3 nodos, ¿en pseudocódigo cómo encontrarías vecinos?</div>
+</div>
+
+<div class="topic" id="t24" data-topic="t24">
+<div class="topichead"><h3><span class="badge GEO">GEO · 5.4</span> OpenGL, VTK, Qt</h3><label class="checklabel"><input type="checkbox" data-t="t24"><small class="sans">hecho</small></label></div>
+<p><strong>OpenGL</strong> es una API de muy bajo nivel para hablarle directamente a la GPU: le mandás una lista de vértices agrupados en triángulos (la malla de FEM otra vez) más dos programitas llamados <em>shaders</em> (uno decide dónde va cada vértice en pantalla, otro de qué color sale cada píxel), y la GPU rasteriza: convierte esos triángulos en píxeles reales, en paralelo. Rotar, hacer zoom o colorear por esfuerzo es, en el fondo, mandar la misma malla una y otra vez con una matriz de transformación distinta (tema 5.1).</p>
+<p>Tres capas de más bajo a más alto nivel: OpenGL → <strong>VTK</strong> (librería en C++ para mallas científicas, construida sobre OpenGL) → <strong>ParaView</strong> (aplicación lista, sin programar). <strong>Qt</strong> es aparte: framework de ventanas en C++, la contraparte de Winteracter (tema 6.9) en el mundo Fortran de tu papá — Qt da la ventana, OpenGL/VTK dibuja adentro.</p>
+<div class="recursos">
+<div class="r"><span class="k">Mirar resultados</span><a href="https://www.paraview.org/tutorials/" target="_blank" rel="noopener">ParaView — tutoriales oficiales</a></div>
+<div class="r"><span class="k">Programar OpenGL</span><a href="https://learnopengl.com/" target="_blank" rel="noopener">LearnOpenGL.com — gratis, en C++, "Hello Triangle" es el ejercicio clave</a></div>
+</div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Los archivos que mandó tu papá en <code>reference/examples-delos/</code> incluyen un <code>exemple3D_201.wrl</code> — VRML, formato de gráficos 3D de los 90 que todavía se abre para ver la malla real que generaba el DELOS original.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés explicar en una frase la diferencia de nivel entre OpenGL, VTK y ParaView?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="4-elementos-finitos.html"><span>Anterior</span><b>← Bloque 4 — Elementos finitos</b></a>
+  <a class="pn next" href="6-fortran.html"><span>Siguiente</span><b>Bloque 6 — De C++ a Fortran →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

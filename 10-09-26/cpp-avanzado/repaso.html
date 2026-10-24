@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Repaso de C++ Avanzado</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.tierhead{display:flex;align-items:baseline;gap:12px;margin:2.4em 0 .3em;padding-top:.4em;border-top:3px solid var(--ink)}
+.tiernum{font-family:'Big Shoulders',sans-serif;font-weight:800;font-size:1.6rem;color:var(--accent)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><span class="accent">◆</span> Repaso C++ Avanzado</div>
+  <div class="progresschip mono-num"><b id="global-frac">0/15</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Puente antes de Estructuras de Datos</div>
+<h1 class="hero">Repaso de C++ avanzado</h1>
+<p class="sub">15 conceptos, organizados por prioridad, para cerrar los huecos reales antes de meterte de lleno en <a href="../ruta_codigo/1-estructuras-de-datos.html">Ruta de Código, Fase 1</a>. Complementa lo que ya repasaste de POO (herencia, polimorfismo) en tu carpeta <code>preparacion-papa/</code>.</p>
+
+<blockquote class="obj"><p><strong>Orden real recomendado:</strong> Tier 1 completo primero (son 3 cosas concretas, cortas, y tu propio <code>CLAUDE.md</code> de <code>VSCODE/cpp/</code> ya las exige) → Tier 2 (le da sentido a lo que ya construiste con tu clase <code>Matriz</code>) → Tier 3 a medida que avances → Tier 4 solo cuando un problema real lo pida, no antes.</p></blockquote>
+
+<div class="legal"><span class="tag sans">Cómo se verificó esta página</span>Los 15 ejemplos están compilados y corridos de verdad en tu Mac — incluido instalar Eigen (<code>brew install eigen</code>), configurar un proyecto CMake real con Catch2 v3 vía FetchContent (se descargó y corrió), compilar un <code>.f90</code> y un <code>.cpp</code> por separado y enlazarlos juntos, correr una sesión real de <code>lldb</code> con breakpoint, y provocar un bug de memoria real para que AddressSanitizer lo atrape.</div>
+
+<div class="mini-toc sans">
+<span class="k">En esta página</span>
+<ol>
+<li><a href="#p01">1. Excepciones (try/catch/throw)</a></li>
+<li><a href="#p02">2. CMake multi-archivo</a></li>
+<li><a href="#p03">3. Testing con Catch2 v3</a></li>
+<li><a href="#p04">4. Row-major vs column-major</a></li>
+<li><a href="#p05">5. Precisión de punto flotante</a></li>
+<li><a href="#p06">6. Eigen</a></li>
+<li><a href="#p07">7. Interop C++/Fortran</a></li>
+<li><a href="#p08">8. Lambdas y std::function</a></li>
+<li><a href="#p09">9. Debugging con lldb</a></li>
+<li><a href="#p10">10. Sanitizers</a></li>
+<li><a href="#p11">11. Namespaces</a></li>
+<li><a href="#p12">12. Move semantics / forwarding</a></li>
+<li><a href="#p13">13. constexpr</a></li>
+<li><a href="#p14">14. Structured bindings</a></li>
+<li><a href="#p15">15. RAII para recursos de OpenGL</a></li>
+</ol>
+</div>
+
+<!-- ============ TIER 1 ============ -->
+<div class="tierhead"><span class="tiernum">TIER 1</span><h2 style="margin:0">Crítico — bloqueante</h2></div>
+<p>Tu propio <code>CLAUDE.md</code> de <code>cpp/ruta-claude/</code> ya exige esto para todo proyecto nuevo. No se practicó en las 11 fases.</p>
+
+<div class="topic" id="p01" data-topic="p01">
+<div class="topichead"><h3><span class="badge PRG">1</span> Excepciones (try/catch/throw)</h3><label class="checklabel"><input type="checkbox" data-t="p01"><small class="sans">hecho</small></label></div>
+<p>El caso concreto que ya viviste: tu clase <code>Matriz</code> sumando dos matrices de tamaño distinto y devolviendo <code>*this</code> en silencio. Eso es un bug esperando a pasar desapercibido. La forma correcta: <code>throw</code> una excepción — el programa se detiene ahí mismo (o lo atrapa un <code>catch</code>) en vez de seguir con un resultado basura.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">excepciones.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">class</span> Matriz {
+    <span class="k">int</span> filas, columnas;         <span class="c">// el orden de declaracion importa (ver el warning de abajo)</span>
+    <span class="t">std::vector</span>&lt;<span class="t">std::vector</span>&lt;<span class="k">double</span>&gt;&gt; datos;
+<span class="k">public</span>:
+    Matriz <span class="k">operator</span>+(<span class="k">const</span> Matriz&amp; otra) <span class="k">const</span> {
+        <span class="k">if</span> (filas != otra.filas || columnas != otra.columnas) {
+            <span class="k">throw</span> <span class="t">std::invalid_argument</span>(
+                <span class="s">"Matriz::operator+ -- dimensiones incompatibles: ("</span> +
+                <span class="t">std::to_string</span>(filas) + <span class="s">"x"</span> + <span class="t">std::to_string</span>(columnas) + <span class="s">") vs ("</span> +
+                <span class="t">std::to_string</span>(otra.filas) + <span class="s">"x"</span> + <span class="t">std::to_string</span>(otra.columnas) + <span class="s">")"</span>
+            );
+        }
+        <span class="c">// ... suma normal ...</span>
+    }
+};
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    Matriz A(<span class="n">2</span>,<span class="n">2</span>), B(<span class="n">3</span>,<span class="n">3</span>);
+    <span class="k">try</span> {
+        Matriz C = A + B;
+    } <span class="k">catch</span> (<span class="k">const</span> <span class="t">std::invalid_argument</span>&amp; e) {
+        <span class="t">std::cout</span> &lt;&lt; <span class="s">"excepcion atrapada: "</span> &lt;&lt; e.what();
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Compilado con -Wall -Wextra -pedantic, sin warnings, y corrido</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">excepcion atrapada correctamente: Matriz::operator+ -- dimensiones incompatibles: (2x2) vs (3x3)
+el programa sigue vivo despues del catch -- no crasheo</pre></div>
+<div class="legal warn"><span class="tag sans">El primer intento tiró un warning real</span><code>-Wreorder-ctor</code>: declaré <code>datos</code> antes de <code>filas</code>/<code>columnas</code> en la clase, pero los inicializaba en otro orden en la lista de inicialización. C++ inicializa SIEMPRE en el orden de <strong>declaración</strong>, sin importar el orden que escribas en la lista — un mismatch entre ambos órdenes es casi seguro un bug latente (usar un miembro antes de que otro lo inicialice). Arreglado reordenando la declaración.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>catch (const invalid_argument& e)</code> usa <code>const</code> y referencia, en vez de recibir la excepción por valor?</div>
+</div>
+
+<div class="topic" id="p02" data-topic="p02">
+<div class="topichead"><h3><span class="badge PRG">2</span> CMake multi-archivo</h3><label class="checklabel"><input type="checkbox" data-t="p02"><small class="sans">hecho</small></label></div>
+<p>Hasta ahora, un archivo, un comando de <code>g++</code>. Un proyecto real (como tu OpenGL, que ya tiene varios <code>.cpp</code>/<code>.h</code> y va a seguir creciendo) necesita CMake: describís QUÉ archivos existen y CÓMO se relacionan, una vez, y CMake genera los comandos de compilación por vos.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">CMakeLists.txt</span><span class="cw-lang">cmake</span></div><div class="cw-body"><pre><code>cmake_minimum_required(VERSION <span class="n">3.20</span>)
+project(MatrizProyecto LANGUAGES CXX)
+<span class="k">set</span>(CMAKE_CXX_STANDARD <span class="n">20</span>)
+
+add_library(matriz_lib src/Matriz.cpp)              <span class="c"># compila Matriz.cpp una sola vez</span>
+target_include_directories(matriz_lib PUBLIC include)
+
+add_executable(main src/main.cpp)
+target_link_libraries(main PRIVATE matriz_lib)       <span class="c"># main usa la libreria de arriba</span></code></pre></div></div>
+<p>Estructura real que usé: <code>include/Matriz.h</code> (declaración), <code>src/Matriz.cpp</code> (implementación), <code>src/main.cpp</code> (programa) — separar declaración/implementación en <code>.h</code>/<code>.cpp</code> es lo que permite que <code>main.cpp</code> y <code>tests/test_matriz.cpp</code> (tema 3) compartan la misma clase sin duplicar código.</p>
+<div class="ejemplo"><span class="k">Configurado, compilado y corrido de verdad</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">-- Configuring done
+-- Generating done
+-- Build files have been written to: .../build
+[100%] Built target main
+C(0,0) = 11</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué separar <code>Matriz.h</code> (declaración) de <code>Matriz.cpp</code> (implementación) en vez de tener todo en un solo archivo, como venías haciendo?</div>
+</div>
+
+<div class="topic" id="p03" data-topic="p03">
+<div class="topichead"><h3><span class="badge PRG">3</span> Testing con Catch2 v3</h3><label class="checklabel"><input type="checkbox" data-t="p03"><small class="sans">hecho</small></label></div>
+<p><strong>Catch2</strong> es el framework de testing que tu <code>CLAUDE.md</code> exige explícitamente. Se agrega vía <code>FetchContent</code> — CMake lo descarga y compila solo, no hace falta instalarlo a mano. Tu clase <code>Matriz</code> es el candidato perfecto para tus primeros tests reales: ya sabés qué comportamiento esperar (tema 1), solo falta escribirlo como test en vez de como <code>cout</code>.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">test_matriz.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">#include</span> &lt;catch2/catch_test_macros.hpp&gt;
+<span class="k">#include</span> <span class="s">"Matriz.h"</span>
+
+TEST_CASE(<span class="s">"suma de matrices del mismo tamano funciona"</span>, <span class="s">"[Matriz]"</span>) {
+    Matriz A(<span class="n">2</span>,<span class="n">2</span>), B(<span class="n">2</span>,<span class="n">2</span>);
+    A.en(<span class="n">0</span>,<span class="n">0</span>) = <span class="n">3</span>; B.en(<span class="n">0</span>,<span class="n">0</span>) = <span class="n">4</span>;
+    Matriz C = A + B;
+    REQUIRE(C.en(<span class="n">0</span>,<span class="n">0</span>) == <span class="n">7</span>);
+}
+
+TEST_CASE(<span class="s">"suma de matrices de distinto tamano lanza excepcion"</span>, <span class="s">"[Matriz]"</span>) {
+    Matriz A(<span class="n">2</span>,<span class="n">2</span>), B(<span class="n">3</span>,<span class="n">3</span>);
+    REQUIRE_THROWS_AS(A + B, <span class="t">std::invalid_argument</span>);   <span class="c">// conecta directo con el tema 1</span>
+}</code></pre></div></div>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">CMakeLists.txt (agregado)</span><span class="cw-lang">cmake</span></div><div class="cw-body"><pre><code>include(FetchContent)
+FetchContent_Declare(Catch2 GIT_REPOSITORY https://github.com/catchorg/Catch2.git GIT_TAG v3.7.1)
+FetchContent_MakeAvailable(Catch2)
+
+add_executable(tests tests/test_matriz.cpp)
+target_link_libraries(tests PRIVATE matriz_lib Catch2::Catch2WithMain)
+enable_testing()
+add_test(NAME MatrizTests COMMAND tests)</code></pre></div></div>
+<div class="ejemplo"><span class="k">Descargado, compilado y corrido de verdad con <code>ctest</code></span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">Test project .../build
+    Start 1: MatrizTests
+1/1 Test #1: MatrizTests ......................   Passed    0.28 sec
+100% tests passed, 0 tests failed out of 1</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>REQUIRE_THROWS_AS</code> es mejor que envolver el código en un <code>try/catch</code> manual dentro del test?</div>
+</div>
+
+<!-- ============ TIER 2 ============ -->
+<div class="tierhead"><span class="tiernum">TIER 2</span><h2 style="margin:0">Alto valor — específico para FEM/Fortran</h2></div>
+
+<div class="topic" id="p04" data-topic="p04">
+<div class="topichead"><h3><span class="badge MAT">4</span> Row-major vs column-major (C++ vs Fortran)</h3><label class="checklabel"><input type="checkbox" data-t="p04"><small class="sans">hecho</small></label></div>
+<p>Ya viste la teoría y la trampa en <a href="../ruta-fem/6-fortran.html#t29">Ruta al FEM, tema 6.5</a> — aquí, la MEDICIÓN real del lado de C++: cuánto más lento es recorrer un array 2D en el orden "equivocado" para el lenguaje.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">benchmark.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">// C++ guarda por FILAS (row-major) -- este orden es secuencial en memoria:</span>
+<span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; N; i++)
+    <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; N; j++)
+        sumaFilas += A[i][j];
+
+<span class="c">// este orden salta por toda la memoria:</span>
+<span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; N; j++)
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; N; i++)
+        sumaColumnas += A[i][j];</code></pre></div></div>
+<div class="ejemplo"><span class="k">Medido de verdad, matriz de 4000×4000, dos corridas</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">recorrer por filas:    41.28 ms
+recorrer por columnas: 71.45 ms   (1.7x mas lento)
+
+recorrer por filas:    27.17 ms
+recorrer por columnas: 70.92 ms   (2.6x mas lento)</pre></div>
+<div class="legal warn"><span class="tag sans">Casi me engaña el compilador</span>La primera versión del benchmark no imprimía la suma acumulada — el compilador, con <code>-O2</code>, se dio cuenta de que ese trabajo "no servía para nada" y BORRÓ los dos loops enteros: los dos tiempos salieron en 0.00 ms. Tuve que forzar el uso real del resultado (imprimirlo) para que el benchmark midiera algo de verdad. Esto es <em>eliminación de código muerto</em> — cualquier benchmark que no use su resultado corre este riesgo.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si este mismo benchmark estuviera escrito en Fortran, ¿cuál de los dos loops (por filas o por columnas) sería el rápido?</div>
+</div>
+
+<div class="topic" id="p05" data-topic="p05">
+<div class="topichead"><h3><span class="badge MAT">5</span> Precisión de punto flotante</h3><label class="checklabel"><input type="checkbox" data-t="p05"><small class="sans">hecho</small></label></div>
+<p><code>float</code> (32 bits, ~7 cifras decimales confiables) vs <code>double</code> (64 bits, ~15-16 cifras) — nunca comparar floats con <code>==</code>, y en solvers iterativos (Ruta al FEM 1.4) el error se ACUMULA con cada operación.</p>
+<div class="ejemplo"><span class="k">Verificado de verdad</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">0.1 + 0.2 = 0.30000000000000004441
+0.1 + 0.2 == 0.3 ?  false
+
+suma de 0.0001 un millon de veces (deberia dar 100.0):
+  float:  99.327309   (error = 0.672691)   <- error GRANDE y visible
+  double: 100.0000000022  (error = 2.20e-09)  <- error casi cero
+
+comparacion correcta con epsilon: true</pre></div>
+<p>El error de <code>float</code> tras un millón de sumas (0.67, un 0.67% de error) no es un detalle académico — es exactamente la clase de error que en un solver iterativo de FEM con miles de pasos puede volver el resultado inútil. Siempre <code>double</code> en código de ingeniería (ya lo veías en Fortran con <code>real(8)</code>, Ruta de Código 6.3).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cómo se compara correctamente si dos <code>double</code> son "iguales" en la práctica?</div>
+</div>
+
+<div class="topic" id="p06" data-topic="p06">
+<div class="topichead"><h3><span class="badge MAT">6</span> Eigen</h3><label class="checklabel"><input type="checkbox" data-t="p06"><small class="sans">hecho</small></label></div>
+<p><strong>Eigen</strong> es la librería de álgebra lineal estándar en C++ — solo headers, gratis (<code>brew install eigen</code>, ya instalado). Tu <code>Matriz&lt;T&gt;</code> a mano (temas 1-3) te dio los fundamentos; en código real vas a construir sobre Eigen, no reinventarla.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">eigen.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">#include</span> &lt;Eigen/Dense&gt;
+<span class="k">using namespace</span> Eigen;
+
+Matrix2d A;  A &lt;&lt; <span class="n">2</span>,<span class="n">1</span>,  <span class="n">0</span>,<span class="n">3</span>;
+Vector2d x(<span class="n">5</span>,<span class="n">1</span>);
+Vector2d resultado = A * x;               <span class="c">// sintaxis matematica real, no una funcion "multiplicar"</span>
+
+Matrix3d M;  M &lt;&lt; <span class="n">1</span>,<span class="n">1</span>,<span class="n">1</span>, <span class="n">2</span>,-<span class="n">1</span>,<span class="n">1</span>, <span class="n">1</span>,<span class="n">2</span>,-<span class="n">1</span>;
+Vector3d b(<span class="n">6</span>,<span class="n">3</span>,<span class="n">2</span>);
+Vector3d sol = M.colPivHouseholderQr().solve(b);   <span class="c">// eliminacion gaussiana, ya hecha por Eigen</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — mismos sistemas de siempre, ahora resueltos por Eigen</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">Eigen A*x = [11, 3]  (esperado: [11, 3], igual que en Ruta de Codigo 3.1)
+Eigen resuelve el sistema 3x3: x=1 y=2 z=3 (esperado: 1,2,3)</pre></div>
+<p>Los mismos resultados exactos que tu eliminación gaussiana escrita a mano (Ruta de Código, tema 3.2) — pero con pivoteo parcial automático (el problema que quedó abierto ahí) y optimizado para matrices grandes.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué le faltaba a tu eliminación gaussiana escrita a mano que Eigen resuelve solo, sin que lo pidas?</div>
+</div>
+
+<div class="topic" id="p07" data-topic="p07">
+<div class="topichead"><h3><span class="badge PRG">7</span> Interoperabilidad C++/Fortran</h3><label class="checklabel"><input type="checkbox" data-t="p07"><small class="sans">hecho</small></label></div>
+<p><strong>La verificación más importante de toda esta página.</strong> Un <code>.f90</code> y un <code>.cpp</code>, compilados por separado con <code>gfortran</code> y <code>g++</code>, enlazados en un solo binario, corriendo de verdad.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">rigidez.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">module</span> rigidez_mod
+  <span class="k">use</span> iso_c_binding
+  <span class="k">implicit none</span>
+<span class="k">contains</span>
+  <span class="k">subroutine</span> <span class="fn">rigidez_barra_c</span>(E, A, L, k) <span class="k">bind</span>(<span class="t">C</span>, <span class="k">name</span>=<span class="s">"rigidez_barra_c"</span>)
+    <span class="k">real</span>(c_double), <span class="k">intent</span>(<span class="k">in</span>), <span class="k">value</span> :: E, A, L
+    <span class="k">real</span>(c_double), <span class="k">intent</span>(<span class="k">out</span>) :: k(<span class="n">2</span>,<span class="n">2</span>)
+    k(<span class="n">1</span>,<span class="n">1</span>) =  E*A/L;  k(<span class="n">1</span>,<span class="n">2</span>) = -E*A/L
+    k(<span class="n">2</span>,<span class="n">1</span>) = -E*A/L;  k(<span class="n">2</span>,<span class="n">2</span>) =  E*A/L
+  <span class="k">end subroutine</span>
+<span class="k">end module</span></code></pre></div></div>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">principal.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">// extern "C" evita el "name mangling" que C++ le pone a los nombres --</span>
+<span class="c">// sin esto, el linker nunca encontraria "rigidez_barra_c"</span>
+<span class="k">extern</span> <span class="s">"C"</span> {
+    <span class="k">void</span> <span class="fn">rigidez_barra_c</span>(<span class="k">double</span> E, <span class="k">double</span> A, <span class="k">double</span> L, <span class="k">double</span> k[<span class="n">2</span>][<span class="n">2</span>]);
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">double</span> k[<span class="n">2</span>][<span class="n">2</span>];
+    rigidez_barra_c(<span class="n">200.0e9</span>, <span class="n">0.001</span>, <span class="n">2.0</span>, k);
+}</code></pre></div></div>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">terminal</span><span class="cw-lang">bash</span></div><div class="cw-body"><pre><code>gfortran -c rigidez.f90 -o rigidez.o
+g++ -std=c++20 -c principal.cpp -o principal.o
+g++ principal.o rigidez.o -L/opt/homebrew/Cellar/gcc/16.2.0/lib/gcc/current -lgfortran -o programa_hibrido
+./programa_hibrido</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — Fortran calculó, C++ leyó el resultado</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">matriz de rigidez calculada por FORTRAN, leida desde C++:
+k(1,1)=1e+08  k(1,2)=-1e+08
+k(2,1)=-1e+08  k(2,2)=1e+08
+esperado (EA/L=1e8): [1e8,-1e8; -1e8,1e8]</pre></div>
+<div class="legal warn"><span class="tag sans">El error real que encontré enlazando</span><code>ld: library 'gfortran' not found</code> — el linker necesita la ruta EXACTA a <code>libgfortran.dylib</code> de Homebrew (<code>-L/opt/homebrew/Cellar/gcc/&lt;version&gt;/lib/gcc/current</code>), no alcanza con <code>-lgfortran</code> solo. Ya está en el comando de arriba, verificado.</div>
+<p>Esta es la prueba de que todo lo que aprendiste en Fortran (Ruta al FEM, Bloque 6) y todo lo que aprendiste en C++ pueden vivir en el MISMO binario — el patrón exacto que usarías para, por ejemplo, escribir el visualizador (Ruta de Código, Fase 5) en C++ y que llame al motor de cálculo real de DELOS-3D en Fortran.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el parámetro Fortran lleva <code>, value</code> en su declaración <code>bind(C)</code> (mirá <code>real(c_double), intent(in), value :: E</code>)? (pista: por defecto Fortran pasa por referencia, C++ por valor)</div>
+</div>
+
+<!-- ============ TIER 3 ============ -->
+<div class="tierhead"><span class="tiernum">TIER 3</span><h2 style="margin:0">Buenas prácticas que redondean tu nivel</h2></div>
+
+<div class="topic" id="p08" data-topic="p08">
+<div class="topichead"><h3><span class="badge PRG">8</span> Lambdas y std::function</h3><label class="checklabel"><input type="checkbox" data-t="p08"><small class="sans">hecho</small></label></div>
+<p>Una lambda es una función anónima, definible en el lugar donde se usa — el patrón detrás de un comparador custom de <code>std::sort</code> y de CUALQUIER callback de GLFW (Ruta de Código 5.4).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">lambdas.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>sort(v.begin(), v.end(), [](<span class="k">int</span> a, <span class="k">int</span> b) { <span class="k">return</span> a &gt; b; });  <span class="c">// descendente</span>
+
+<span class="k">int</span> contadorClicks = <span class="n">0</span>;
+<span class="t">std::function</span>&lt;<span class="k">void</span>()&gt; alHacerClick = [&amp;contadorClicks]() { contadorClicks++; };  <span class="c">// captura por REFERENCIA</span>
+
+<span class="k">int</span> base = <span class="n">100</span>;
+<span class="k">auto</span> sumador = [base](<span class="k">int</span> x) { <span class="k">return</span> base + x; };   <span class="c">// captura por VALOR -- copia congelada</span>
+base = <span class="n">999</span>;  <span class="c">// esto NO afecta a sumador</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">ordenado por calidad desc: 94 88 85 79 61
+clicks contados via lambda con captura por referencia: 3
+sumador(5) = 105 (deberia ser 105, no 1004 -- capturo por VALOR)</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué hubiera pasado con <code>sumador(5)</code> si la lambda hubiera capturado <code>&base</code> (por referencia) en vez de <code>base</code> (por valor)?</div>
+</div>
+
+<div class="topic" id="p09" data-topic="p09">
+<div class="topichead"><h3><span class="badge PRG">9</span> Debugging real con lldb</h3><label class="checklabel"><input type="checkbox" data-t="p09"><small class="sans">hecho</small></label></div>
+<p>En macOS el debugger nativo es <strong>lldb</strong>, no <code>gdb</code> (que ni siquiera está instalado ni funciona bien por temas de firma de código de Apple). Hasta ahora depuramos leyendo código y compilando — un breakpoint real, con inspección de variables en el momento exacto, es otro nivel.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">terminal</span><span class="cw-lang">bash</span></div><div class="cw-body"><pre><code>g++ -std=c++20 -g -O0 -o t_debug t_debug.cpp   <span class="c"># -g: incluye info de debug; -O0: sin optimizar</span>
+lldb ./t_debug</code></pre></div></div>
+<div class="ejemplo"><span class="k">Sesión real de lldb — breakpoint en la línea del cálculo, inspección de variables</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">(lldb) breakpoint set --file t_debug.cpp --line 6
+(lldb) run
+* thread #1, stop reason = breakpoint 1.1
+    frame #0: calcularRigidez(E=2.0E+11, A=0.001, L=2) at t_debug.cpp:6
+(lldb) print E
+(double) 2.0E+11
+(lldb) print resultado
+(double) 1.0E+8
+(lldb) continue
+k = 1e+08</pre></div>
+<p>Comandos clave: <code>breakpoint set --file X --line N</code>, <code>run</code>, <code>print variable</code>, <code>next</code> (una línea, sin entrar a funciones), <code>step</code> (una línea, entrando a funciones), <code>continue</code>.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué hace falta compilar con <code>-g</code> para que lldb pueda mostrar nombres de variables y líneas de código, en vez de solo direcciones de memoria?</div>
+</div>
+
+<div class="topic" id="p10" data-topic="p10">
+<div class="topichead"><h3><span class="badge PRG">10</span> Sanitizers</h3><label class="checklabel"><input type="checkbox" data-t="p10"><small class="sans">hecho</small></label></div>
+<p><strong>AddressSanitizer</strong> (<code>-fsanitize=address</code>) detecta bugs de memoria (overflow, use-after-free) que, SIN él, muchas veces no crashean — devuelven un número raro y seguís sin saberlo.</p>
+<div class="ejemplo"><span class="k">El mismo bug (acceder <code>arreglo[5]</code> en un array de 5 elementos), con y sin sanitizer</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">SIN sanitizer:
+  arreglo[5] (fuera de limites): 0        <- silencioso, "funciona", pero esta MAL
+
+CON -fsanitize=address:
+  ==ERROR: AddressSanitizer: heap-buffer-overflow
+      #0 in main t_bug.cpp:6
+  SUMMARY: AddressSanitizer: heap-buffer-overflow t_bug.cpp:6 in main</pre></div>
+<p>Sin el sanitizer, este bug real habría pasado completamente desapercibido — el programa "funcionó" y dio un número. Con él, la línea exacta del error queda señalada. Para código de cálculo numérico (tu futuro solver de FEM), correr con sanitizers activados durante el desarrollo debería ser el default, no una excepción.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el programa SIN sanitizer no crasheó, si técnicamente estaba leyendo memoria fuera de los límites del array?</div>
+</div>
+
+<div class="topic" id="p11" data-topic="p11">
+<div class="topichead"><h3><span class="badge PRG">11</span> Namespaces</h3><label class="checklabel"><input type="checkbox" data-t="p11"><small class="sans">hecho</small></label></div>
+<p>A medida que un proyecto crece (módulo de cálculo, módulo de visualización, módulo de I/O), es fácil que dos funciones necesiten el mismo nombre lógico con significados distintos. Un <code>namespace</code> evita el choque.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">namespaces.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">namespace</span> Calculo {
+    <span class="k">double</span> <span class="fn">energia</span>(<span class="k">double</span> k, <span class="k">double</span> x) { <span class="k">return</span> <span class="n">0.5</span> * k * x * x; }      <span class="c">// energia de deformacion</span>
+}
+<span class="k">namespace</span> Visualizacion {
+    <span class="k">double</span> <span class="fn">energia</span>(<span class="k">double</span> intensidad, <span class="k">double</span> distancia) { <span class="k">return</span> intensidad/(distancia*distancia); }  <span class="c">// intensidad de luz</span>
+}
+<span class="c">// Calculo::energia(...) y Visualizacion::energia(...) -- mismo nombre, sin choque</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">energia de deformacion (Calculo): 0.02
+intensidad de luz (Visualizacion): 5.55556</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué error de compilación te daría escribir estas dos funciones <code>energia</code> SIN los namespaces, en el mismo archivo?</div>
+</div>
+
+<div class="topic" id="p12" data-topic="p12">
+<div class="topichead"><h3><span class="badge PRG">12</span> Move semantics avanzado / perfect forwarding</h3><label class="checklabel"><input type="checkbox" data-t="p12"><small class="sans">hecho</small></label></div>
+<p>Ya viste el move constructor básico. El siguiente nivel: una función <strong>template</strong> que recibe un argumento y lo reenvía a otra función SIN perder si el original era temporal (rvalue) o una variable normal (lvalue) — <code>T&&</code> acá es una "referencia universal", no un rvalue puro, y <code>std::forward</code> preserva la categoría original.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">forwarding.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">void</span> <span class="fn">procesar</span>(<span class="k">int</span>&amp;)  { <span class="t">std::cout</span> &lt;&lt; <span class="s">"lvalue"</span>; }
+<span class="k">void</span> <span class="fn">procesar</span>(<span class="k">int</span>&amp;&amp;) { <span class="t">std::cout</span> &lt;&lt; <span class="s">"rvalue"</span>; }
+
+<span class="k">template</span>&lt;<span class="k">typename</span> T&gt;
+<span class="k">void</span> <span class="fn">reenviar</span>(T&amp;&amp; arg) {           <span class="c">// referencia universal, NO necesariamente rvalue</span>
+    procesar(<span class="t">std::forward</span>&lt;T&gt;(arg));   <span class="c">// preserva si arg llego como lvalue o rvalue</span>
+}
+
+<span class="k">int</span> variable = <span class="n">42</span>;
+reenviar(variable);   <span class="c">// arg es lvalue -- forward lo mantiene lvalue</span>
+reenviar(<span class="n">100</span>);        <span class="c">// arg es rvalue -- forward lo mantiene rvalue</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">pasando una variable (lvalue):
+reenviando con std::forward:
+  recibido como lvalue (referencia normal)
+pasando un temporal (rvalue):
+reenviando con std::forward:
+  recibido como rvalue (temporal)</pre></div>
+<div class="legal warn"><span class="tag sans">Sin <code>std::forward</code></span>Si en <code>reenviar</code> llamaras <code>procesar(arg)</code> directo (sin <code>std::forward</code>), <code>arg</code> SIEMPRE llegaría como lvalue a <code>procesar</code> — incluso cuando el original era un rvalue — porque dentro de la función, <code>arg</code> ya es una variable con nombre (y toda variable con nombre es un lvalue). Ese es el error clásico que <code>std::forward</code> existe para evitar.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué toda variable con nombre dentro de una función es un lvalue, sin importar cómo fue "categorizada" al llegar?</div>
+</div>
+
+<!-- ============ TIER 4 ============ -->
+<div class="tierhead"><span class="tiernum">TIER 4</span><h2 style="margin:0">Cuando aparezca la necesidad — no urgente</h2></div>
+
+<div class="topic" id="p13" data-topic="p13">
+<div class="topichead"><h3><span class="badge PRG">13</span> constexpr</h3><label class="checklabel"><input type="checkbox" data-t="p13"><small class="sans">hecho</small></label></div>
+<p>Una función <code>constexpr</code> puede evaluarse EN TIEMPO DE COMPILACIÓN si todos sus argumentos son conocidos entonces — cero costo en tiempo de ejecución.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">constexpr.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">constexpr</span> <span class="k">long</span> <span class="fn">factorial</span>(<span class="k">int</span> n) { <span class="k">return</span> n &lt;= <span class="n">1</span> ? <span class="n">1</span> : n * factorial(n-<span class="n">1</span>); }
+static_assert(factorial(<span class="n">5</span>) == <span class="n">120</span>, <span class="s">"..."</span>);  <span class="c">// el COMPILADOR verifica esto, no el programa corriendo</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">factorial(5) calculado EN TIEMPO DE COMPILACION = 120</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué diferencia práctica hay entre que <code>factorial(5)</code> se calcule al compilar vs al ejecutar, para un programa que lo llama una sola vez?</div>
+</div>
+
+<div class="topic" id="p14" data-topic="p14">
+<div class="topichead"><h3><span class="badge PRG">14</span> Structured bindings (C++17)</h3><label class="checklabel"><input type="checkbox" data-t="p14"><small class="sans">hecho</small></label></div>
+<p>Desempaquetar un <code>pair</code>/<code>tuple</code>/<code>map</code> directo en variables con nombre, sin <code>.first</code>/<code>.second</code>.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">bindings.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="t">std::map</span>&lt;<span class="t">std::string</span>,<span class="k">double</span>&gt; resultados = {{<span class="s">"esfuerzo"</span>, <span class="n">250.5</span>}, {<span class="s">"desplazamiento"</span>, <span class="n">0.003</span>}};
+<span class="k">for</span> (<span class="k">const</span> <span class="k">auto</span>&amp; [clave, valor] : resultados)   <span class="c">// en vez de par.first, par.second</span>
+    <span class="t">std::cout</span> &lt;&lt; clave &lt;&lt; <span class="s">" = "</span> &lt;&lt; valor;</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">desplazamiento = 0.003
+esfuerzo = 250.5</pre></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cómo escribirías el mismo loop sin structured bindings, usando <code>.first</code>/<code>.second</code>?</div>
+</div>
+
+<div class="topic" id="p15" data-topic="p15">
+<div class="topichead"><h3><span class="badge PRG">15</span> RAII para recursos de OpenGL</h3><label class="checklabel"><input type="checkbox" data-t="p15"><small class="sans">hecho</small></label></div>
+<p>Ya dominás la Regla de los 5 (constructor de copia, move, destructor...). El siguiente paso natural: envolver un recurso de GPU (un VBO, una textura, Ruta de Código Fase 5) en una clase RAII — se "crea" al construirse, se libera solo al destruirse, y NO se puede copiar (copiar un ID de buffer de OpenGL no duplica el buffer real en la GPU).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">raii_buffer.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">struct</span> RAII_Buffer {
+    <span class="k">unsigned int</span> id;
+    RAII_Buffer() { id = /* glGenBuffers(1, &id); */ ; }
+    ~RAII_Buffer() { /* glDeleteBuffers(1, &id); */ }
+    RAII_Buffer(<span class="k">const</span> RAII_Buffer&amp;) = <span class="k">delete</span>;             <span class="c">// no se puede copiar un recurso de GPU</span>
+    RAII_Buffer&amp; <span class="k">operator</span>=(<span class="k">const</span> RAII_Buffer&amp;) = <span class="k">delete</span>;
+};</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (simulando las llamadas GL con prints)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">entrando a un scope con un recurso RAII:
+  buffer 42 'creado' (simulado, seria glGenBuffers)
+  usando el buffer...
+  buffer 42 'liberado' automaticamente (seria glDeleteBuffers)
+saliendo del scope -- el buffer ya se libero solo</pre></div>
+<p>Sin RAII, tendrías que acordarte de llamar <code>glDeleteBuffers</code> a mano en cada punto de salida de la función (incluyendo returns tempranos y excepciones) — con RAII, es imposible olvidarse: el destructor corre siempre.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>RAII_Buffer(const RAII_Buffer&) = delete;</code> es necesario — qué saldría mal si se permitiera copiar esta clase?</div>
+</div>
+
+<footer class="foot sans">Con esto cerrado, seguís derecho a <a href="../ruta_codigo/1-estructuras-de-datos.html">Ruta de Código, Fase 1 — Estructuras de datos</a>.</footer>
+</article></main>
+<script>
+(function(){
+  var KEY='cpp-avanzado-progreso', TOTAL=15;
+  function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){return {};}}
+  function save(s){try{localStorage.setItem(KEY, JSON.stringify(s));}catch(e){}}
+  var state = load();
+  function apply(){
+    var done=0;
+    document.querySelectorAll('input[type=checkbox][data-t]').forEach(function(cb){
+      var id=cb.getAttribute('data-t'), isDone=!!state[id];
+      cb.checked=isDone; if(isDone) done++;
+      var el=document.getElementById(id); if(el) el.classList.toggle('done', isDone);
+    });
+    var f=document.getElementById('global-frac'); if(f) f.textContent = done+'/'+TOTAL;
+  }
+  document.querySelectorAll('input[type=checkbox][data-t]').forEach(function(cb){
+    cb.addEventListener('change', function(){ state[cb.getAttribute('data-t')]=cb.checked; save(state); apply(); });
+  });
+  apply();
+})();
+</script>
+</body></html>

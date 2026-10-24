@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B3 · Mecánica estructural · Ruta al FEM</title>
+<link rel="stylesheet" href="estilo.css">
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta al FEM</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-matematicas.html" title="Matemáticas">1</a>
+    <a class="pill" href="2-algoritmos.html" title="Estructuras de datos y algoritmos">2</a>
+    <a class="pill active" href="3-mecanica.html" title="Mecánica estructural">3</a>
+    <a class="pill" href="4-elementos-finitos.html" title="Elementos finitos">4</a>
+    <a class="pill" href="5-geometria.html" title="Geometría y gráficos">5</a>
+    <a class="pill" href="6-fortran.html" title="De C++ a Fortran">6</a>
+    <a class="pill" href="7-proyecto-papa.html" title="El proyecto de tu papá">7</a>
+    <a class="pill" href="8-tesis.html" title="Proyecto de grado">8</a>
+    <a class="pill" href="9-biblioteca.html" title="Biblioteca">L</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/38</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Bloque 3</div>
+<h1 class="hero">Mecánica estructural — para alguien que no es civil</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> entender la física que un programa de análisis estructural resuelve, para leer y confiar en el código que la implementa — no llegar a diseñar un edificio como tu hermano. <strong>Pre-requisito:</strong> Bloque 1 completo.</p></blockquote>
+
+<div class="topic" id="t10" data-topic="t10">
+<div class="topichead"><h3><span class="badge MEC">MEC · 3.1</span> Estática</h3><label class="checklabel"><input type="checkbox" data-t="t10"><small class="sans">hecho</small></label></div>
+<p>Ya la ves en tu carrera de mecánica. Equilibrio de fuerzas y momentos, diagramas de cuerpo libre, reacciones, cerchas y vigas simples — todo lo que sigue en este bloque son variaciones más ricas de <code>ΣF=0, ΣM=0</code>.</p>
+<ul><li>Calcular reacciones de una viga con carga puntual o distribuida.</li><li>Dibujar diagramas de cortante y momento flector a mano.</li><li>Resolver una cercha por nodos y por secciones.</li></ul>
+<div class="recursos"><div class="r"><span class="k">Libro</span><span>R.C. Hibbeler, <em>Ingeniería Mecánica: Estática</em></span></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Viga simplemente apoyada de 6 m, carga puntual al centro — ¿reacciones y momento máximo, sin el libro?</div>
+</div>
+
+<div class="topic" id="t11" data-topic="t11">
+<div class="topichead"><h3><span class="badge MEC">MEC · 3.2</span> Mecánica de materiales</h3><label class="checklabel"><input type="checkbox" data-t="t11"><small class="sans">hecho</small></label></div>
+<p>Estática da las fuerzas; mecánica de materiales dice qué pasa <em>por dentro</em> del material: esfuerzo, deformación, ley de Hooke, torsión, flexión. Acá aparece <code>E</code> (módulo de elasticidad), el número que termina dentro de la matriz de rigidez de cada elemento finito.</p>
+<ul><li>Calcular esfuerzo axial, de corte y de flexión (<code>σ = My/I</code>).</li><li>Círculo de Mohr para transformar esfuerzos entre orientaciones.</li></ul>
+<div class="recursos"><div class="r"><span class="k">Libro</span><span>R.C. Hibbeler, <em>Mecánica de Materiales</em></span></div></div>
+<div class="obra"><span class="tag sans">Nota de obra</span><code>E</code> y <code>ν</code> (Poisson) son exactamente lo que IFC-Bridge extrae de un archivo IFC en su Fase 8 (<code>ifc_pset.f90</code>) para clasificar un material como concreto o acero — mecánica de materiales, guardada como dato en un archivo BIM.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué una viga en I resiste mucho más momento que una barra maciza de igual área? (pista: momento de inercia)</div>
+</div>
+
+<div class="topic" id="t12" data-topic="t12">
+<div class="topichead"><h3><span class="badge MEC">MEC · 3.3</span> Análisis estructural</h3><label class="checklabel"><input type="checkbox" data-t="t12"><small class="sans">hecho</small></label></div>
+<p>Sistemas completos: marcos, estructuras hiperestáticas (más incógnitas que ecuaciones de equilibrio), líneas de influencia. Los métodos clásicos son el puente histórico hacia el análisis matricial del siguiente tema.</p>
+<ul><li>Distinguir isostática de hiperestática, y por qué la segunda necesita ecuaciones de compatibilidad.</li></ul>
+<div class="recursos"><div class="r"><span class="k">Libro</span><span>R.C. Hibbeler, <em>Análisis Estructural</em></span></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué una estructura hiperestática no se resuelve solo con <code>ΣF=0, ΣM=0</code>?</div>
+</div>
+
+<div class="topic" id="t13" data-topic="t13">
+<div class="topichead"><h3><span class="badge MEC">MEC · 3.4</span> Análisis matricial — el puente directo a FEM</h3><label class="checklabel"><input type="checkbox" data-t="t13"><small class="sans">hecho</small></label></div>
+<p>El tema bisagra de toda la ruta. El "método de la rigidez directa" es literalmente el mismo algoritmo que FEM completo, pero aplicado solo a barras y vigas. Cada barra tiene su matriz de rigidez <code>k</code> en forma cerrada; el trabajo es ensamblarlas en una matriz global <code>K</code> y resolver <code>Ku=F</code>.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">rigidez_barra.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="c">! matriz de rigidez de un elemento barra (axial, 2 nodos): k = EA/L · [[1,-1],[-1,1]]</span>
+<span class="k">subroutine</span> <span class="fn">rigidez_barra</span>(E, A, L, k)
+  <span class="k">real</span>(<span class="n">8</span>), <span class="k">intent</span>(<span class="k">in</span>)  :: E, A, L
+  <span class="k">real</span>(<span class="n">8</span>), <span class="k">intent</span>(<span class="k">out</span>) :: k(<span class="n">2</span>,<span class="n">2</span>)
+  <span class="k">real</span>(<span class="n">8</span>) :: EA_L
+  EA_L = E * A / L
+  k(<span class="n">1</span>,<span class="n">1</span>) =  EA_L;  k(<span class="n">1</span>,<span class="n">2</span>) = -EA_L
+  k(<span class="n">2</span>,<span class="n">1</span>) = -EA_L;  k(<span class="n">2</span>,<span class="n">2</span>) =  EA_L
+<span class="k">end subroutine</span> rigidez_barra</code></pre></div></div>
+<ul><li>Escribir de memoria la matriz de rigidez de un elemento barra.</li><li>Ensamblar 2-3 elementos barra en una matriz global, a mano, para una cercha simple.</li><li>Aplicar condiciones de frontera (apoyos) eliminando o penalizando filas/columnas.</li></ul>
+<div class="recursos">
+<div class="r"><span class="k">Libro</span><span>McGuire, Gallagher &amp; Ziemian, <em>Matrix Structural Analysis</em> (2ª ed.)</span></div>
+<div class="r"><span class="k">Software gratis</span><a href="https://mastan2.com/" target="_blank" rel="noopener">MASTAN2</a> — compañero del libro; armás una estructura y ves la matriz ensamblarse y resolverse en vivo</div>
+</div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Base física exacta de lo que IFC-Bridge Fase 9 (<code>ifc_analysis_types.f90</code>) importa desde BIM: nodos estructurales, miembros barra/viga, apoyos, cargas puntuales — los mismos objetos que vas a ensamblar a mano acá.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>En MASTAN2: armá una cercha de 3 barras, cambiá un apoyo de fijo a rodillo, y explicá por qué cambia la matriz global, no solo el resultado.</div>
+</div>
+
+<div class="topic" id="t14" data-topic="t14">
+<div class="topichead"><h3><span class="badge MEC">MEC · 3.5</span> Dinámica estructural y vibraciones</h3><label class="checklabel"><input type="checkbox" data-t="t14"><small class="sans">hecho</small></label></div>
+<p>Hasta acá todo estático. En dinámica aparecen masa y tiempo: <code>[M]{ü} + [C]{u̇} + [K]{u} = {F(t)}</code>. "¿A qué frecuencias vibra este edificio?" es un problema de eigenvalores — la misma herramienta del tema 1.1, aplicada a <code>M</code> y <code>K</code> juntas.</p>
+<ul><li>Calcular el período natural de un sistema masa-resorte de 1 grado de libertad.</li><li>Entender un "modo de vibración" como eigenvector del par <code>(K,M)</code>.</li></ul>
+<div class="recursos">
+<div class="r"><span class="k">Libro (español)</span><span>Mario Paz, <em>Dinámica Estructural: Teoría y Cálculo</em></span></div>
+<div class="r"><span class="k">Referencia avanzada</span><span>Anil Chopra, <em>Dynamics of Structures</em> — probablemente el de tu hermano en la maestría</span></div>
+</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué un edificio más rígido no siempre es "mejor" ante un sismo? (pista: período natural vs. período dominante del sismo)</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="2-algoritmos.html"><span>Anterior</span><b>← Bloque 2 — Algoritmos</b></a>
+  <a class="pn next" href="4-elementos-finitos.html"><span>Siguiente</span><b>Bloque 4 — Elementos finitos →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

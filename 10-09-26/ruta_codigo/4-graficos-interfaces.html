@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4 · Gráficos e interfaces · Ruta de Código</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de Código</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-estructuras-de-datos.html" title="Estructuras de datos">1</a>
+    <a class="pill" href="2-arboles-grafos.html" title="Árboles y grafos">2</a>
+    <a class="pill" href="3-metodos-numericos.html" title="Métodos numéricos en código">3</a>
+    <a class="pill active" href="4-graficos-interfaces.html" title="Gráficos e interfaces">4</a>
+    <a class="pill" href="5-opengl-avanzado.html" title="OpenGL avanzado: hacia un visualizador FEM">5</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/43</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 4</div>
+<h1 class="hero">Gráficos e interfaces</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> de la teoría de OpenGL/transformaciones (<a href="../ruta-fem/5-geometria.html">Ruta al FEM, Bloque 5</a>) al código real que abre una ventana y dibuja una malla. <strong>Pre-requisito:</strong> Fase 1 de acá + Bloque 5 de <code>ruta-fem</code>.</p></blockquote>
+
+<div class="legal"><span class="tag sans">Cómo se verificó esta fase, distinto a las anteriores</span>Todo lo de 4.2, 4.3 y 4.5 (matrices, proyección, archivos) es matemática/texto puro — compilado y corrido igual que siempre. Lo de OpenGL de verdad (4.1, 4.4, 4.6) también lo compilé y corrí en esta Mac (instalé <code>glfw</code> por vos, ya queda instalado) — confirmé que la ventana se crea, los shaders compilan, y la malla se dibuja sin errores de OpenGL. Lo único que NO puedo verificar desde acá es que la imagen se vea "bien" a simple vista — eso te toca confirmarlo a vos corriendo el código con la ventana visible.</div>
+
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#c401">4.1 Fundamentos de OpenGL</a></li>
+<li><a href="#c402">4.2 Transformaciones en código</a></li>
+<li><a href="#c403">4.3 Cámara y proyección en código</a></li>
+<li><a href="#c404">4.4 Construir una ventana</a></li>
+<li><a href="#c405">4.5 Importar y exportar modelos (OBJ)</a></li>
+<li><a href="#c406">4.6 Renderizar una malla completa</a></li>
+</ol>
+</div>
+
+<div class="topic" id="c401" data-topic="c401">
+<div class="topichead"><h3><span class="badge PRG">4.1</span> Fundamentos de OpenGL</h3><label class="checklabel"><input type="checkbox" data-t="c401"><small class="sans">hecho</small></label></div>
+<p>El pipeline real, ya explicado en <a href="../ruta-fem/5-geometria.html#t24">Ruta al FEM, tema 5.4</a>: mandás vértices + dos programitas (<strong>shaders</strong>) a la GPU, y ella rasteriza. El <strong>vertex shader</strong> corre una vez por vértice y decide dónde va en pantalla; el <strong>fragment shader</strong> corre una vez por píxel y decide de qué color sale.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">shaders.glsl</span><span class="cw-lang">glsl</span></div><div class="cw-body"><pre><code><span class="c">// vertex shader -- corre UNA VEZ POR VERTICE</span>
+<span class="k">#version</span> 330 core
+<span class="k">layout</span> (location = 0) <span class="k">in</span> vec3 posicion;
+<span class="k">void</span> <span class="fn">main</span>() {
+    gl_Position = vec4(posicion, 1.0);   <span class="c">// donde va este vertice en pantalla</span>
+}
+
+<span class="c">// fragment shader -- corre UNA VEZ POR PIXEL</span>
+<span class="k">#version</span> 330 core
+<span class="k">out</span> vec4 colorFinal;
+<span class="k">void</span> <span class="fn">main</span>() {
+    colorFinal = vec4(0.85, 0.47, 0.34, 1.0);   <span class="c">// el naranja de esta ruta</span>
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Compilado y corrido de verdad en esta Mac (M1, headless)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">vertex shader compilado sin errores
+fragment shader compilado sin errores
+programa de shaders enlazado: OK
+GL error tras dibujar: ninguno (GL_NO_ERROR)
+un triangulo fue enviado a la GPU y dibujado sin errores</pre></div>
+<div class="legal warn"><span class="tag sans">Gotcha específico de macOS — real, no de un tutorial</span>Con GLFW en macOS, incluir <code>&lt;GLFW/glfw3.h&gt;</code> a secas solo expone funciones de OpenGL viejas (2.1). Las funciones "core" que vas a usar todo el tiempo (<code>glGenVertexArrays</code>, etc.) dan error de compilación ("undeclared identifier") si no agregás, ANTES del include, <code>#define GLFW_INCLUDE_GLCOREARB</code>. Me pasó al verificar este mismo ejemplo — lo dejo documentado acá para que no pierdas el tiempo que yo perdí encontrándolo.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el fragment shader corre muchas más veces que el vertex shader, para el mismo triángulo en pantalla?</div>
+</div>
+
+<div class="topic" id="c402" data-topic="c402">
+<div class="topichead"><h3><span class="badge PRG">4.2</span> Transformaciones en código</h3><label class="checklabel"><input type="checkbox" data-t="c402"><small class="sans">hecho</small></label></div>
+<p>Las matrices de rotación (tema 1.5.3) y coordenadas homogéneas (tema 1.5.4) de matemáticas, aplicadas de verdad sobre un punto — sin GPU todavía, para ver los números crudos.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">transformaciones.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>Mat4 <span class="fn">matrizRotacionZ</span>(<span class="k">double</span> theta) {
+    <span class="k">return</span> {{
+        {cos(theta), -sin(theta), 0, 0},
+        {sin(theta),  cos(theta), 0, 0},
+        {0,           0,          1, 0},
+        {0,           0,          0, 1}
+    }};
+}
+
+Mat4 <span class="fn">matrizTraslacion</span>(<span class="k">double</span> tx, <span class="k">double</span> ty, <span class="k">double</span> tz) {
+    <span class="k">return</span> {{ {1,0,0,tx}, {0,1,0,ty}, {0,0,1,tz}, {0,0,0,1} }};
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — el checkpoint del tema 5.1 de <code>ruta-fem</code>, respondido con números</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">punto (1,0,0) rotado 90 grados en Z: (0.0000, 1.0000, 0.0000)  [esperado: (0,1,0)]
+rotar luego trasladar: (5.0000, 1.0000, 0.0000)
+trasladar luego rotar: (0.0000, 6.0000, 0.0000)
+son iguales? no (confirma que el orden importa)</pre></div>
+<p>Ahí está, en números concretos, la respuesta al checkpoint que quedó pendiente en matemáticas: <strong>(5, 1, 0) ≠ (0, 6, 0)</strong> — rotar-y-trasladar y trasladar-y-rotar dan resultados completamente distintos, no solo "en teoría".</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés predecir a mano el resultado de rotar (1,0,0) 90° en Z y DESPUÉS trasladar +5 en X, antes de mirar la salida de arriba?</div>
+</div>
+
+<div class="topic" id="c403" data-topic="c403">
+<div class="topichead"><h3><span class="badge PRG">4.3</span> Cámara y proyección en código</h3><label class="checklabel"><input type="checkbox" data-t="c403"><small class="sans">hecho</small></label></div>
+<p>Ortográfica (tema 5.2) implementada de la forma más simple posible: ignorar Z. Perspectiva: dividir por la distancia — cuanto más lejos, más chico se ve.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">proyeccion.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>Punto2D <span class="fn">proyectarOrtografica</span>(<span class="k">const</span> Punto3D&amp; p) {
+    <span class="k">return</span> {p.x, p.y};   <span class="c">// Z simplemente se descarta</span>
+}
+
+Punto2D <span class="fn">proyectarPerspectiva</span>(<span class="k">const</span> Punto3D&amp; p, <span class="k">double</span> distanciaCamara) {
+    <span class="k">double</span> factor = distanciaCamara / (distanciaCamara + p.z);
+    <span class="k">return</span> {p.x * factor, p.y * factor};
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — mismo punto (2,2), a Z=0 y a Z=20</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">ortografica -- cerca: (2.00,2.00)  lejos: (2.00,2.00)  (identicos: la distancia no importa)
+perspectiva -- cerca: (2.00,2.00)  lejos: (0.67,0.67)  (lejos se ve mas chico)</pre></div>
+<p>Con ortográfica, un objeto se ve del mismo tamaño sin importar qué tan lejos esté de la cámara — por eso un plano estructural (donde las medidas tienen que ser fieles, no "artísticas") se dibuja siempre así.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>proyectarOrtografica</code> ni siquiera necesita el parámetro de distancia de cámara, pero <code>proyectarPerspectiva</code> sí?</div>
+</div>
+
+<div class="topic" id="c404" data-topic="c404">
+<div class="topichead"><h3><span class="badge PRG">4.4</span> Construir una ventana</h3><label class="checklabel"><input type="checkbox" data-t="c404"><small class="sans">hecho</small></label></div>
+<p><strong>GLFW</strong> es la librería estándar, multiplataforma, para abrir una ventana y pedirle al sistema operativo un contexto de OpenGL — sin GLFW tendrías que hablarle directo a la API nativa de cada sistema operativo (Cocoa en Mac, Win32 en Windows, X11 en Linux). Ya lo instalé en esta Mac (<code>brew install glfw</code>).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">ventana.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>glfwInit();
+glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+GLFWwindow* ventana = glfwCreateWindow(800, 600, <span class="s">"Ruta al FEM"</span>, <span class="k">nullptr</span>, <span class="k">nullptr</span>);
+glfwMakeContextCurrent(ventana);
+
+<span class="c">// el loop real de una app (quitando GLFW_VISIBLE=false) seria:</span>
+<span class="k">while</span> (!glfwWindowShouldClose(ventana)) {
+    <span class="c">// ... dibujar acá ...</span>
+    glfwSwapBuffers(ventana);
+    glfwPollEvents();
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real de esta Mac</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">ventana creada correctamente: 800x600
+version de OpenGL reportada: 4.1 Metal - 88.1
+vendor: Apple
+renderer: Apple M1
+un frame limpiado y presentado sin errores
+cerrado limpio</pre></div>
+<p>Fijate: "4.1 Metal" — en Apple Silicon, el driver de OpenGL corre en realidad SOBRE Metal (la API gráfica nativa de Apple), traducido por debajo. Es transparente para tu código: seguís escribiendo OpenGL normal.</p>
+<div class="recursos"><div class="r"><span class="k">Compilar en tu máquina</span><span><code>g++ -std=c++17 -I/opt/homebrew/opt/glfw/include -L/opt/homebrew/opt/glfw/lib -lglfw -framework OpenGL -framework Cocoa -framework IOKit archivo.cpp</code></span></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Para qué sirve <code>glfwPollEvents()</code> dentro del loop — qué pasaría si nunca lo llamaras?</div>
+</div>
+
+<div class="topic" id="c405" data-topic="c405">
+<div class="topichead"><h3><span class="badge PRG">4.5</span> Importar y exportar modelos (OBJ)</h3><label class="checklabel"><input type="checkbox" data-t="c405"><small class="sans">hecho</small></label></div>
+<p><strong>OBJ</strong> es el formato de malla más simple que existe — texto plano, una línea <code>v x y z</code> por nodo, una línea <code>f i j k</code> por triángulo (con índices que empiezan en 1, igual que Fortran, tema 6.5). No tiene nada de la complejidad del <code>.mesh</code>/<code>.wrl</code> de DELOS, pero el patrón de "leer texto línea por línea, parsear según la primera palabra" es EXACTAMENTE el mismo que vas a necesitar para esos formatos reales.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">obj.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>Malla <span class="fn">leerOBJ</span>(<span class="k">const</span> <span class="t">std::string</span>&amp; ruta) {
+    Malla m;
+    <span class="t">std::ifstream</span> archivo(ruta);
+    <span class="t">std::string</span> linea, tipo;
+    <span class="k">while</span> (getline(archivo, linea)) {
+        <span class="t">std::istringstream</span> ss(linea);
+        ss &gt;&gt; tipo;
+        <span class="k">if</span> (tipo == <span class="s">"v"</span>) {
+            <span class="k">double</span> x,y,z; ss &gt;&gt; x &gt;&gt; y &gt;&gt; z;
+            m.nodos.push_back({x,y,z});
+        } <span class="k">else if</span> (tipo == <span class="s">"f"</span>) {
+            <span class="k">int</span> a,b,c; ss &gt;&gt; a &gt;&gt; b &gt;&gt; c;
+            m.triangulos.push_back({a,b,c});
+        }
+    }
+    <span class="k">return</span> m;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — escribir un cuadrado, releerlo, confirmar ida y vuelta exacta</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">escrito: 4 nodos, 2 triangulos
+releido: 4 nodos, 2 triangulos
+ida y vuelta correcta: si</pre></div>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">cuadrado.obj</span><span class="cw-lang">texto</span></div><div class="cw-body"><pre><code># malla exportada -- ruta_codigo Fase 4
+v 0 0 0
+v 1 0 0
+v 1 1 0
+v 0 1 0
+f 1 2 3
+f 1 3 4</code></pre></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el parser revisa la PRIMERA palabra de cada línea (<code>"v"</code> o <code>"f"</code>) antes de decidir qué hacer con el resto?</div>
+</div>
+
+<div class="topic" id="c406" data-topic="c406">
+<div class="topichead"><h3><span class="badge PRG">4.6</span> Renderizar una malla completa</h3><label class="checklabel"><input type="checkbox" data-t="c406"><small class="sans">hecho</small></label></div>
+<p>Todo junto: cargar el <code>cuadrado.obj</code> del tema anterior, subirlo a la GPU, y dibujarlo — cerrando el círculo entero de esta ruta, desde un archivo de texto hasta píxeles.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">render_malla.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>Malla malla = leerOBJ(<span class="s">"cuadrado.obj"</span>);   <span class="c">// tema 4.5</span>
+
+GLuint VAO, VBO, EBO;
+glGenVertexArrays(<span class="n">1</span>, &amp;VAO);
+glGenBuffers(<span class="n">1</span>, &amp;VBO);
+glGenBuffers(<span class="n">1</span>, &amp;EBO);
+glBindVertexArray(VAO);
+glBindBuffer(GL_ARRAY_BUFFER, VBO);
+glBufferData(GL_ARRAY_BUFFER, malla.nodos.size()*<span class="k">sizeof</span>(<span class="k">float</span>), malla.nodos.data(), GL_STATIC_DRAW);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, malla.indices.size()*<span class="k">sizeof</span>(<span class="k">unsigned</span> <span class="k">int</span>), malla.indices.data(), GL_STATIC_DRAW);
+glVertexAttribPointer(<span class="n">0</span>, <span class="n">3</span>, GL_FLOAT, GL_FALSE, <span class="n">3</span>*<span class="k">sizeof</span>(<span class="k">float</span>), (<span class="k">void</span>*)<span class="n">0</span>);
+glEnableVertexAttribArray(<span class="n">0</span>);
+
+glUseProgram(programa);        <span class="c">// <- ver la nota de abajo</span>
+glBindVertexArray(VAO);
+glDrawElements(GL_TRIANGLES, malla.indices.size(), GL_UNSIGNED_INT, <span class="n">0</span>);</code></pre></div></div>
+<div class="legal warn"><span class="tag sans">El bug real que encontré verificando esto — vale más que cualquier ejemplo que "ya funciona"</span>La primera versión de esta prueba, sin <code>glUseProgram(programa)</code> antes de <code>glDrawElements</code>, dio <strong>GL_INVALID_OPERATION</strong> (código 1282) — en OpenGL "core profile" (el que usás siempre hoy) es OBLIGATORIO tener un programa de shaders activo antes de dibujar cualquier cosa; a diferencia del OpenGL viejo (fixed-function), no hay un shader "por defecto". Es, probablemente, el primer error que vas a ver vos mismo la primera vez que armes este pipeline desde cero — ya sabés qué significa cuando aparezca.</div>
+<div class="ejemplo"><span class="k">Salida real, ya corregido</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">malla cargada: 4 nodos, 2 triangulos
+malla subida a la GPU y dibujada -- GL error: ninguno
+(6 indices = 2 triangulos dibujados)</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra — hacia dónde apunta esto</span>Esto es, en miniatura, lo que <code>docs/comparison.md</code> de DELOS-3D necesitaría para visualizar el resultado de una triangulación real en vez de solo números — cambiar <code>leerOBJ</code> por un parser del formato <code>.mesh</code> real (parcialmente descifrado, Bloque 7 de <code>ruta-fem</code>) es la única diferencia estructural.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Corré este código vos mismo con <code>GLFW_VISIBLE</code> en <code>true</code> — ¿ves el cuadrado naranja en pantalla?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="3-metodos-numericos.html"><span>Anterior</span><b>← Fase 3 — Métodos numéricos en código</b></a>
+  <a class="pn next" href="5-opengl-avanzado.html"><span>Siguiente</span><b>Fase 5 — OpenGL avanzado →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

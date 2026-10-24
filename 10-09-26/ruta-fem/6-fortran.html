@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B6 · De C++ a Fortran · Ruta al FEM</title>
+<link rel="stylesheet" href="estilo.css">
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta al FEM</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-matematicas.html" title="Matemáticas">1</a>
+    <a class="pill" href="2-algoritmos.html" title="Estructuras de datos y algoritmos">2</a>
+    <a class="pill" href="3-mecanica.html" title="Mecánica estructural">3</a>
+    <a class="pill" href="4-elementos-finitos.html" title="Elementos finitos">4</a>
+    <a class="pill" href="5-geometria.html" title="Geometría y gráficos">5</a>
+    <a class="pill active" href="6-fortran.html" title="De C++ a Fortran">6</a>
+    <a class="pill" href="7-proyecto-papa.html" title="El proyecto de tu papá">7</a>
+    <a class="pill" href="8-tesis.html" title="Proyecto de grado">8</a>
+    <a class="pill" href="9-biblioteca.html" title="Biblioteca">L</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/38</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Bloque 6</div>
+<h1 class="hero">De C++ a Fortran</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> prototipar cada idea en C++ (donde pensás rápido) y traducir el patrón a Fortran — nunca aprender un concepto nuevo y un lenguaje nuevo a la vez. <strong>Pre-requisito:</strong> ninguno formal — se puede empezar en paralelo con Bloques 1-2 en cuanto tengas los temas 1.1 y 3.1 cómodos.</p></blockquote>
+
+<div class="legal"><span class="tag sans">Workspace listo</span>Los ejemplos de código de este bloque ya están escritos, compilados y probados en <code>../gfortran/</code> — cada carpeta ahí corresponde a uno de estos temas. Abrí esa carpeta en VS Code (<code>code ../gfortran</code>) y seguí el <code>README.md</code>.</div>
+
+<div class="topic" id="t25" data-topic="t25">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.1</span> Mini-proyectos progresivos en C++</h3><label class="checklabel"><input type="checkbox" data-t="t25"><small class="sans">hecho</small></label></div>
+<p>Cuatro proyectos en este orden — la mejor forma de ver los temas 3.4 y el Bloque 4 convertirse en código real, en el lenguaje donde ya sos fuerte:</p>
+<ul>
+<li><strong>1. Elemento barra:</strong> 2 nodos, sistema de 2 ecuaciones a mano — sin librerías.</li>
+<li><strong>2. Cercha (truss solver):</strong> varios elementos ensamblados en 2D — acá ya conviene Eigen (solo headers, gratis).</li>
+<li><strong>3. Viga (beam solver):</strong> agregás flexión — 4 grados de libertad por nodo.</li>
+<li><strong>4. FEM 2D simple:</strong> un cuadrado en triángulos, esfuerzo plano — tu primer FEM "de verdad".</li>
+</ul>
+<div class="recursos">
+<div class="r"><span class="k">Ejemplo para estudiar</span><a href="https://github.com/THTBSE/finite_element_for_static_truss" target="_blank" rel="noopener">finite_element_for_static_truss (GitHub)</a></div>
+<div class="r"><span class="k">Guía con ejemplo resuelto</span><a href="https://www.unm.edu/~bgreen/ME360/Finite%20Element%20Truss.pdf" target="_blank" rel="noopener">UNM ME360 — Finite Element Trusses (PDF)</a></div>
+</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Tu solver de cercha, ¿da los mismos desplazamientos que calculaste a mano en el tema 3.4?</div>
+</div>
+
+<div class="topic" id="t26" data-topic="t26">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.2</span> Instalar y compilar tu primer programa Fortran</h3><label class="checklabel"><input type="checkbox" data-t="t26"><small class="sans">hecho</small></label></div>
+<div class="legal"><span class="tag sans">Ya confirmado en esta Mac</span><code>gfortran</code> (Homebrew GCC 16.2.0) ya está instalado en <code>/opt/homebrew/bin/gfortran</code> — el mismo compilador que se usó para verificar ambos proyectos de tu papá. La extensión "Modern Fortran" y el servidor <code>fortls</code> ya quedaron instalados en VS Code.</div>
+<p>Fortran distingue dos formatos de archivo: <code>.f90</code> es la sintaxis moderna (libre, la que vas a escribir siempre) y <code>.f</code> es la sintaxis vieja de Fortran 77 (fija por columnas — la que vas a ENCONTRAR cuando abras <code>reference/f77/</code> del proyecto, código original de DELOS de los 80/90). No hace falta escribir <code>.f</code> nunca, solo reconocerlo al leerlo.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">hola.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">program</span> hola
+  <span class="k">implicit none</span>
+  <span class="k">print</span> *, <span class="s">"Hola, Nicolás"</span>
+<span class="k">end program</span> hola</code></pre></div></div>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">terminal</span><span class="cw-lang">bash</span></div><div class="cw-body"><pre><code>export PATH=<span class="s">"/opt/homebrew/bin:$PATH"</span>
+gfortran -o hola hola.f90
+./hola
+<span class="c"># -&gt; Hola, Nicolás</span></code></pre></div></div>
+<p><code>implicit none</code> va SIEMPRE, sin excepción, al principio de cada programa/módulo/procedimiento: apaga una regla heredada de Fortran 66/77 donde una variable sin declarar tomaba tipo automáticamente según su primera letra (I-N enteros, el resto reales) — una trampa histórica de bugs silenciosos. El código real de tu papá seguro lo usa en todas partes; vos hacé lo mismo desde el primer programa.</p>
+<div class="recursos"><div class="r"><span class="k">Manual oficial (descargado)</span><span><code>../biblioteca/GNU_Fortran_Manual_gfortran.pdf</code></span></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Compilaste y corriste tu "hola mundo" en <code>gfortran/01-hola-mundo/</code>? ¿Qué pasa si borrás <code>implicit none</code> y escribís una variable sin declarar?</div>
+</div>
+
+<div class="topic" id="t27" data-topic="t27">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.3</span> Variables, tipos y operadores</h3><label class="checklabel"><input type="checkbox" data-t="t27"><small class="sans">hecho</small></label></div>
+<div class="tablewrap"><table><thead><tr><th>C++</th><th>Fortran 90+</th></tr></thead><tbody>
+<tr><td><code>double x = 3.14;</code></td><td><code>real(8) :: x = 3.14d0</code></td></tr>
+<tr><td><code>int i;</code></td><td><code>integer :: i</code></td></tr>
+<tr><td><code>bool ok = true;</code></td><td><code>logical :: ok = .true.</code></td></tr>
+<tr><td><code>// comentario</code></td><td><code>! comentario</code></td></tr>
+<tr><td><code>const double PI = 3.14159;</code></td><td><code>real(8), parameter :: PI = 3.14159d0</code></td></tr>
+<tr><td><code>x == y</code></td><td><code>x == y</code> (o <code>x .eq. y</code>, forma vieja)</td></tr>
+<tr><td><code>a &amp;&amp; b</code></td><td><code>a .and. b</code></td></tr>
+</tbody></table></div>
+<p>El <code>(8)</code> en <code>real(8)</code> es el <em>kind</em>: cuántos bytes de precisión (8 = doble precisión, como <code>double</code> en C++; 4 sería como <code>float</code>). Siempre <code>real(8)</code> en código de ingeniería — la precisión simple no alcanza para acumular sumas de miles de elementos sin error visible.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">variables.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">program</span> variables
+  <span class="k">implicit none</span>
+  <span class="k">real</span>(<span class="n">8</span>) :: base, altura, area
+  base = <span class="n">4.0d0</span>
+  altura = <span class="n">2.5d0</span>
+  area = base * altura
+  <span class="k">print</span> *, <span class="s">"area = "</span>, area
+<span class="k">end program</span> variables</code></pre></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Declará una variable <code>real(8)</code> llamada <code>area</code> y asignale <code>base*altura</code>, de memoria, sin mirar <code>gfortran/02-variables/</code>.</div>
+</div>
+
+<div class="topic" id="t28" data-topic="t28">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.4</span> Control de flujo</h3><label class="checklabel"><input type="checkbox" data-t="t28"><small class="sans">hecho</small></label></div>
+<p><code>if</code>/<code>else if</code>/<code>else</code>/<code>end if</code>, <code>do</code> (un solo constructo para el for y el while de C++), <code>select case</code> (el switch de Fortran), <code>exit</code>/<code>cycle</code> (break/continue).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">suma.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">integer</span> :: i, suma
+suma = <span class="n">0</span>
+<span class="k">do</span> i = <span class="n">1</span>, <span class="n">10</span>
+  suma = suma + i
+<span class="k">end do</span>
+<span class="k">print</span> *, suma   <span class="c">! -&gt; 55</span></code></pre></div></div>
+<div class="legal warn"><span class="tag sans">Trampa clásica viniendo de C++</span><code>do i = 1, 10</code> INCLUYE el 10 (intervalo cerrado), a diferencia de <code>for(i=0; i&lt;10; i++)</code> en C++ que es medio-abierto. Un <code>do i=1,n</code> tiene exactamente <code>n</code> iteraciones, no <code>n-1</code>.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuántas veces se ejecuta <code>do i = 5, 8</code>? ¿Y <code>do i = 1, 10, 2</code>?</div>
+</div>
+
+<div class="topic" id="t29" data-topic="t29">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.5</span> Arrays — el superpoder de Fortran</h3><label class="checklabel"><input type="checkbox" data-t="t29"><small class="sans">hecho</small></label></div>
+<p>Fortran nació para álgebra lineal y se nota: los arrays empiezan en índice <strong>1</strong> por defecto (no 0), una matriz se declara nativa <code>real(8) :: K(3,3)</code> sin librería, y hay operaciones de array completas: <code>A = B + C</code> suma elemento a elemento sin loop explícito, <code>matmul(A,B)</code> multiplica matrices, <code>sum(A)</code>, <code>transpose(A)</code> — todo built-in, no una librería tipo Eigen.</p>
+<h4>La trampa real: orden de memoria column-major</h4>
+<p>C/C++ guarda un array 2D fila por fila (<em>row-major</em>); Fortran lo guarda columna por columna (<em>column-major</em>). No es un detalle cosmético: si recorrés un array en el orden equivocado, el programa sigue funcionando pero mucho más lento, porque salta por toda la memoria en vez de leerla secuencial (mala localidad de caché).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">memoria</span><span class="cw-lang">texto</span></div><div class="cw-body"><pre><code>Matriz 3x3, valores A(i,j):
+
+  A(1,1) A(1,2) A(1,3)
+  A(2,1) A(2,2) A(2,3)
+  A(3,1) A(3,2) A(3,3)
+
+C/C++ (row-major)   -&gt; en memoria:
+  A(1,1) A(1,2) A(1,3) A(2,1) A(2,2) A(2,3) A(3,1) A(3,2) A(3,3)
+  bucle rápido: for(i) for(j) usar A[i][j]   <span class="c">// j varía más rápido</span>
+
+Fortran (column-major) -&gt; en memoria:
+  A(1,1) A(2,1) A(3,1) A(1,2) A(2,2) A(3,2) A(1,3) A(2,3) A(3,3)
+  bucle rápido: do j; do i; usar A(i,j); end do; end do
+                                            <span class="c">! i varía más rápido -- el loop de ADENTRO</span></code></pre></div></div>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">arrays.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">real</span>(<span class="n">8</span>) :: K(<span class="n">3</span>,<span class="n">3</span>), F(<span class="n">3</span>), suma_K
+K = <span class="n">0.0d0</span>
+K(<span class="n">1</span>,<span class="n">1</span>) = <span class="n">2.0d0</span>;  K(<span class="n">2</span>,<span class="n">2</span>) = <span class="n">2.0d0</span>;  K(<span class="n">3</span>,<span class="n">3</span>) = <span class="n">2.0d0</span>
+suma_K = <span class="k">sum</span>(K)             <span class="c">! sin loop -- built-in</span>
+F = <span class="k">matmul</span>(K, [<span class="n">1.0d0</span>, <span class="n">1.0d0</span>, <span class="n">1.0d0</span>])  <span class="c">! multiplicación de matriz por vector, built-in</span></code></pre></div></div>
+<p>Arrays dinámicos: <code>real(8), allocatable :: v(:)</code> y después <code>allocate(v(n))</code> — el equivalente a <code>std::vector</code>, pero vos controlás el crecimiento (siempre por doblado amortizado, per el tema 2.1, nunca reallocate por cada inserción).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuál de los dos loops (por filas o por columnas) es el rápido en Fortran para una matriz 1000×1000? ¿Y en C++?</div>
+</div>
+
+<div class="topic" id="t30" data-topic="t30">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.6</span> Subrutinas, funciones y módulos</h3><label class="checklabel"><input type="checkbox" data-t="t30"><small class="sans">hecho</small></label></div>
+<p><code>function</code> devuelve un valor (por su propio nombre o con <code>result(...)</code>); <code>subroutine</code> no devuelve nada por sí misma, se llama con <code>call</code> y modifica sus argumentos. <code>intent(in)</code>/<code>intent(out)</code>/<code>intent(inout)</code> documentan en la firma misma qué hace cada argumento — el compilador te avisa si lo violás, algo que C++ no fuerza.</p>
+<p><code>module</code> es la unidad de organización de Fortran — como un header+source de C++ combinados en un solo archivo. <code>use nombre_modulo</code> importa. Cada archivo de DELOS-3D ya sigue este patrón: un módulo por archivo <code>.f90</code>.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">elemento_barra.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">module</span> elemento_barra
+  <span class="k">implicit none</span>
+<span class="k">contains</span>
+  <span class="k">subroutine</span> <span class="fn">rigidez_barra</span>(E, A, L, k)
+    <span class="k">real</span>(<span class="n">8</span>), <span class="k">intent</span>(<span class="k">in</span>)  :: E, A, L
+    <span class="k">real</span>(<span class="n">8</span>), <span class="k">intent</span>(<span class="k">out</span>) :: k(<span class="n">2</span>,<span class="n">2</span>)
+    <span class="k">real</span>(<span class="n">8</span>) :: EA_L
+    EA_L = E * A / L
+    k(<span class="n">1</span>,<span class="n">1</span>) =  EA_L;  k(<span class="n">1</span>,<span class="n">2</span>) = -EA_L
+    k(<span class="n">2</span>,<span class="n">1</span>) = -EA_L;  k(<span class="n">2</span>,<span class="n">2</span>) =  EA_L
+  <span class="k">end subroutine</span> rigidez_barra
+<span class="k">end module</span> elemento_barra
+
+<span class="k">program</span> principal
+  <span class="k">use</span> elemento_barra
+  <span class="k">implicit none</span>
+  <span class="k">real</span>(<span class="n">8</span>) :: k(<span class="n">2</span>,<span class="n">2</span>)
+  <span class="k">call</span> rigidez_barra(<span class="n">200.0d9</span>, <span class="n">0.001d0</span>, <span class="n">2.0d0</span>, k)
+  <span class="k">print</span> *, k
+<span class="k">end program</span> principal</code></pre></div></div>
+<p>Este ejemplo (en <code>gfortran/05-subrutinas-modulos/</code>, ya compilado y probado) es el tema 6.1 (elemento barra) y el 3.4 (rigidez EA/L) en Fortran real — la misma fórmula que ya programaste en C++, traducida.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué error da el compilador si intentás modificar dentro de la subrutina un argumento marcado <code>intent(in)</code>?</div>
+</div>
+
+<div class="topic" id="t31" data-topic="t31">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.7</span> Tipos derivados e interoperabilidad con C</h3><label class="checklabel"><input type="checkbox" data-t="t31"><small class="sans">hecho</small></label></div>
+<p><code>type</code> es el <code>struct</code> de Fortran:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">nodo.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">type</span> :: Nodo
+  <span class="k">real</span>(<span class="n">8</span>) :: x, y, z
+<span class="k">end type</span> Nodo
+
+<span class="k">type</span>(Nodo) :: p1
+p1%x = <span class="n">1.0d0</span>;  p1%y = <span class="n">2.0d0</span>;  p1%z = <span class="n">0.0d0</span></code></pre></div></div>
+<h4>Llamar código C desde Fortran: <code>ISO_C_BINDING</code></h4>
+<p>Desde Fortran 2003, el módulo intrínseco <code>iso_c_binding</code> permite declarar una interfaz que llama directo a una función C compilada aparte (por ejemplo, en una DLL en Windows), con una interfaz <code>bind(C)</code> que garantiza compatibilidad binaria exacta con la convención de llamada de C:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">interop.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">interface</span>
+  <span class="k">subroutine</span> <span class="fn">dibujar_triangulo</span>(x1, y1, x2, y2, x3, y3) <span class="k">bind</span>(<span class="t">C</span>, <span class="k">name</span>=<span class="s">"dibujar_triangulo"</span>)
+    <span class="k">use</span>, <span class="k">intrinsic</span> :: iso_c_binding
+    <span class="k">real</span>(<span class="t">c_double</span>), <span class="k">value</span> :: x1, y1, x2, y2, x3, y3
+  <span class="k">end subroutine</span> dibujar_triangulo
+<span class="k">end interface</span></code></pre></div></div>
+<p>Esto le dice al compilador: "esta subrutina existe en otro archivo compilado en C, y así es su firma exacta". El núcleo numérico se queda en Fortran (rápido, lo que tu papá ya sabía) y una DLL en C hace de puente hacia gráficos de bajo nivel.</p>
+<div class="obra"><span class="tag sans">Nota de obra — la "DLL en C" que mencionaba tu papá</span>Hipótesis a confirmar cuando veas su código, no un hecho todavía: exactamente este patrón — Fortran + una DLL en C vía <code>bind(C)</code> — era la forma estándar de llegar a gráficos de bajo nivel (probablemente OpenGL, tema 5.4) antes de que existiera algo como Winteracter (tema 6.9), o para partes puntuales que Winteracter no cubría. Cuando tengan el código a la vista, buscá un bloque <code>interface ... bind(C) ... end interface</code> para confirmarlo.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés declarar un tipo derivado <code>Triangulo</code> con 3 campos <code>type(Nodo)</code>?</div>
+</div>
+
+<div class="topic" id="t32" data-topic="t32">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.8</span> Compiladores — cuál usaba tu papá</h3><label class="checklabel"><input type="checkbox" data-t="t32"><small class="sans">hecho</small></label></div>
+<p>Tres opciones reales hoy: <strong>gfortran</strong> (gratis, multiplataforma, ya instalado acá), <strong>Intel ifx</strong> (gratis, parte de oneAPI, muy usado en ingeniería) y <strong>Silverfrost FTN95</strong> (comercial, solo Windows, con buena interoperabilidad con gfortran/ifort en 64 bits).</p>
+<div class="legal no"><span class="tag sans">No adivinado</span>Mencionaste que tu papá tenía licencia de algo — no lo voy a inventar. La única forma correcta de saberlo es mirar su PC, la misma regla que él mismo dejó como método de trabajo ("leer y validar, nunca adivinar"), registrada en la memoria del proyecto IFC-Bridge.</div>
+<div class="obra"><span class="tag sans">Nota de obra — usar la PC de tu papá sin riesgo</span>Con licencia o sin ella, una sola regla: <strong>respaldá primero, experimentá después.</strong> Copiá la carpeta completa de su programa (y cualquier carpeta de licencias, <code>.lic</code> o <code>License</code>) a un disco externo antes de abrir nada. Con eso hecho: leer código no rompe nada; compilar SIEMPRE hacia una carpeta de copia nueva, nunca sobre la original; nunca borrar/mover/sobrescribir un archivo original mientras aprendés. Si la licencia está atada a esa máquina, no hace falta moverla — compilás las copias ahí mismo.</div>
+<p>Buscá carpetas de instalación con nombre <code>Intel</code>, <code>oneAPI</code>, <code>Silverfrost</code> o <code>FTN95</code>, y cualquier archivo <code>.lic</code> cerca de la carpeta de su programa de FEM.</p>
+<div class="recursos"><div class="r"><span class="k">Referencia</span><a href="https://fortran-lang.org/compilers/" target="_blank" rel="noopener">fortran-lang.org/compilers</a></div></div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Ya revisaste la PC de tu papá — ¿qué compilador encontraste, y ya hiciste el respaldo antes de tocar nada?</div>
+</div>
+
+<div class="topic" id="t33" data-topic="t33">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.9</span> Winteracter</h3><label class="checklabel"><input type="checkbox" data-t="t33"><small class="sans">hecho</small></label></div>
+<p>Librería de ventanas y gráficos <em>escrita para llamarse directamente desde Fortran</em>, sin mezclar lenguajes — el equivalente Fortran de Qt. Buena noticia real: pasó a ser completamente gratuita y corre en <strong>macOS</strong> (Intel y Apple Silicon), Linux y Windows con el mismo código sin cambios — vas a poder compilar y correr partes del programa real de tu papá en tu propia Mac.</p>
+<div class="recursos">
+<div class="r"><span class="k">Sitio oficial</span><a href="https://www.winteracter.uk/" target="_blank" rel="noopener">winteracter.uk</a></div>
+<div class="r"><span class="k">Anuncio de gratuidad</span><a href="https://fortran-lang.discourse.group/t/the-winteracter-fortran-gui-toolset-is-now-available-free-of-charge/10855" target="_blank" rel="noopener">Fortran Discourse</a></div>
+</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Ya conseguiste correr el ejemplo de ventana de Winteracter en tu Mac?</div>
+</div>
+
+<div class="topic" id="t34" data-topic="t34">
+<div class="topichead"><h3><span class="badge PRG">PRG · 6.10</span> Editor y flujo de trabajo</h3><label class="checklabel"><input type="checkbox" data-t="t34"><small class="sans">hecho</small></label></div>
+<div class="legal"><span class="tag sans">Ya instalado en esta sesión</span>La extensión "Modern Fortran" (<code>fortran-lang.linter-gfortran</code>) y el servidor <code>fortls</code> ya quedaron instalados en tu VS Code — no hace falta repetir el setup.</div>
+<ul><li>Abrí <code>../gfortran</code> en VS Code y confirmá que resaltado y "ir a definición" funcionan en cualquiera de los <code>.f90</code>.</li>
+<li>Después, abrí un <code>.f90</code> real del proyecto de tu papá y confirmá lo mismo.</li></ul>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Ya podés navegar (Ctrl+clic a una función) dentro del código Fortran real del proyecto?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="5-geometria.html"><span>Anterior</span><b>← Bloque 5 — Geometría</b></a>
+  <a class="pn next" href="7-proyecto-papa.html"><span>Siguiente</span><b>Bloque 7 — El proyecto de tu papá →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

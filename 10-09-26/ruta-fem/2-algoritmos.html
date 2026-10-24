@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B2 · Algoritmos · Ruta al FEM</title>
+<link rel="stylesheet" href="estilo.css">
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta al FEM</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-matematicas.html" title="Matemáticas">1</a>
+    <a class="pill active" href="2-algoritmos.html" title="Estructuras de datos y algoritmos">2</a>
+    <a class="pill" href="3-mecanica.html" title="Mecánica estructural">3</a>
+    <a class="pill" href="4-elementos-finitos.html" title="Elementos finitos">4</a>
+    <a class="pill" href="5-geometria.html" title="Geometría y gráficos">5</a>
+    <a class="pill" href="6-fortran.html" title="De C++ a Fortran">6</a>
+    <a class="pill" href="7-proyecto-papa.html" title="El proyecto de tu papá">7</a>
+    <a class="pill" href="8-tesis.html" title="Proyecto de grado">8</a>
+    <a class="pill" href="9-biblioteca.html" title="Biblioteca">L</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/38</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Bloque 2</div>
+<h1 class="hero">Estructuras de datos y algoritmos</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> lo que estás viendo ahora en tu carrera (estructuras de datos → árboles → grafos → algoritmos), explicado desde cero y conectado directamente al código real de tu papá — no es un desvío del camino, es el mismo camino. <strong>Pre-requisito:</strong> 1.1 (para los ejemplos con matrices). <strong>Se puede avanzar en paralelo con:</strong> todo lo demás.</p></blockquote>
+<div class="legal"><span class="tag sans">Versión completa</span>Esta fase da lo esencial, atado de cerca al proyecto. Para la ruta completa de estructuras de datos, árboles y grafos — con cada ejemplo de código compilado y probado — ver <a href="../ruta_codigo/0-indice.html">Ruta de Código</a>.</div>
+
+<div class="topic" id="t06" data-topic="t06">
+<div class="topichead"><h3><span class="badge DSA">DSA · 2.1</span> Complejidad algorítmica (Big-O)</h3>
+<label class="checklabel"><input type="checkbox" data-t="t06"><small class="sans">hecho</small></label></div>
+<h4>Teoría: por qué existe</h4>
+<p>Cuando un problema crece — de una malla de 100 nodos a una de 2 millones — lo que importa no es cuánto tarda <em>hoy</em>, sino cómo crece el tiempo cuando el problema crece. Big-O describe esa tasa de crecimiento, ignorando constantes y detalles de implementación: es una herramienta para comparar algoritmos en el límite, no un cronómetro.</p>
+<div class="tablewrap"><table class="numtable">
+<thead><tr><th>Clase</th><th>n = 10</th><th>n = 1.000</th><th>n = 1.000.000</th></tr></thead>
+<tbody>
+<tr><td>O(1) — acceso a un array por índice</td><td>1</td><td>1</td><td>1</td></tr>
+<tr><td>O(log n) — buscar en un árbol balanceado</td><td>3</td><td>10</td><td>20</td></tr>
+<tr><td>O(n) — recorrer cada nodo una vez</td><td>10</td><td>1.000</td><td>1.000.000</td></tr>
+<tr><td>O(n log n) — un buen sort (heapsort)</td><td>33</td><td>10.000</td><td>20.000.000</td></tr>
+<tr><td>O(n²) — comparar cada elemento contra cada otro</td><td>100</td><td>1.000.000</td><td>1.000.000.000.000</td></tr>
+</tbody></table></div>
+<p>Con un millón de nodos, la diferencia entre O(n log n) y O(n²) es la diferencia entre 20 millones de operaciones (segundos) y un billón (inviable). Esta tabla, no una opinión, es por qué el proyecto de tu papá <em>prohíbe explícitamente</em> ciertos algoritmos.</p>
+<div class="obra"><span class="tag sans">Nota de obra</span>La memoria del proyecto IFC-Bridge registra esta regla explícita del usuario: "que quede al pelo la implementación porque son archivos gigantes, es vital el rendimiento". Por eso: resolver una referencia de entidad siempre O(1) por hash, nunca búsqueda lineal; parsear números con rutinas manuales (10-50× más rápido que el <code>read</code> formateado de Fortran en un archivo con millones de números); y crecimiento de arrays por doblado amortizado, nunca "reallocate por cada inserción".</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con un archivo IFC de 200 MB y millones de entidades, ¿por qué un algoritmo O(n²) para resolver referencias sería, literalmente, imposible de correr?</div>
+</div>
+
+<div class="topic" id="t07" data-topic="t07">
+<div class="topichead"><h3><span class="badge DSA">DSA · 2.2</span> Árboles</h3>
+<label class="checklabel"><input type="checkbox" data-t="t07"><small class="sans">hecho</small></label></div>
+<h4>Teoría: por qué existe</h4>
+<p>Un array es genial para "dame el elemento en la posición i" (O(1)) pero pésimo para "encontrá el más cercano a este punto" sin revisarlos todos (O(n)). Un árbol organiza datos jerárquicamente para que cada pregunta descarte la mitad (o más) de los datos en cada paso — de O(n) a O(log n), la fila 2 de la tabla anterior.</p>
+<p><strong>Vocabulario:</strong> el nodo de arriba es la <em>raíz</em>; cada nodo tiene <em>hijos</em> hacia abajo y un <em>padre</em> hacia arriba (salvo la raíz); un nodo sin hijos es una <em>hoja</em>; la <em>altura</em> es la distancia máxima raíz→hoja.</p>
+<figure class="diagram">
+<svg viewBox="0 0 500 260" role="img" aria-label="Árbol binario de búsqueda con raíz 50; el camino resaltado muestra cómo se busca el valor 35 descartando la mitad del árbol en cada paso">
+  <g stroke="currentColor" stroke-width="1.3" fill="none">
+    <line x1="250" y1="35" x2="140" y2="95"/><line x1="250" y1="35" x2="360" y2="95"/>
+    <line x1="140" y1="95" x2="80" y2="155" stroke="var(--accent)" stroke-width="2.2"/><line x1="140" y1="95" x2="200" y2="155"/>
+    <line x1="360" y1="95" x2="300" y2="155"/><line x1="360" y1="95" x2="420" y2="155"/>
+    <line x1="80" y1="155" x2="60" y2="215"/><line x1="80" y1="155" x2="100" y2="215" stroke="var(--accent)" stroke-width="2.2"/>
+  </g>
+  <g font-family="SF Mono, JetBrains Mono, monospace" font-size="14" text-anchor="middle">
+    <circle cx="250" cy="35" r="20" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="250" y="40" fill="currentColor">50</text>
+    <circle cx="140" cy="95" r="20" fill="var(--accent)" fill-opacity=".18" stroke="var(--accent)" stroke-width="2"/><text x="140" y="100" fill="currentColor">30</text>
+    <circle cx="360" cy="95" r="20" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="360" y="100" fill="currentColor">70</text>
+    <circle cx="80" cy="155" r="20" fill="var(--accent)" fill-opacity=".18" stroke="var(--accent)" stroke-width="2"/><text x="80" y="160" fill="currentColor">10</text>
+    <circle cx="200" cy="155" r="20" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="200" y="160" fill="currentColor">40</text>
+    <circle cx="300" cy="155" r="20" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="300" y="160" fill="currentColor">60</text>
+    <circle cx="420" cy="155" r="20" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="420" y="160" fill="currentColor">80</text>
+    <circle cx="60" cy="215" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="60" y="220" fill="currentColor">20</text>
+    <circle cx="100" cy="215" r="18" fill="var(--accent)" fill-opacity=".25" stroke="var(--accent)" stroke-width="2.2"/><text x="100" y="220" fill="currentColor">35</text>
+  </g>
+</svg>
+<figcaption>Buscar 35 desde la raíz (50): 35&lt;50 → izquierda (30) · 35&gt;30 → derecha (40)... el camino resaltado sigue hasta el nodo correcto. Cada comparación descarta una rama entera.</figcaption>
+</figure>
+<h4>Árbol binario de búsqueda (BST)</h4>
+<p>Cada nodo tiene como máximo 2 hijos: todo lo menor a la izquierda, todo lo mayor a la derecha. Insertar y buscar son O(log n) <em>en promedio</em> — pero si insertás valores ya ordenados, el árbol degenera en una lista (cada nodo con un solo hijo) y se vuelve O(n). De ahí nacen los árboles <em>balanceados</em> (AVL, rojo-negro), que se auto-reorganizan para garantizar O(log n) siempre — conceptualmente, no hace falta implementarlos para esta ruta, pero sí saber que existen y por qué.</p>
+<h4>El giro aplicado a mallas: árboles espaciales</h4>
+<p>Un k-d tree o un quad-tree/octree no ordena por "menor/mayor" sino por <em>posición en el espacio</em>: dividen 2D/3D recursivamente en mitades, y responden "¿qué nodos están cerca de este punto?" sin revisar cada nodo del modelo — exactamente lo que un mallador necesita para "¿ya existe un punto acá cerca?" en tiempo razonable.</p>
+<div class="recursos">
+<div class="r"><span class="k">Libro</span><span>Cormen, Leiserson, Rivest, Stein (CLRS), <em>Introduction to Algorithms</em> — cap. de árboles binarios de búsqueda</span></div>
+<div class="r"><span class="k">Curso gratis</span><a href="https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/" target="_blank" rel="noopener">MIT OCW 6.006 — Introduction to Algorithms</a></div>
+</div>
+<div class="obra"><span class="tag sans">Nota de obra — con honestidad, no inventada</span>DELOS-3D <strong>no</strong> usa árboles espaciales: resuelve conectividad con heapsort (ver 2.1), no con un árbol. Pero quad-tree/octree son la técnica estándar de la industria para este mismo problema en mallas mucho más grandes que las de este proyecto — una extensión natural y real si algún día hiciera falta escalar.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>En un árbol balanceado con 1 millón de nodos, ¿cuántas comparaciones como máximo hacen falta para encontrar un valor? (mirá la tabla de 2.1 para la respuesta)</div>
+</div>
+
+<div class="topic" id="t08" data-topic="t08">
+<div class="topichead"><h3><span class="badge DSA">DSA · 2.3</span> Grafos</h3>
+<label class="checklabel"><input type="checkbox" data-t="t08"><small class="sans">hecho</small></label></div>
+<h4>Teoría: qué es y cómo se guarda</h4>
+<p>Un grafo es vértices + aristas: puede ser dirigido o no, con peso o sin peso. Dos formas de guardarlo en memoria: <strong>matriz de adyacencia</strong> (una tabla n×n, O(n²) de memoria — bien para grafos densos) o <strong>lista de adyacencia</strong> (cada nodo guarda solo sus vecinos reales, O(n+aristas) — bien para grafos dispersos). Una malla real es exactamente un grafo disperso: cada nodo toca un puñado de vecinos, nunca todos los demás — por eso la lista de adyacencia es, estructuralmente, la misma idea que una matriz dispersa (tema 1.4).</p>
+<h4>BFS (breadth-first search)</h4>
+<p>Explora nivel por nivel desde un nodo inicial usando una cola (FIFO): visita todos los vecinos directos, después los vecinos de los vecinos, y así. Siempre encuentra el camino más corto en número de aristas. DFS (depth-first search) hace lo opuesto: se mete lo más profundo posible antes de retroceder, con una pila o recursión.</p>
+<figure class="diagram">
+<svg viewBox="0 0 480 240" role="img" aria-label="Grafo de 8 nodos con el orden de visita BFS numerado desde el nodo A: A=1, B=2, C=3, D=4, E=5, F=6, G=7, H=8">
+  <g stroke="currentColor" stroke-width="1.3" fill="none">
+    <line x1="60" y1="120" x2="180" y2="60"/><line x1="60" y1="120" x2="180" y2="120"/><line x1="60" y1="120" x2="180" y2="190"/>
+    <line x1="180" y1="60" x2="320" y2="40"/><line x1="180" y1="120" x2="320" y2="120"/><line x1="180" y1="190" x2="320" y2="200"/>
+    <line x1="320" y1="120" x2="440" y2="120"/>
+  </g>
+  <g font-family="SF Mono, JetBrains Mono, monospace" font-size="13" text-anchor="middle">
+    <circle cx="60" cy="120" r="20" fill="var(--accent)" fill-opacity=".22" stroke="var(--accent)" stroke-width="2.2"/><text x="60" y="125" fill="currentColor">A</text><text x="60" y="98" fill="var(--accent)" font-size="11">1</text>
+    <circle cx="180" cy="60" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="180" y="65" fill="currentColor">B</text><text x="180" y="38" fill="var(--accent)" font-size="11">2</text>
+    <circle cx="180" cy="120" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="180" y="125" fill="currentColor">C</text><text x="180" y="148" fill="var(--accent)" font-size="11">3</text>
+    <circle cx="180" cy="190" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="180" y="195" fill="currentColor">D</text><text x="180" y="218" fill="var(--accent)" font-size="11">4</text>
+    <circle cx="320" cy="40" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="320" y="45" fill="currentColor">E</text><text x="320" y="18" fill="var(--accent)" font-size="11">5</text>
+    <circle cx="320" cy="120" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="320" y="125" fill="currentColor">F</text><text x="320" y="148" fill="var(--accent)" font-size="11">6</text>
+    <circle cx="320" cy="200" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="320" y="205" fill="currentColor">G</text><text x="345" y="200" fill="var(--accent)" font-size="11">7</text>
+    <circle cx="440" cy="120" r="18" fill="currentColor" fill-opacity=".08" stroke="currentColor"/><text x="440" y="125" fill="currentColor">H</text><text x="440" y="148" fill="var(--accent)" font-size="11">8</text>
+  </g>
+</svg>
+<figcaption>BFS desde A: visita primero todos los vecinos directos de A (B, C, D), después los vecinos de esos (E, F, G), después H. Nivel por nivel, nunca salta uno.</figcaption>
+</figure>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">bfs.f90</span><span class="cw-lang">fortran</span></div><div class="cw-body"><pre><code><span class="k">subroutine</span> <span class="fn">bfs</span>(adyacencia, inicio, orden_visita)
+  <span class="k">integer</span>, <span class="k">intent</span>(<span class="k">in</span>)  :: adyacencia(:,:), inicio
+  <span class="k">integer</span>, <span class="k">intent</span>(<span class="k">out</span>) :: orden_visita(:)
+  <span class="k">logical</span> :: visitado(<span class="k">size</span>(adyacencia,1))
+  <span class="k">integer</span> :: cola(<span class="k">size</span>(adyacencia,1)), inicio_cola, fin_cola, actual, vecino
+
+  visitado = .<span class="k">false</span>.
+  cola(1) = inicio;  inicio_cola = 1;  fin_cola = 1
+  visitado(inicio) = .<span class="k">true</span>.
+
+  <span class="k">do while</span> (inicio_cola &lt;= fin_cola)
+    actual = cola(inicio_cola);  inicio_cola = inicio_cola + 1
+    <span class="k">do</span> vecino = 1, <span class="k">size</span>(adyacencia, 2)
+      <span class="k">if</span> (adyacencia(actual, vecino) == 1 .<span class="k">and</span>. .<span class="k">not</span>. visitado(vecino)) <span class="k">then</span>
+        visitado(vecino) = .<span class="k">true</span>.
+        fin_cola = fin_cola + 1;  cola(fin_cola) = vecino
+      <span class="k">end if</span>
+    <span class="k">end do</span>
+  <span class="k">end do</span>
+  orden_visita = cola
+<span class="k">end subroutine</span> bfs</code></pre></div></div>
+<div class="recursos">
+<div class="r"><span class="k">Libro</span><span>CLRS, <em>Introduction to Algorithms</em> — cap. de BFS/DFS</span></div>
+<div class="r"><span class="k">Curso gratis</span><a href="https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/" target="_blank" rel="noopener">MIT OCW 6.006</a></div>
+</div>
+<div class="obra"><span class="tag sans">Nota de obra</span>La renumeración de nodos de DELOS-3D (<code>delos_renumber.f90</code>, Fase 7) implementa Cuthill-McKee: exactamente un BFS empezando desde el nodo más "periférico" del grafo, para minimizar el ancho de banda de la matriz global antes de que llegue al solver del programa de FEM de tu papá. Una malla ES un grafo — nodos son vértices, conexiones entre elementos son aristas — sin ninguna metáfora de por medio.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con el grafo del diagrama de arriba, ¿podés escribir a mano el orden en que DFS (no BFS) visitaría los mismos nodos desde A?</div>
+</div>
+
+<div class="topic" id="t09" data-topic="t09">
+<div class="topichead"><h3><span class="badge DSA">DSA · 2.4</span> Diseño de algoritmos: greedy (y sus límites)</h3>
+<label class="checklabel"><input type="checkbox" data-t="t09"><small class="sans">hecho</small></label></div>
+<h4>Teoría: qué es un paradigma de diseño</h4>
+<p>No es una técnica puntual sino una estrategia general para construir un algoritmo. Las cuatro clásicas: <em>greedy</em> (voraz), <em>divide y vencerás</em>, <em>programación dinámica</em> y <em>backtracking</em>. Greedy es la más simple: en cada paso, tomar la opción que se ve mejor <strong>ahora mismo</strong> — sin reconsiderar decisiones pasadas — y esperar que eso lleve al óptimo global.</p>
+<h4>Cuándo sí funciona: selección de actividades</h4>
+<p>Problema clásico: dado un conjunto de actividades con hora de inicio y fin, elegir el máximo número de actividades que no se solapen. La estrategia greedy correcta: <strong>ordenar por hora de fin más temprana</strong>, tomar la primera, descartar todas las que se solapen con ella, repetir con lo que queda. Se puede demostrar (por un argumento de intercambio: cualquier solución óptima se puede transformar en la greedy sin perder actividades) que esto es óptimo — no es casualidad, es una propiedad matemática del problema.</p>
+<h4>Cuándo NO funciona: el contraejemplo que hay que conocer</h4>
+<p>Cambio de monedas con denominaciones {1, 3, 4} y monto 6: greedy toma la moneda más grande posible cada vez → 4+1+1 = <strong>3 monedas</strong>. El óptimo real es 3+3 = <strong>2 monedas</strong>. Greedy falló porque la elección local (la moneda más grande) no siempre lleva al óptimo global — para este problema hace falta programación dinámica, no greedy, para garantizar la respuesta correcta siempre.</p>
+<div class="legal warn"><span class="tag sans">Regla a recordar</span>Greedy es rápido y simple, pero solo es correcto cuando el problema tiene la "propiedad de intercambio" que lo garantiza — usarlo porque "parece razonable" sin esa garantía es la forma más común de bug sutil en algoritmos.</div>
+<h4>El algoritmo real de DELOS-3D: emparejado greedy de triángulos</h4>
+<p>Fase 6 de DELOS-3D empareja triángulos adyacentes en cuadriláteros bien formados, ordenados por calidad — la misma forma que selección de actividades: ordenar candidatos por una métrica, tomar el mejor, descartar lo que ya quedó usado, repetir con lo que sobra. Traza ilustrativa (con la mecánica real del algoritmo, no los números exactos del código):</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">salida</span><span class="cw-lang">texto</span></div><div class="cw-body"><pre><code>candidatos (par de triángulos), ordenados por calidad descendente:
+
+  (T3,T7)  calidad 0.94   -&gt; ACEPTADO    [T3, T7 consumidos]
+  (T3,T9)  calidad 0.91   -&gt; descartado  (T3 ya usado)
+  (T5,T6)  calidad 0.88   -&gt; ACEPTADO    [T5, T6 consumidos]
+  (T7,T8)  calidad 0.85   -&gt; descartado  (T7 ya usado)
+  (T1,T2)  calidad 0.79   -&gt; ACEPTADO    [T1, T2 consumidos]
+  (T2,T4)  calidad 0.61   -&gt; descartado  (T2 ya usado)
+  ...
+
+resultado: 3 cuadriláteros formados, el resto queda como triángulos</code></pre></div></div>
+<div class="recursos">
+<div class="r"><span class="k">Libro</span><span>CLRS, <em>Introduction to Algorithms</em> — capítulo de algoritmos greedy</span></div>
+<div class="r"><span class="k">Curso gratis</span><a href="https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/" target="_blank" rel="noopener">MIT OCW 6.046J — Design and Analysis of Algorithms</a></div>
+</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con monedas {1,3,4} y monto=6, ¿podés mostrar a mano por qué greedy da 3 monedas y cuál es la combinación óptima real de 2?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="1-matematicas.html"><span>Anterior</span><b>← Bloque 1 — Matemáticas</b></a>
+  <a class="pn next" href="3-mecanica.html"><span>Siguiente</span><b>Bloque 3 — Mecánica →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

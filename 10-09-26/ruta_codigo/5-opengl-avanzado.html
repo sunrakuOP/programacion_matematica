@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>5 · OpenGL avanzado · Ruta de Código</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de Código</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-estructuras-de-datos.html" title="Estructuras de datos">1</a>
+    <a class="pill" href="2-arboles-grafos.html" title="Árboles y grafos">2</a>
+    <a class="pill" href="3-metodos-numericos.html" title="Métodos numéricos en código">3</a>
+    <a class="pill" href="4-graficos-interfaces.html" title="Gráficos e interfaces">4</a>
+    <a class="pill active" href="5-opengl-avanzado.html" title="OpenGL avanzado">5</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/43</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 5</div>
+<h1 class="hero">OpenGL avanzado: hacia un visualizador FEM</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> de dibujar un triángulo (Fase 4) a un visualizador real — texturas, luz, cámara que se mueve, y lo específico para FEM: mapas de color por esfuerzo/desplazamiento y selección de elementos con el mouse. <strong>Pre-requisito:</strong> Fase 4 completa. <strong>Referencia base:</strong> <a href="https://learnopengl.com/" target="_blank" rel="noopener">learnopengl.com</a>, que sigue casi este mismo orden.</p></blockquote>
+
+<div class="legal"><span class="tag sans">Cómo se verificó esta fase</span>Instalé <code>glm</code> por vos (<code>brew install glm</code>) y descargué <code>stb_image.h</code> y Dear ImGui (los archivos mínimos, código fuente oficial) directo a <code>opengl-libs/</code> de esta carpeta — ya los tenés ahí, no hay que bajarlos de nuevo. Compilé y corrí de verdad 7 de los 8 temas (GLM, stb_image, el shader de Phong, la matemática de cámara, EBO+colores, picking, e ImGui con un panel real). Lo único que no se puede verificar "corriendo" sin una ventana visible e interacción humana es 5.4 (mover la cámara con teclado/mouse) — ese código está revisado y es correcto, pero no lo vi correr.</div>
+
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#c501">5.1 GLM: la librería que reemplaza tu clase Matriz</a></li>
+<li><a href="#c502">5.2 Texturas con stb_image</a></li>
+<li><a href="#c503">5.3 Iluminación: el modelo de Phong</a></li>
+<li><a href="#c504">5.4 Cámara interactiva</a></li>
+<li><a href="#c505">5.5 EBO: mallas sin vértices duplicados</a></li>
+<li><a href="#c506">5.6 El corazón visual: color por valor escalar</a></li>
+<li><a href="#c507">5.7 Selección de elementos (picking)</a></li>
+<li><a href="#c508">5.8 Interfaz con Dear ImGui</a></li>
+</ol>
+</div>
+
+<div class="topic" id="c501" data-topic="c501">
+<div class="topichead"><h3><span class="badge PRG">5.1</span> GLM: la librería que reemplaza tu clase Matriz</h3><label class="checklabel"><input type="checkbox" data-t="c501"><small class="sans">hecho</small></label></div>
+<p><strong>GLM</strong> (OpenGL Mathematics) es una librería solo-headers que hace exactamente lo que tu clase <code>Mat4</code>/<code>Vec4</code> del tema 4.2 hacía a mano — pero optimizada, probada, y con la sintaxis que vas a ver en TODO tutorial de OpenGL. Ya instalada en tu Mac (<code>brew install glm</code>). Escribir la tuya primero no fue en vano: ahora sabés exactamente qué hace GLM por debajo en vez de tratarla como caja negra.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">glm_vs_manual.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">#include</span> &lt;glm/glm.hpp&gt;
+<span class="k">#include</span> &lt;glm/gtc/matrix_transform.hpp&gt;
+<span class="k">using namespace</span> glm;
+
+vec4 punto(<span class="n">1.0f</span>, <span class="n">0.0f</span>, <span class="n">0.0f</span>, <span class="n">1.0f</span>);
+mat4 R = rotate(mat4(<span class="n">1.0f</span>), radians(<span class="n">90.0f</span>), vec3(<span class="n">0</span>,<span class="n">0</span>,<span class="n">1</span>));  <span class="c">// mat4(1.0f) = identidad</span>
+mat4 T = translate(mat4(<span class="n">1.0f</span>), vec3(<span class="n">5</span>,<span class="n">0</span>,<span class="n">0</span>));
+
+vec4 rotarLuegoTrasladar = T * R * punto;
+vec4 trasladarLuegoRotar = R * T * punto;</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — el mismo checkpoint del tema 4.2, ahora con GLM</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">GLM -- rotar luego trasladar: (5.0000, 1.0000, 0.0000)
+GLM -- trasladar luego rotar: (-0.0000, 6.0000, 0.0000)
+matriz de perspectiva[0][0] = 1.81066 (no deberia ser 0 ni nan)</pre></div>
+<p>Idéntico, número por número, a tu <code>Mat4</code> hecha a mano. De acá en adelante, usá GLM siempre — <code>glm::rotate</code>, <code>glm::translate</code>, <code>glm::perspective</code>, <code>glm::lookAt</code> (tema 5.4) cubren el 95% de lo que vas a necesitar.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>mat4(1.0f)</code> (y no <code>mat4()</code> vacío) es la forma correcta de pedir una matriz identidad en GLM?</div>
+</div>
+
+<div class="topic" id="c502" data-topic="c502">
+<div class="topichead"><h3><span class="badge PRG">5.2</span> Texturas: cargar imágenes con stb_image</h3><label class="checklabel"><input type="checkbox" data-t="c502"><small class="sans">hecho</small></label></div>
+<p><strong>stb_image.h</strong> es un único header (dominio público) que carga PNG/JPG/BMP y te da los píxeles crudos como un array de bytes — ya está en <code>opengl-libs/stb_image.h</code> de esta carpeta. Solo un archivo <code>.cpp</code> de todo tu proyecto debe definir <code>STB_IMAGE_IMPLEMENTATION</code> antes de incluirlo (una sola vez, o el linker se queja de símbolos duplicados).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">textura.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">#define</span> STB_IMAGE_IMPLEMENTATION   <span class="c">// solo en UN archivo .cpp de todo el proyecto</span>
+<span class="k">#include</span> <span class="s">"stb_image.h"</span>
+
+<span class="k">int</span> ancho, alto, canales;
+<span class="k">unsigned char</span>* datos = stbi_load(<span class="s">"textura.png"</span>, &amp;ancho, &amp;alto, &amp;canales, <span class="n">0</span>);
+<span class="c">// datos[0], datos[1], datos[2] = R,G,B del primer pixel...</span>
+stbi_image_free(datos);</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — probado con una imagen de 2×2 píxeles generada a propósito</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">imagen cargada: 2x2, 3 canales
+pixel (0,0) [deberia ser rojo 255,0,0]: 255,0,0
+pixel (1,1) [deberia ser blanco 255,255,255]: 255,255,255</pre></div>
+<div class="legal warn"><span class="tag sans">El bug que encontré armando mi PROPIA imagen de prueba</span>El formato BMP guarda cada píxel en orden <strong>BGR, no RGB</strong> — armé mal el generador de la imagen de prueba (invertí el orden) y el primer resultado salió con rojo y azul cambiados. No era un bug de <code>stb_image</code> — era mío, en cómo escribí los bytes crudos del archivo. Vale la pena saberlo: si alguna vez armás o leés píxeles crudos a mano, BMP y varios formatos internos de GPU usan BGR, no el RGB "intuitivo".</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué solo UN archivo <code>.cpp</code> del proyecto debe tener <code>#define STB_IMAGE_IMPLEMENTATION</code>?</div>
+</div>
+
+<div class="topic" id="c503" data-topic="c503">
+<div class="topichead"><h3><span class="badge PRG">5.3</span> Iluminación: el modelo de Phong</h3><label class="checklabel"><input type="checkbox" data-t="c503"><small class="sans">hecho</small></label></div>
+<p>El modelo de Phong suma 3 contribuciones de luz en cada píxel: <strong>ambiental</strong> (una base constante, para que nada quede totalmente negro), <strong>difusa</strong> (proporcional al ángulo entre la normal de la superficie y la dirección a la luz — <code>dot(N,L)</code>, tema 1.1.1 de matemáticas otra vez) y <strong>especular</strong> (el brillo, proporcional a qué tan alineado está el reflejo de la luz con la cámara).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">phong.frag</span><span class="cw-lang">glsl</span></div><div class="cw-body"><pre><code><span class="k">void</span> <span class="fn">main</span>(){
+    <span class="k">float</span> ambiental = 0.15;
+    vec3 N = normalize(fragNormal);
+    vec3 L = normalize(posLuz - fragPos);
+    <span class="k">float</span> difusa = max(dot(N,L), 0.0);          <span class="c">// negativo = la luz le da por atras, se ignora</span>
+
+    vec3 V = normalize(posCamara - fragPos);
+    vec3 R = reflect(-L, N);
+    <span class="k">float</span> especular = pow(max(dot(V,R), 0.0), 32.0) * 0.5;  <span class="c">// 32 = "brillo" de la superficie</span>
+
+    vec3 resultado = (ambiental + difusa + especular) * colorLuz * colorObjeto;
+    colorFinal = vec4(resultado, 1.0);
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Compilado y enlazado de verdad (headless, en esta Mac)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">vertex (Phong): compilado sin errores
+fragment (Phong): compilado sin errores
+programa Phong enlazado: OK
+uniform 'modelo' encontrado en location: 2 (-1 seria error)</pre></div>
+<p>La <strong>normal</strong> (perpendicular a la superficie, tema 1.5.1) es la pieza que faltaba: sin ella, no hay forma de saber "hacia dónde mira" cada punto de la malla, y por lo tanto no hay forma de calcular cuánta luz difusa recibe. El vertex shader la transforma con <code>mat3(transpose(inverse(modelo)))</code> en vez de la matriz <code>modelo</code> directa — necesario para que las normales sigan siendo perpendiculares si el objeto se escala de forma no-uniforme (un detalle real que casi todo tutorial se salta la primera vez).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la componente difusa usa <code>max(dot(N,L), 0.0)</code> en vez de <code>dot(N,L)</code> directo?</div>
+</div>
+
+<div class="topic" id="c504" data-topic="c504">
+<div class="topichead"><h3><span class="badge PRG">5.4</span> Cámara interactiva</h3><label class="checklabel"><input type="checkbox" data-t="c504"><small class="sans">hecho</small></label></div>
+<div class="legal warn"><span class="tag sans">Honestidad sobre esta verificación</span>La matemática de este tema SÍ la corrí y confirmé (ver abajo). El manejo de teclado/mouse en un loop real, no — necesita una ventana visible e interacción humana, algo que no puedo simular desde acá. El código de abajo es correcto (sigue el patrón estándar de GLFW/learnopengl.com) pero no lo vi ejecutar de verdad; probalo vos y confirmame.</div>
+<p>La cámara se describe con un vector <code>frente</code> (hacia dónde mira), calculado a partir de dos ángulos: <strong>yaw</strong> (giro horizontal) y <strong>pitch</strong> (inclinación vertical) — el mouse mueve estos dos ángulos, no la cámara directamente.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">camara.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>vec3 frente;
+frente.x = cos(radians(yaw)) * cos(radians(pitch));
+frente.y = sin(radians(pitch));
+frente.z = sin(radians(yaw)) * cos(radians(pitch));
+frente = normalize(frente);
+
+mat4 vista = lookAt(posCamara, posCamara + frente, vec3(0,1,0));
+
+<span class="c">// callback de GLFW, se llama cada vez que el mouse se mueve:</span>
+<span class="k">void</span> <span class="fn">mouse_callback</span>(GLFWwindow* w, <span class="k">double</span> xpos, <span class="k">double</span> ypos) {
+    <span class="k">float</span> dx = (xpos - mouseXAnterior) * sensibilidad;
+    <span class="k">float</span> dy = (mouseYAnterior - ypos) * sensibilidad;   <span class="c">// invertido: Y de pantalla crece hacia abajo</span>
+    yaw += dx;  pitch += dy;
+    pitch = clamp(pitch, -89.0f, 89.0f);   <span class="c">// evita que la camara se "voltee" de cabeza</span>
+    mouseXAnterior = xpos;  mouseYAnterior = ypos;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">La matemática, verificada</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">yaw=-90,pitch=0 -> frente=(-0.0000,0.0000,-1.0000)  [esperado ~(0,0,-1)]
+yaw=0,pitch=45 -> frente=(0.7071,0.7071,0.0000)     [Y positivo, ~0.707]
+lookAt calculada, vista[3][2] (traslacion Z) = -5.0000  [la camara esta 5 atras]</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Esto es la contraparte interactiva de la proyección estática que ya viste en el tema 4.3 — un programa como el de tu papá (o SAP2000/ETABS) usa exactamente este esquema para "girar" el modelo con el mouse.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué se limita (<code>clamp</code>) el <code>pitch</code> a ±89° y no a ±90° exactos?</div>
+</div>
+
+<div class="topic" id="c505" data-topic="c505">
+<div class="topichead"><h3><span class="badge PRG">5.5</span> EBO: mallas sin vértices duplicados</h3><label class="checklabel"><input type="checkbox" data-t="c505"><small class="sans">hecho</small></label></div>
+<p>Sin un <strong>EBO</strong> (Element Buffer Object), dibujar un cuadrado de 2 triángulos obliga a repetir 2 de los 4 nodos (6 vértices en el VBO en vez de 4) porque cada triángulo necesita su propia lista de 3 vértices seguidos. El EBO separa "los nodos únicos" de "cómo se agrupan en triángulos" — exactamente el mismo espíritu que <code>Node(:)</code> + <code>Tri(:)%N(1:3)</code> en el código Fortran de DELOS-3D.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">ebo.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">float</span> nodos[] = { <span class="n">0</span>,<span class="n">0</span>,<span class="n">0</span>,  <span class="n">1</span>,<span class="n">0</span>,<span class="n">0</span>,  <span class="n">1</span>,<span class="n">1</span>,<span class="n">0</span>,  <span class="n">0</span>,<span class="n">1</span>,<span class="n">0</span> };  <span class="c">// 4 nodos, ni uno repetido</span>
+<span class="k">unsigned int</span> indices[] = { <span class="n">0</span>,<span class="n">1</span>,<span class="n">2</span>,  <span class="n">0</span>,<span class="n">2</span>,<span class="n">3</span> };            <span class="c">// 2 triangulos comparten el nodo 0 y 2</span>
+
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, <span class="k">sizeof</span>(indices), indices, GL_STATIC_DRAW);
+<span class="c">// glDrawElements en vez de glDrawArrays -- lee del EBO, no repite nodos</span></code></pre></div></div>
+<p>Para una malla real de miles de nodos donde cada nodo interior es compartido por 5-6 triángulos, el EBO no es una optimización menor — es la diferencia entre guardar cada nodo una vez o cinco/seis veces.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuántos vértices tendría que guardar el VBO para este mismo cuadrado SIN un EBO (usando <code>glDrawArrays</code> con 2 triángulos independientes)?</div>
+</div>
+
+<div class="topic" id="c506" data-topic="c506">
+<div class="topichead"><h3><span class="badge PRG">5.6</span> El corazón visual: color por valor escalar</h3><label class="checklabel"><input type="checkbox" data-t="c506"><small class="sans">hecho</small></label></div>
+<p>Esto es, literalmente, lo que hace que un visualizador de FEM se vea como uno: cada nodo lleva, además de su posición, un <strong>valor escalar</strong> (esfuerzo, desplazamiento) como atributo extra. La GPU interpola ese valor automáticamente entre los 3 nodos de cada triángulo — el fragment shader solo tiene que convertir el número interpolado en un color.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">mapa_color.frag</span><span class="cw-lang">glsl</span></div><div class="cw-body"><pre><code><span class="k">in</span> <span class="k">float</span> vValor;   <span class="c">// ya interpolado por la GPU entre los 3 vertices</span>
+
+vec3 <span class="fn">mapaDeColor</span>(<span class="k">float</span> t) {   <span class="c">// t entre 0 (bajo) y 1 (alto)</span>
+    vec3 azul   = vec3(0.20, 0.40, 0.90);
+    vec3 blanco = vec3(0.95, 0.95, 0.92);
+    vec3 rojo   = vec3(0.85, 0.20, 0.15);
+    <span class="k">if</span> (t &lt; 0.5) <span class="k">return</span> mix(azul, blanco, t*2.0);
+    <span class="k">return</span> mix(blanco, rojo, (t-0.5)*2.0);
+}
+<span class="k">void</span> <span class="fn">main</span>(){ colorFinal = vec4(mapaDeColor(clamp(vValor,0.0,1.0)), 1.0); }</code></pre></div></div>
+<div class="ejemplo"><span class="k">Compilado y dibujado de verdad — un cuadrado (EBO, tema 5.5) con 4 valores distintos por nodo</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">malla con color por escalar dibujada -- GL error: ninguno
+4 nodos, 2 triangulos, 1 sola vez cada nodo (EBO) -- sin EBO serian 6 nodos duplicados</pre></div>
+<p>El truco entero está en que <code>vValor</code> es una variable <code>in</code> en el fragment shader que viene de una <code>out</code> del vertex shader — la GPU hace la interpolación lineal (la misma matemática de las funciones de forma de Lagrange, <a href="../ruta-fem/1-matematicas.html#m146">Ruta al FEM, tema 1.4.6</a>) automáticamente, sin que escribas ese código vos mismo.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si un triángulo tiene esfuerzo 0 en dos nodos y 1.0 en el tercero, ¿qué color tendría el CENTRO exacto del triángulo?</div>
+</div>
+
+<div class="topic" id="c507" data-topic="c507">
+<div class="topichead"><h3><span class="badge PRG">5.7</span> Selección de elementos con el mouse (picking)</h3><label class="checklabel"><input type="checkbox" data-t="c507"><small class="sans">hecho</small></label></div>
+<p>La técnica estándar: renderizar la escena UNA vez a un framebuffer invisible, pero en vez de colores "bonitos", cada elemento se pinta con un color que codifica su ID (elemento 1 → color (1,0,0), elemento 2 → (2,0,0)...). Cuando el usuario hace click, se lee UN píxel de ese buffer en la posición del mouse — el valor leído ES el ID del elemento clickeado.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">picking.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>glUniform3f(locColor, <span class="n">1.0f</span>/<span class="n">255.0f</span>, <span class="n">0</span>, <span class="n">0</span>);  <span class="c">// elemento 1</span>
+<span class="c">// ... dibujar triangulo 1 ...</span>
+glUniform3f(locColor, <span class="n">2.0f</span>/<span class="n">255.0f</span>, <span class="n">0</span>, <span class="n">0</span>);  <span class="c">// elemento 2</span>
+<span class="c">// ... dibujar triangulo 2 ...</span>
+
+<span class="k">unsigned char</span> pixel[<span class="n">3</span>];
+glReadPixels(mouseX, mouseY, <span class="n">1</span>, <span class="n">1</span>, GL_RGB, GL_UNSIGNED_BYTE, pixel);
+<span class="c">// pixel[0] == 0  -> ningun elemento (fondo)</span>
+<span class="c">// pixel[0] == 1  -> elemento 1;  pixel[0] == 2 -> elemento 2 ...</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Verificado de verdad — renderizado offscreen + lectura de píxel real, 3 clicks simulados</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">framebuffer offscreen completo: SI
+click en (100,150) -> ID leido = 1 (deberia ser 1 = triangulo 1)
+click en (300,150) -> ID leido = 2 (deberia ser 2 = triangulo 2)
+click en (200,50)  -> ID leido = 0 (deberia ser 0 = fondo, ningun elemento)</pre></div>
+<p>Los 3 clicks simulados dieron exactamente el ID esperado — esta técnica funciona hasta 16 millones de elementos distintos (256³ combinaciones de RGB), más que suficiente para cualquier malla real.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el color de fondo tiene que ser <code>(0,0,0)</code> y ningún elemento real puede usar el ID 0?</div>
+</div>
+
+<div class="topic" id="c508" data-topic="c508">
+<div class="topichead"><h3><span class="badge PRG">5.8</span> Interfaz con Dear ImGui</h3><label class="checklabel"><input type="checkbox" data-t="c508"><small class="sans">hecho</small></label></div>
+<p><strong>Dear ImGui</strong> es la librería estándar para paneles de control DENTRO de una ventana OpenGL — sliders, checkboxes, botones — pensada para herramientas técnicas (editores, visualizadores), no para el HUD vistoso de un juego. Ya está vendorizada en <code>opengl-libs/imgui/</code> de esta carpeta (los archivos oficiales, MIT license, clonados directo del repo de <code>ocornut/imgui</code>).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">panel.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>ImGui_ImplOpenGL3_NewFrame();
+ImGui_ImplGlfw_NewFrame();
+ImGui::NewFrame();
+
+<span class="k">static</span> <span class="k">float</span> esfuerzoMax = <span class="n">250.0f</span>;
+<span class="k">static</span> <span class="k">bool</span> verWireframe = <span class="k">false</span>;
+ImGui::Begin(<span class="s">"Panel de control -- visualizador FEM"</span>);
+ImGui::SliderFloat(<span class="s">"Esfuerzo maximo (MPa)"</span>, &amp;esfuerzoMax, <span class="n">0.0f</span>, <span class="n">500.0f</span>);
+ImGui::Checkbox(<span class="s">"Ver wireframe"</span>, &amp;verWireframe);
+<span class="k">if</span> (ImGui::Button(<span class="s">"Recalcular"</span>)) { <span class="c">/* ... */</span> }
+ImGui::End();
+
+ImGui::Render();
+<span class="c">// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); -- dibuja el panel de verdad</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Compilado y corrido de verdad — un panel real con slider, checkbox y botón</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">backend GLFW inicializado: OK
+backend OpenGL3 inicializado: OK
+un frame de UI (slider + checkbox + boton) construido y renderizado sin excepciones</pre></div>
+<div class="recursos"><div class="r"><span class="k">Compilar con ImGui</span><span>agregar al comando de g++: <code>-Iopengl-libs -Iopengl-libs/imgui -Iopengl-libs/imgui/backends</code> y compilar junto <code>imgui.cpp imgui_draw.cpp imgui_tables.cpp imgui_widgets.cpp imgui/backends/imgui_impl_glfw.cpp imgui/backends/imgui_impl_opengl3.cpp</code></span></div></div>
+<p>Con esto, el <code>verWireframe</code> del ejemplo controla directo <code>glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)</code> vs <code>GL_FILL</code>, y <code>esfuerzoMax</code> es el número que normaliza el <code>vValor</code> del tema 5.6 antes de mapearlo a color — las piezas de toda esta fase se conectan en un panel real, no quedan sueltas.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>ImGui::NewFrame()</code> se llama una vez por cuadro, igual que <code>glClear()</code>?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="4-graficos-interfaces.html"><span>Anterior</span><b>← Fase 4 — Gráficos e interfaces</b></a>
+  <a class="pn next" href="0-indice.html"><span>Volver</span><b>Índice →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

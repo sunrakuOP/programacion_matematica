@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2 · Árboles y grafos · Ruta de Código</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de Código</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-estructuras-de-datos.html" title="Estructuras de datos">1</a>
+    <a class="pill active" href="2-arboles-grafos.html" title="Árboles y grafos">2</a>
+    <a class="pill" href="3-metodos-numericos.html" title="Métodos numéricos en código">3</a>
+    <a class="pill" href="4-graficos-interfaces.html" title="Gráficos e interfaces">4</a>
+    <a class="pill" href="5-opengl-avanzado.html" title="OpenGL avanzado: hacia un visualizador FEM">5</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/43</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 2</div>
+<h1 class="hero">Árboles y grafos</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> las estructuras de datos jerárquicas y de red que hacen posible casi todo lo demás — mallado, renumeración, componentes conectadas. <strong>Pre-requisito:</strong> Fase 1 completa (sobre todo pilas/colas y recursión).</p></blockquote>
+
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#c201">2.1 Árboles binarios de búsqueda</a></li>
+<li><a href="#c202">2.2 Árboles balanceados (AVL)</a></li>
+<li><a href="#c203">2.3 Heaps y colas de prioridad</a></li>
+<li><a href="#c204">2.4 Árboles espaciales (quad-tree)</a></li>
+<li><a href="#c205">2.5 Grafos: representación y recorridos</a></li>
+<li><a href="#c206">2.6 Caminos mínimos: Dijkstra</a></li>
+<li><a href="#c207">2.7 Union-Find (conjuntos disjuntos)</a></li>
+<li><a href="#c208">2.8 Árboles de expresión</a></li>
+<li><a href="#c209">2.9 Orden topológico y detección de ciclos</a></li>
+<li><a href="#c210">2.10 Árbol de expansión mínima (Kruskal)</a></li>
+</ol>
+</div>
+<div class="legal"><span class="tag sans">Nota de alcance</span>Esta fase es de tu proyecto personal (<code>RUTA_FERNANDO.md</code>), pausado mientras cierras la materia — pero árboles y grafos como tema de curso ("AyG") lo ves el semestre que viene, en un repo distinto. Esta página sirve igual como adelanto: la teoría y el código de abajo son la misma base, no importa en qué curso te la den.</div>
+
+<div class="topic" id="c201" data-topic="c201">
+<div class="topichead"><h3><span class="badge PRG">2.1</span> Árboles binarios de búsqueda</h3><label class="checklabel"><input type="checkbox" data-t="c201"><small class="sans">hecho</small></label></div>
+<p>Ya viste la teoría (qué es un BST, por qué es O(log n)) en <a href="../ruta-fem/2-algoritmos.html#t07">Ruta al FEM, tema 2.2</a>. Acá va la implementación completa: insertar, buscar, y los tres recorridos clásicos.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">bst.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">struct</span> NodoBST {
+    <span class="k">int</span> valor;
+    <span class="t">std::unique_ptr</span>&lt;NodoBST&gt; izq, der;
+    NodoBST(<span class="k">int</span> v) : valor(v) {}
+};
+
+<span class="k">void</span> <span class="fn">insertar</span>(<span class="t">std::unique_ptr</span>&lt;NodoBST&gt;&amp; raiz, <span class="k">int</span> valor) {
+    <span class="k">if</span> (!raiz) { raiz = <span class="t">std::make_unique</span>&lt;NodoBST&gt;(valor); <span class="k">return</span>; }
+    <span class="k">if</span> (valor &lt; raiz-&gt;valor) insertar(raiz-&gt;izq, valor);
+    <span class="k">else</span> insertar(raiz-&gt;der, valor);
+}
+
+<span class="k">bool</span> <span class="fn">buscar</span>(NodoBST* raiz, <span class="k">int</span> valor) {
+    <span class="k">if</span> (!raiz) <span class="k">return</span> <span class="k">false</span>;
+    <span class="k">if</span> (raiz-&gt;valor == valor) <span class="k">return</span> <span class="k">true</span>;
+    <span class="k">return</span> valor &lt; raiz-&gt;valor ? buscar(raiz-&gt;izq.get(), valor) : buscar(raiz-&gt;der.get(), valor);
+}
+
+<span class="k">void</span> <span class="fn">inorder</span>(NodoBST* raiz) {   <span class="c">// izquierda, nodo, derecha</span>
+    <span class="k">if</span> (!raiz) <span class="k">return</span>;
+    inorder(raiz-&gt;izq.get());
+    <span class="c">// visitar raiz->valor</span>
+    inorder(raiz-&gt;der.get());
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — insertar 50,30,70,10,40,60,80</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">inorder (debe salir ordenado): 10 30 40 50 60 70 80
+buscar 40: encontrado
+buscar 45: no encontrado</pre></div>
+<p>El recorrido <strong>inorder</strong> de un BST SIEMPRE da los valores en orden ascendente — no es casualidad, es la propiedad estructural del árbol (todo lo menor a la izquierda, mayor a la derecha) haciéndose visible. Los otros dos recorridos: <strong>preorder</strong> (nodo, izquierda, derecha — útil para copiar/serializar un árbol) y <strong>postorder</strong> (izquierda, derecha, nodo — útil para liberar memoria de abajo hacia arriba, o para evaluar expresiones).</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuántas comparaciones como máximo hacen falta para buscar en este árbol de 7 nodos? ¿Coincide con <span>log₂(7)</span> redondeado hacia arriba?</div>
+</div>
+
+<div class="topic" id="c202" data-topic="c202">
+<div class="topichead"><h3><span class="badge PRG">2.2</span> Árboles balanceados (AVL)</h3><label class="checklabel"><input type="checkbox" data-t="c202"><small class="sans">hecho</small></label></div>
+<p>El problema real del tema 2.1: insertar valores YA ordenados (30, 20, 10...) degenera el BST en una lista enlazada — O(n), no O(log n). Un árbol <strong>AVL</strong> corrige esto automáticamente: después de cada inserción, si el "factor de balance" (altura del subárbol izquierdo menos la del derecho) se pasa de 1, aplica una <strong>rotación</strong> que reacomoda los nodos sin romper el orden.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">avl.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>NodoAVL* <span class="fn">rotarDerecha</span>(NodoAVL* y) {
+    NodoAVL* x = y-&gt;izq;
+    NodoAVL* T2 = x-&gt;der;
+    x-&gt;der = y;               <span class="c">// x sube, se convierte en la nueva raiz local</span>
+    y-&gt;izq = T2;               <span class="c">// y baja, hereda el subarbol que x le "presta"</span>
+    y-&gt;altura = <span class="t">std::max</span>(altura(y-&gt;izq), altura(y-&gt;der)) + <span class="n">1</span>;
+    x-&gt;altura = <span class="t">std::max</span>(altura(x-&gt;izq), altura(x-&gt;der)) + <span class="n">1</span>;
+    <span class="k">return</span> x;
+}
+
+<span class="c">// dentro de insertar(), despues de insertar recursivamente:</span>
+<span class="k">int</span> balance = factorBalance(nodo);
+<span class="k">if</span> (balance &gt; <span class="n">1</span> &amp;&amp; valor &lt; nodo-&gt;izq-&gt;valor)   <span class="c">// caso izquierda-izquierda</span>
+    <span class="k">return</span> rotarDerecha(nodo);</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — insertando 30, 20, 10 en ese orden (el caso que degrada un BST normal)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">insertando 30, 20, 10 en ese orden:
+  -> desbalance detectado en nodo 30, rotando a la derecha
+raiz final: 20 (deberia ser 20, no 30 -- el arbol se autobalanceo)
+altura del arbol: 2 (un BST comun sin balancear tendria altura 3)</pre></div>
+<p>Con el mismo input que arruinaba un BST común, el AVL termina con 20 como raíz y 10/30 como sus dos hijos — altura 2, no 3. Existen 4 casos de desbalance (izquierda-izquierda, derecha-derecha, izquierda-derecha, derecha-izquierda), cada uno con su propia combinación de rotaciones — el código completo (en el archivo fuente) los cubre todos, pero el mecanismo de fondo es el mismo <code>rotarDerecha</code>/<code>rotarIzquierda</code> de arriba.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la rotación NO rompe el orden del árbol (probá con el ejemplo: antes de rotar era 30→20→10, después de rotar sigue siendo 10&lt;20&lt;30)?</div>
+</div>
+
+<div class="topic" id="c203" data-topic="c203">
+<div class="topichead"><h3><span class="badge PRG">2.3</span> Heaps y colas de prioridad</h3><label class="checklabel"><input type="checkbox" data-t="c203"><small class="sans">hecho</small></label></div>
+<p>Un <strong>heap</strong> es un árbol binario (guardado en un array plano, sin punteros) con una sola propiedad: cada nodo es mayor (max-heap) o menor (min-heap) que sus hijos. No está totalmente ordenado — solo garantiza que la raíz es siempre el máximo (o mínimo). Eso alcanza para responder "dame el más grande" en O(1) y "sacá el más grande y reacomodá" en O(log n) — mucho más barato que mantener un array totalmente ordenado.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">heap.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="t">std::priority_queue</span>&lt;<span class="k">int</span>&gt; maxHeap;
+<span class="k">for</span> (<span class="k">int</span> v : {<span class="n">5</span>,<span class="n">2</span>,<span class="n">8</span>,<span class="n">1</span>,<span class="n">9</span>,<span class="n">3</span>}) maxHeap.push(v);
+<span class="c">// maxHeap.top() siempre da el mayor actual, sin buscarlo</span>
+
+<span class="c">// heapsort real, con las funciones de heap de la STL:</span>
+<span class="t">std::vector</span>&lt;<span class="k">int</span>&gt; v = {<span class="n">5</span>,<span class="n">2</span>,<span class="n">8</span>,<span class="n">1</span>,<span class="n">9</span>,<span class="n">3</span>};
+<span class="t">std::make_heap</span>(v.begin(), v.end());   <span class="c">// O(n): construye el heap</span>
+<span class="t">std::sort_heap</span>(v.begin(), v.end());   <span class="c">// O(n log n): extrae uno por uno</span></code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">extrayendo del heap (mayor a menor): 9 8 5 3 2 1
+heapsort: 1 2 3 5 8 9</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Una <strong>cola de prioridad</strong> es exactamente lo que necesita un algoritmo <em>greedy ordenado por calidad</em> — como el emparejado de triángulos de DELOS-3D (Fase 6 del proyecto, ya visto en <a href="../ruta-fem/2-algoritmos.html#t09">Ruta al FEM, tema 2.4</a>): en vez de ordenar TODOS los candidatos de una (costoso si aparecen nuevos candidatos sobre la marcha), un heap te da siempre "el mejor candidato restante" en O(log n) por operación.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué un heap es más barato de mantener que un array siempre-ordenado, si en ambos casos "sacar el máximo" es O(1) o casi?</div>
+</div>
+
+<div class="topic" id="c204" data-topic="c204">
+<div class="topichead"><h3><span class="badge PRG">2.4</span> Árboles espaciales: quad-tree</h3><label class="checklabel"><input type="checkbox" data-t="c204"><small class="sans">hecho</small></label></div>
+<p>Ya lo viste conceptualmente en <a href="../ruta-fem/2-algoritmos.html#t07">Ruta al FEM, tema 2.2</a>. Acá, la implementación: un quad-tree divide el plano en 4 cuadrantes recursivamente, cada nodo guarda hasta <code>capacidad</code> puntos antes de subdividirse. La clave de la eficiencia está en <code>consultar()</code>: si el rectángulo de búsqueda NO toca la región de un nodo, se descarta esa región ENTERA sin mirar ni uno de sus puntos.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">quadtree.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">void</span> <span class="fn">consultar</span>(<span class="k">const</span> Rectangulo&amp; rango, <span class="t">std::vector</span>&lt;Punto&gt;&amp; encontrados) {
+    <span class="k">if</span> (!limite.interseca(rango)) <span class="k">return</span>;  <span class="c">// <- descarta la region ENTERA acá</span>
+    <span class="k">for</span> (<span class="k">auto</span>&amp; p : puntos) <span class="k">if</span> (rango.contiene(p)) encontrados.push_back(p);
+    <span class="k">if</span> (dividido) {
+        ne-&gt;consultar(rango, encontrados);  no-&gt;consultar(rango, encontrados);
+        se-&gt;consultar(rango, encontrados);  so-&gt;consultar(rango, encontrados);
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — 100 puntos en una grilla 10×10, buscar cerca de (15,15)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">puntos totales en el arbol: 100
+puntos encontrados cerca de (15,15): 4
+nodos del quadtree visitados para responder: 13 (mucho menos que 100)</pre></div>
+<p>13 nodos visitados en vez de revisar los 100 puntos uno por uno — con una malla de decenas de miles de nodos reales, esa diferencia es la que separa un mallador utilizable de uno que tarda minutos en cada consulta "¿hay un punto cerca de acá?". En 3D, la misma idea con 8 subdivisiones en vez de 4 es un <strong>octree</strong>.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el chequeo <code>if (!limite.interseca(rango)) return;</code> es lo que hace que el quad-tree sea rápido — qué pasaría si esa línea no estuviera?</div>
+</div>
+
+<div class="topic" id="c205" data-topic="c205">
+<div class="topichead"><h3><span class="badge PRG">2.5</span> Grafos: representación y recorridos</h3><label class="checklabel"><input type="checkbox" data-t="c205"><small class="sans">hecho</small></label></div>
+<p>Versión en C++ del <code>bfs.f90</code> de <a href="../ruta-fem/2-algoritmos.html#t08">Ruta al FEM, tema 2.3</a> — ahora con lista de adyacencia real (<code>vector&lt;vector&lt;int&gt;&gt;</code>) y, además de BFS, su contraparte DFS con una pila explícita.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">grafo.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="t">std::vector</span>&lt;<span class="t">std::vector</span>&lt;<span class="k">int</span>&gt;&gt; adj(n);  <span class="c">// lista de adyacencia</span>
+
+<span class="c">// BFS: cola</span>
+<span class="t">std::queue</span>&lt;<span class="k">int</span>&gt; cola;  cola.push(<span class="n">0</span>);  visitado[<span class="n">0</span>]=<span class="k">true</span>;
+<span class="k">while</span> (!cola.empty()) {
+    <span class="k">int</span> actual = cola.front(); cola.pop();
+    <span class="k">for</span> (<span class="k">int</span> vecino : adj[actual])
+        <span class="k">if</span> (!visitado[vecino]) { visitado[vecino]=<span class="k">true</span>; cola.push(vecino); }
+}
+
+<span class="c">// DFS: pila (misma estructura, cambia SOLO la cola por una pila)</span>
+<span class="t">std::stack</span>&lt;<span class="k">int</span>&gt; pila;  pila.push(<span class="n">0</span>);
+<span class="k">while</span> (!pila.empty()) {
+    <span class="k">int</span> actual = pila.top(); pila.pop();
+    <span class="k">if</span> (visitado[actual]) <span class="k">continue</span>;
+    visitado[actual] = <span class="k">true</span>;
+    <span class="k">for</span> (<span class="k">int</span> vecino : adj[actual]) <span class="k">if</span> (!visitado[vecino]) pila.push(vecino);
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — mismo grafo de 6 nodos</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">BFS desde 0: 0 1 2 3 4 5
+DFS desde 0: 0 2 4 5 3 1</pre></div>
+<p>BFS y DFS visitan los mismos nodos pero en orden distinto — y fijate que la ÚNICA diferencia real en el código es cambiar <code>queue</code> por <code>stack</code>. Esa simetría (misma estructura de algoritmo, diferente estructura de datos subyacente) es una de las cosas más elegantes de este tema.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con el grafo del diagrama del tema 2.3 de <code>ruta-fem</code> (A-B-C-D-E-F-G-H), ¿podés predecir el orden DFS antes de correrlo?</div>
+</div>
+
+<div class="topic" id="c206" data-topic="c206">
+<div class="topichead"><h3><span class="badge PRG">2.6</span> Caminos mínimos: Dijkstra</h3><label class="checklabel"><input type="checkbox" data-t="c206"><small class="sans">hecho</small></label></div>
+<p>BFS encuentra el camino más corto en NÚMERO DE ARISTAS (todas "pesan" lo mismo). Cuando cada arista tiene un costo distinto (distancia, tiempo, rigidez), hace falta <strong>Dijkstra</strong>: una cola de prioridad (tema 2.3) que siempre expande primero el nodo con menor distancia acumulada conocida hasta el momento.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">dijkstra.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="t">std::vector</span>&lt;<span class="k">int</span>&gt; dist(n, INT_MAX);
+dist[<span class="n">0</span>] = <span class="n">0</span>;
+<span class="t">std::priority_queue</span>&lt;<span class="t">std::pair</span>&lt;<span class="k">int</span>,<span class="k">int</span>&gt;, <span class="t">std::vector</span>&lt;<span class="t">std::pair</span>&lt;<span class="k">int</span>,<span class="k">int</span>&gt;&gt;, <span class="t">std::greater</span>&lt;&gt;&gt; pq;
+pq.push({<span class="n">0</span>,<span class="n">0</span>});  <span class="c">// (distancia, nodo) -- min-heap por distancia</span>
+<span class="k">while</span> (!pq.empty()) {
+    <span class="k">auto</span> [d, u] = pq.top(); pq.pop();
+    <span class="k">if</span> (d &gt; dist[u]) <span class="k">continue</span>;   <span class="c">// ya encontramos algo mejor, ignorar</span>
+    <span class="k">for</span> (<span class="k">auto</span> [v, peso] : adj[u])
+        <span class="k">if</span> (dist[u] + peso &lt; dist[v]) { dist[v] = dist[u] + peso; pq.push({dist[v], v}); }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">distancias minimas desde el nodo 0:
+  a 0: 0
+  a 1: 3   (via 0->2->1, cuesta 1+2=3, mejor que el directo 0->1 que cuesta 4)
+  a 2: 1
+  a 3: 4
+  a 4: 7</pre></div>
+<p>No es un algoritmo que uses directo en DELOS-3D o IFC-Bridge (ninguno de los dos resuelve caminos con peso) — pero es una pieza fundacional de la caja de herramientas de grafos, y aparece en optimización de mallas, ruteo de cableado en BIM, y análisis de redes en general.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué BFS (tema 2.5) da la respuesta incorrecta si las aristas tienen pesos distintos?</div>
+</div>
+
+<div class="topic" id="c207" data-topic="c207">
+<div class="topichead"><h3><span class="badge PRG">2.7</span> Union-Find (conjuntos disjuntos)</h3><label class="checklabel"><input type="checkbox" data-t="c207"><small class="sans">hecho</small></label></div>
+<p>La estructura de datos hecha a medida para UNA pregunta: "¿estos dos elementos están en el mismo grupo conectado?" — sin tener que recorrer el grafo completo cada vez. Cada elemento apunta a un "padre"; el elemento cuyo padre es él mismo es la raíz (el "representante") de su grupo. Dos optimizaciones la hacen casi O(1) por operación: <strong>compresión de camino</strong> (al buscar la raíz, aplanar el camino para la próxima vez) y <strong>unión por rango</strong> (el árbol más chico cuelga del más grande, nunca al revés).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">union_find.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="k">int</span> <span class="fn">encontrar</span>(<span class="k">int</span> x) {
+    <span class="k">if</span> (padre[x] != x) padre[x] = encontrar(padre[x]);  <span class="c">// compresion de camino</span>
+    <span class="k">return</span> padre[x];
+}
+<span class="k">void</span> <span class="fn">unir</span>(<span class="k">int</span> a, <span class="k">int</span> b) {
+    <span class="k">int</span> ra = encontrar(a), rb = encontrar(b);
+    <span class="k">if</span> (ra == rb) <span class="k">return</span>;
+    <span class="k">if</span> (rango[ra] &lt; rango[rb]) <span class="t">std::swap</span>(ra, rb);   <span class="c">// union por rango</span>
+    padre[rb] = ra;
+    <span class="k">if</span> (rango[ra] == rango[rb]) rango[ra]++;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real — 8 "triángulos", conectados en 3 grupos</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">componentes conectadas:
+  triangulo 0 -> raiz de su grupo: 0     triangulo 4 -> raiz de su grupo: 3
+  triangulo 1 -> raiz de su grupo: 0     triangulo 5 -> raiz de su grupo: 5
+  triangulo 2 -> raiz de su grupo: 0     triangulo 6 -> raiz de su grupo: 5
+  triangulo 3 -> raiz de su grupo: 3     triangulo 7 -> raiz de su grupo: 5
+
+0 y 2 estan en el mismo grupo? si
+0 y 5 estan en el mismo grupo? no</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Esto es, con nombre y apellido, el algoritmo estándar para lo que la Fase 2 de DELOS-3D llama "connected components" (componentes conectadas) — agrupar triángulos que están unidos entre sí, separándolos de otros grupos de triángulos que no tocan al primero (por ejemplo, dos regiones separadas de una misma malla). El ejemplo de arriba usa <code>unir()</code> una vez por cada arista compartida entre triángulos — exactamente el patrón que usarías para replicar esa fase del proyecto en C++.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Sin compresión de camino (si <code>encontrar()</code> no aplanara el camino), ¿por qué una cadena larga de <code>unir()</code> en secuencia podría degenerar a O(n) por consulta?</div>
+</div>
+
+<div class="topic" id="c208" data-topic="c208">
+<div class="topichead"><h3><span class="badge PRG">2.8</span> Árboles de expresión</h3><label class="checklabel"><input type="checkbox" data-t="c208"><small class="sans">hecho</small></label></div>
+<p>Conecta directo con la notación postfija del tema 1.6 (pilas): en vez de solo EVALUAR la expresión con una pila de números, se construye un árbol real con una pila de <em>nodos</em> — cada operador es un nodo interno con dos hijos (sus operandos), cada número es una hoja. El mismo algoritmo de evaluación postfija, pero acumulando estructura en vez de solo el resultado.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">arbol_expresion.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>struct NodoExpr { std::string valor; NodoExpr* izq; NodoExpr* der; };
+
+NodoExpr* construirDesdePostfija(const std::string&amp; expr) {
+    std::stack&lt;NodoExpr*&gt; pila;
+    std::istringstream iss(expr);
+    std::string token;
+    while (iss &gt;&gt; token) {
+        NodoExpr* nodo = new NodoExpr{token, nullptr, nullptr};
+        if (esOperador(token)) {
+            nodo->der = pila.top(); pila.pop();   // el segundo operando salio primero
+            nodo->izq = pila.top(); pila.pop();
+        }
+        pila.push(nodo);
+    }
+    return pila.top();
+}
+
+int evaluar(NodoExpr* raiz) {   // recorrido postorder: izquierda, derecha, nodo
+    if (!esOperador(raiz->valor)) return std::stoi(raiz->valor);
+    int a = evaluar(raiz->izq), b = evaluar(raiz->der);
+    if (raiz->valor == "+") return a + b;
+    // ... mismo patron para -, *, /
+    return a / b;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido)</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">postfija: "5 1 2 + 4 * + 3 -"
+infija reconstruida desde el arbol: ((5 + ((1 + 2) * 4)) - 3)
+evaluada recorriendo el arbol (postorder): 14</pre></div>
+<p>Ojo con el orden al sacar los dos operandos de la pila: el que salió primero (el tope) es el operando DERECHO, no el izquierdo — porque entró último. Si los invertís, operaciones conmutativas como <code>+</code> dan el mismo resultado por casualidad, pero <code>-</code> y <code>/</code> dan la respuesta al revés sin ningún error del compilador que te avise.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el recorrido <strong>inorder</strong> de un árbol de expresión (izquierda, nodo, derecha) te da la notación INFIJA original, con los operadores entre sus operandos?</div>
+</div>
+
+<div class="topic" id="c209" data-topic="c209">
+<div class="topichead"><h3><span class="badge PRG">2.9</span> Orden topológico y detección de ciclos</h3><label class="checklabel"><input type="checkbox" data-t="c209"><small class="sans">hecho</small></label></div>
+<p>Un orden topológico de un grafo DIRIGIDO responde: "¿en qué orden puedo procesar estos nodos de forma que nunca procese uno antes que todo lo que depende de él?" — el ejemplo de todos los días: prerrequisitos de materias. El algoritmo de Kahn (BFS con grado de entrada) es directo: empezar por los nodos sin prerrequisitos (grado de entrada 0), "consumirlos" quitando sus aristas salientes, y repetir con los que quedaron en grado 0. Si al final quedan nodos sin procesar, es porque hay un <strong>ciclo</strong> — y un orden topológico simplemente no existe si hay un ciclo (sería pedirle a A que vaya antes que B, que vaya antes que A).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">topologico.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>std::vector&lt;int&gt; ordenTopologico(int n, std::vector&lt;std::vector&lt;int&gt; &gt;&amp; adj, bool&amp; hayCiclo) {
+    std::vector&lt;int&gt; gradoEntrada(n, 0);
+    for (int u = 0; u &lt; n; u++) for (int v : adj[u]) gradoEntrada[v]++;
+
+    std::queue&lt;int&gt; cola;
+    for (int i = 0; i &lt; n; i++) if (gradoEntrada[i] == 0) cola.push(i);
+
+    std::vector&lt;int&gt; orden;
+    while (!cola.empty()) {
+        int u = cola.front(); cola.pop();
+        orden.push_back(u);
+        for (int v : adj[u]) if (--gradoEntrada[v] == 0) cola.push(v);
+    }
+    hayCiclo = (int)orden.size() != n;   // si quedo alguno sin grado 0, hay ciclo
+    return orden;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido) — grafo de prerrequisitos: 0=Calculo-&gt;1=Estatica-&gt;2=MecSolidos, 3=EstructurasDatos-&gt;4=AyG</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">hay ciclo? no
+orden valido: 0 3 1 4 2
+
+agregando una arista 2 -> 0 (crea un ciclo: 0->1->2->0):
+hay ciclo? si
+nodos procesados antes de trabarse: 2 de 5</pre></div>
+<div class="obra"><span class="tag sans">Nota de obra</span>Esto es la versión general de <code>delos_renumber.f90</code> (ya visto en el tema 2.3, BFS puro): acá el BFS no solo visita, sino que respeta una DEPENDENCIA entre nodos. En un proyecto de software real, exactamente este algoritmo es el que resuelve "en qué orden compilo estos módulos" cuando uno depende de otro — y el "hay ciclo" es, literalmente, el error de "dependencia circular" que da un compilador o un gestor de paquetes.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué CUALQUIER grafo sin ciclos (un DAG) tiene AL MENOS un orden topológico válido, pero puede tener más de uno?</div>
+</div>
+
+<div class="topic" id="c210" data-topic="c210">
+<div class="topichead"><h3><span class="badge PRG">2.10</span> Árbol de expansión mínima: Kruskal</h3><label class="checklabel"><input type="checkbox" data-t="c210"><small class="sans">hecho</small></label></div>
+<p>Dado un grafo con pesos, un árbol de expansión mínima (MST) conecta TODOS los nodos con el MENOR peso total posible, sin ciclos. Kruskal es greedy (tema 2.4 de <code>ruta-fem</code>) aplicado a esto: ordenar todas las aristas por peso ascendente, y tomar cada una SALVO que conecte dos nodos que ya están en el mismo grupo (eso formaría un ciclo, y un árbol no tiene ciclos). "¿Ya están en el mismo grupo?" es EXACTAMENTE la pregunta que resuelve Union-Find (tema 2.7) — por eso este tema va después, reusa esa estructura entera sin cambiar una línea.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">kruskal.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code>struct Arista { int u, v, peso; };
+
+std::sort(aristas.begin(), aristas.end(), [](const Arista&amp; a, const Arista&amp; b) {
+    return a.peso &lt; b.peso;
+});
+
+int pesoTotal = 0;
+for (auto&amp; a : aristas) {
+    if (encontrar(a.u) != encontrar(a.v)) {   // Union-Find del tema 2.7, sin cambios
+        unir(a.u, a.v);
+        pesoTotal += a.peso;
+    }
+    // si encontrar(a.u) == encontrar(a.v): formaria un ciclo, se descarta
+}</code></pre></div></div>
+<div class="ejemplo"><span class="k">Salida real (compilado y corrido) — 5 nodos, 6 aristas con peso</span><pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:.85rem">(0,2) peso=1 -> ACEPTADA
+(1,2) peso=2 -> ACEPTADA
+(3,4) peso=3 -> ACEPTADA
+(0,1) peso=4 -> descartada (forma ciclo)
+(1,3) peso=5 -> ACEPTADA
+(2,3) peso=8 -> descartada (forma ciclo)
+arbol de expansion minima: 4 aristas, peso total=11</pre></div>
+<p>Con <code>n</code> nodos, un árbol de expansión siempre tiene exactamente <code>n-1</code> aristas (4 en el ejemplo, con 5 nodos) — ni una menos (no conectaría todo) ni una más (formaría un ciclo). La alternativa es <strong>Prim</strong>: en vez de ordenar TODAS las aristas de una, crece el árbol desde un nodo inicial usando una cola de prioridad (tema 2.3) para elegir siempre la arista más barata que toque el árbol actual — mejor cuando el grafo es muy denso, Kruskal suele ser más simple de razonar cuando es disperso (el caso típico de una malla).</p>
+<div class="obra"><span class="tag sans">Nota de obra</span>Si alguna vez el proyecto de tu papá necesitara minimizar el costo TOTAL de conectar una red (cableado, tuberías, una malla con costo de arista real en vez de solo adyacencia), esto es la pieza exacta — mismo patrón greedy + Union-Find que el emparejado de triángulos de DELOS-3D (tema 2.4 de <code>ruta-fem</code>), aplicado a un problema distinto.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué Kruskal es greedy "seguro" (siempre da el óptimo), a diferencia del greedy de cambio de monedas (tema 2.4 de <code>ruta-fem</code>) que a veces falla?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="1-estructuras-de-datos.html"><span>Anterior</span><b>← Fase 1 — Estructuras de datos</b></a>
+  <a class="pn next" href="3-metodos-numericos.html"><span>Siguiente</span><b>Fase 3 — Métodos numéricos en código →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

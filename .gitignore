@@ -1,0 +1,18 @@
+# Libros con copyright / pesados: viven solo en el disco local (ver biblioteca/INDICE_PDFS.md)
+*.pdf
+
+# Artefactos de compilación (se regeneran con cmake / g++)
+build/
+*.o
+*.out
+a.out
+
+# Binarios compilados sueltos
+codigo/openGl/introduccion/introduccion
+codigo/openGl/introduccion/funcion
+codigo/PROYECTO/graficos/vector_visual
+
+# Estado local de editores / SO
+.DS_Store
+.obsidian/workspace.json
+.obsidian/workspaces.json

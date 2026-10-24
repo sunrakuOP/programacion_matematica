@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Índice · Ruta de Código</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de Código</a></div>
+  <nav class="phasenav">
+    <a class="pill active" href="0-indice.html">0</a>
+    <a class="pill" href="1-estructuras-de-datos.html" title="Estructuras de datos">1</a>
+    <a class="pill" href="2-arboles-grafos.html" title="Árboles y grafos">2</a>
+    <a class="pill" href="3-metodos-numericos.html" title="Métodos numéricos en código">3</a>
+    <a class="pill" href="4-graficos-interfaces.html" title="Gráficos e interfaces">4</a>
+    <a class="pill" href="5-opengl-avanzado.html" title="OpenGL avanzado: hacia un visualizador FEM">5</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/43</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Complemento de <a href="../ruta-fem/0-indice.html">Ruta al FEM</a></div>
+<h1 class="hero">Ruta de Código</h1>
+<p class="sub">Estructuras de datos, árboles y grafos, métodos numéricos en código, y gráficos e interfaces — completo, en C++ primero (ya lo manejás), con la sintaxis de Fortran 90 como traducción después.</p>
+
+<blockquote class="obj"><p><strong>Cómo se relaciona con <a href="../ruta-fem/0-indice.html">Ruta al FEM</a>:</strong> esa ruta tiene la <em>teoría</em> — matemática, mecánica, FEM — y ya incluye una introducción a algoritmos (su Bloque 2) atada de cerca al proyecto de tu papá. Esta ruta es la <em>implementación</em>: la misma base de programación pero completa, de cero, con el objetivo de que salgas de acá pudiendo escribir cualquiera de los algoritmos que la Fase 1 de matemáticas describe. No hace falta terminar una antes que la otra — vas alternando: leés la teoría de un método numérico en <code>ruta-fem/1-matematicas.html</code>, y lo implementás acá, mientras está fresco.</p></blockquote>
+
+<h2 class="withrule">Orden</h2>
+<p>En C++ primero (para no pelear con sintaxis nueva mientras aprendés el concepto), después traducido a Fortran en el Bloque 6 de <code>ruta-fem</code>. Las Fases 1 y 2 de acá pueden ir en paralelo con Matemáticas y Mecánica de <code>ruta-fem</code> — no dependen de ellas. La Fase 3 sí conviene hacerla junto con (no antes de) el tema 1.4 de matemáticas (métodos numéricos). La Fase 4 es independiente, la podés hacer cuando quieras.</p>
+
+<div class="blockcards sans">
+  <a class="blockcard" href="1-estructuras-de-datos.html"><div class="num">FASE 1</div><h3>Estructuras de datos</h3><p>Memoria y punteros, arrays, structs/clases, listas (simple/circular/doble/centinela), pilas/colas (TAD + arreglo circular), búsqueda, ordenamiento, tablas hash, complejidad formal, STL/lambdas.</p><div class="frac" data-block-frac="c1">0/11</div></a>
+  <a class="blockcard" href="2-arboles-grafos.html"><div class="num">FASE 2</div><h3>Árboles y grafos</h3><p>BST, AVL, heaps, árboles espaciales, grafos, Dijkstra, Union-Find, árboles de expresión, orden topológico, MST (Kruskal).</p><div class="frac" data-block-frac="c2">0/10</div></a>
+  <a class="blockcard" href="3-metodos-numericos.html"><div class="num">FASE 3</div><h3>Métodos numéricos en código</h3><p>Vectores/matrices, Gauss/LU, iterativos, eigenvalores, interpolación, matrices dispersas.</p><div class="frac" data-block-frac="c3">0/8</div></a>
+  <a class="blockcard" href="4-graficos-interfaces.html"><div class="num">FASE 4</div><h3>Gráficos e interfaces</h3><p>OpenGL, transformaciones en código, cámara, ventanas, importar/exportar modelos, dibujar una malla.</p><div class="frac" data-block-frac="c4">0/6</div></a>
+  <a class="blockcard" href="5-opengl-avanzado.html"><div class="num">FASE 5</div><h3>OpenGL avanzado</h3><p>GLM, texturas, iluminación Phong, cámara interactiva, EBO, mapas de color por escalar, picking, ImGui.</p><div class="frac" data-block-frac="c5">0/8</div></a>
+</div>
+
+<h2 class="withrule">Estado de este documento</h2>
+<p>Las 5 fases están completas — 38 temas, cada ejemplo de C++ compilado y corrido de verdad (incluida la Fase 4: instalé <code>glfw</code> en esta Mac y verifiqué en vivo que la ventana, los shaders y el pipeline completo funcionan). Donde encontré un error propio al verificar (un ejemplo de Gauss-Seidel, un typo de LaTeX, un bug real de OpenGL por falta de <code>glUseProgram</code>), quedó corregido y documentado en el lugar donde pasó, no escondido.</p>
+
+<div class="prevnext">
+  <div class="pn ghost"></div>
+  <a class="pn next" href="1-estructuras-de-datos.html"><span>Empezar</span><b>Fase 1 — Estructuras de datos →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>

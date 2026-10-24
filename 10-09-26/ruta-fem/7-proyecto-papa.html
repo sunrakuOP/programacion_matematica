@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B7 · El proyecto de tu papá · Ruta al FEM</title>
+<link rel="stylesheet" href="estilo.css">
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta al FEM</a></div>
+  <nav class="phasenav">
+    <a class="pill" href="0-indice.html">0</a>
+    <a class="pill" href="1-matematicas.html" title="Matemáticas">1</a>
+    <a class="pill" href="2-algoritmos.html" title="Estructuras de datos y algoritmos">2</a>
+    <a class="pill" href="3-mecanica.html" title="Mecánica estructural">3</a>
+    <a class="pill" href="4-elementos-finitos.html" title="Elementos finitos">4</a>
+    <a class="pill" href="5-geometria.html" title="Geometría y gráficos">5</a>
+    <a class="pill" href="6-fortran.html" title="De C++ a Fortran">6</a>
+    <a class="pill active" href="7-proyecto-papa.html" title="El proyecto de tu papá">7</a>
+    <a class="pill" href="8-tesis.html" title="Proyecto de grado">8</a>
+    <a class="pill" href="9-biblioteca.html" title="Biblioteca">L</a>
+  </nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/38</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Bloque 7</div>
+<h1 class="hero">El proyecto de tu papá, mapeado a esta ruta</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> leer el código real. No hace falta terminar el 100% de los bloques 1-6 — con B1, B2, el tema 4.4 y B6 con soltura ya podés seguir la lógica de DELOS-3D.</p></blockquote>
+
+<div class="topic" id="t35" data-topic="t35">
+<div class="topichead"><h3><span class="badge FEM">7.1</span> DELOS-3D, fase por fase</h3><label class="checklabel"><input type="checkbox" data-t="t35"><small class="sans">hecho</small></label></div>
+<p>Port a Fortran moderno de una librería francesa de mallado (DELOS 2.06, BSD-3) para usarla como mesher 3D en el programa de FEM de tu papá. Las 8 fases planeadas están hechas, 422 tests pasando — pero queda una tarea real sin terminar: tu papá mandó 4 archivos de ejemplo reales de DELOS (14 de agosto) para comparar el port contra el DELOS original, y esa comparación nunca se hizo.</p>
+<ul>
+<li>Leer <code>docs/algorithm.md</code>, <code>docs/api.md</code> y <code>docs/comparison.md</code>, en ese orden.</li>
+<li>Compilar (<code>make FC=gfortran test-debug</code>) y correr los 4 ejemplos incluidos.</li>
+<li>Retomar la comparación pendiente contra <code>reference/examples-delos/</code> — formato <code>.geo</code>/<code>.den</code>/<code>.mesh</code> parcialmente descifrado, documentado en la memoria del proyecto.</li>
+</ul>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Pudiste compilar y correr <code>ex04_hybrid</code> (mezcla triángulos y cuadriláteros) en tu máquina?</div>
+</div>
+
+<div class="topic" id="t36" data-topic="t36">
+<div class="topichead"><h3><span class="badge FEM">7.2</span> IFC-Bridge, qué añade</h3><label class="checklabel"><input type="checkbox" data-t="t36"><small class="sans">hecho</small></label></div>
+<p>Librería para importar/exportar archivos IFC (formato BIM estándar) desde/hacia el programa de tu papá, para leer un modelo dibujado en Revit/ETABS/SAP2000 en vez de modelarlo desde cero. 9 de 10 fases hechas y verificadas, solo con gfortran — nunca probado con el compilador que usaría tu papá (tema 6.8) — y con preguntas de diseño abiertas que solo él podía responder.</p>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Podés explicar en una frase qué hace este proyecto que DELOS-3D no hace?</div>
+</div>
+
+<div class="topic" id="t37" data-topic="t37">
+<div class="topichead"><h3><span class="badge FEM">7.3</span> Cómo retomar con tu hermano</h3><label class="checklabel"><input type="checkbox" data-t="t37"><small class="sans">hecho</small></label></div>
+<p>Tu hermano (civil, maestría en estructuras) valida que los resultados tengan sentido físico; vos te enfocás en que el código sea correcto. Ninguno necesita dominar el terreno completo del otro — necesitan el vocabulario común que construye esta ruta.</p>
+<ul><li>Primera sesión sugerida: leer <code>docs/comparison.md</code> de DELOS-3D en voz alta, y que confirme si las métricas de calidad de malla (conservación de área, pisos de calidad de triángulo) le suenan razonables.</li></ul>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Ya agendaron esa primera sesión?</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="6-fortran.html"><span>Anterior</span><b>← Bloque 6 — De C++ a Fortran</b></a>
+  <a class="pn next" href="8-tesis.html"><span>Siguiente</span><b>Bloque 8 — Proyecto de grado →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+</body></html>
