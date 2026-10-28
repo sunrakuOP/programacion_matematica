@@ -38,8 +38,6 @@ void bubbleSort(std::vector<double>& v) {
         if(!swapped) {
             return; // no se hizo ningun swap
         }
-
-
     }
 }
 
