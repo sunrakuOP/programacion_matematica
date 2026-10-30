@@ -157,7 +157,7 @@ private:
     }
 
 public:
-    TablaHash(int t = 17): m(t), tabla(std::vector<ListaPropia> (t))  {}
+    TablaHash(int t = 17): tabla(std::vector<ListaPropia> (t)) , m(t)  {}
     ~TablaHash()  {}
 
     void insertar(int clave, const std::string& valor) {
@@ -174,13 +174,6 @@ public:
         return true;
     }
 
-    std::string buscar(int claveBuscar) {
-        if(!existe(claveBuscar)){
-            return "inexistente";
-        }
-        int indice = funcionHash(claveBuscar);
-        return tabla[indice].
-    }
 
     // calcula el indice, confirma si existe y elimina la lista
     void eliminarIndice(int claveBuscar) {

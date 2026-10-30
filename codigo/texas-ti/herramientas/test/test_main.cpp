@@ -162,6 +162,86 @@ int main() {
         verdad("tuberiaD imposible (hf minusculo)", !tuberiaD(0.05, 1e-12, 100, 0.00026, 1.004e-6, D, d));
         verdad("tuberiaD imposible (hf enorme)", !tuberiaD(0.05, 1e30, 100, 0.00026, 1.004e-6, D, d));
 
+        // Comparacion Haaland vs Colebrook en el mismo punto
+        cerca("tuberia fH", t.fH, 0.02166886117241206, 1e-8);
+        cerca("tuberia error H vs C (%)", t.errRel, 0.2463451798328612, 1e-6);
+        cerca("tuberia hf con fH", t.hfH, 1.3987733576518122, 1e-6);
+        cerca("tuberiaQ conserva fH", q.fH, t.fH, 1e-8);
+        // Ecuaciones explicitas (Swamee-Jain), mismo caso
+        cerca("explicita hf", swameeHf(0.05, 0.2, 100, 0.00026, 1.004e-6), 1.4057476596357192, 1e-9);
+        cerca("explicita Q", swameeQ(t.hf, 0.2, 100, 0.00026, 1.004e-6), 0.0500097664084734, 1e-9);
+        cerca("explicita D", swameeD(0.05, t.hf, 100, 0.00026, 1.004e-6), 0.20476097683709313, 1e-9);
+
+        // Ejemplo 8-4 (aire, e = 0): L=150, Q=0.35, hf=20, nu=1.655e-5
+        {
+            double D84;
+            Tuberia t84;
+            verdad("ej 8-4 tuberiaD ok", tuberiaD(0.35, 20, 150, 0, 1.655e-5, D84, t84));
+            cerca("ej 8-4 D Colebrook", D84, 0.26725964595904694, 1e-8);
+            cerca("ej 8-4 D explicita", swameeD(0.35, 20, 150, 0, 1.655e-5), 0.2707765368177234, 1e-9);
+            cerca("ej 8-4 Re", t84.Re, 100750.39931740036, 1e-3);
+            cerca("ej 8-4 fH", t84.fH, 0.01779715557845217, 1e-9);
+            cerca("ej 8-4 fC", t84.f, 0.01796173801004122, 1e-9);
+            cerca("ej 8-4 error %", t84.errRel, 0.9162945784925823, 1e-6);
+            cerca("ej 8-4 hf con fH", t84.hfH, 19.816741084301473, 1e-6);
+            cerca("ej 8-4 hf con D explicita", tuberiaHf(0.35, 0.2707765368177234, 150, 0, 1.655e-5).hf,
+                  18.785663828106394, 1e-6);
+            // Ejemplo 8-5: misma D, longitud doble, mismo hf -> cae el caudal
+            Tuberia t85;
+            verdad("ej 8-5 tuberiaQ ok", tuberiaQ(20, D84, 300, 0, 1.655e-5, t85));
+            cerca("ej 8-5 Q", t85.Q, 0.23750262796273414, 1e-8);
+            cerca("ej 8-5 Q explicita", swameeQ(20, D84, 300, 0, 1.655e-5), 0.237470802012206, 1e-8);
+        }
+        // Tipo 3 iterando D desde Swamee-Jain (diap. 25: converge a 0.267 m)
+        {
+            double D0 = swameeD(0.35, 20, 150, 0, 1.655e-5), Dit;
+            Tuberia ti;
+            int it;
+            verdad("tuberiaDiter ok", tuberiaDiter(0.35, 20, 150, 0, 1.655e-5, D0, Dit, ti, it, false));
+            cerca("tuberiaDiter D", Dit, 0.26725964595904694, 1e-6);
+            cerca("tuberiaDiter hL = pedida", ti.hf, 20, 1e-4);
+            verdad("tuberiaDiter pocas vueltas", it <= 6);
+            // arrancando lejos tambien converge
+            verdad("tuberiaDiter desde D=1", tuberiaDiter(0.35, 20, 150, 0, 1.655e-5, 1.0, Dit, ti, it, false));
+            cerca("tuberiaDiter desde D=1", Dit, 0.26725964595904694, 1e-6);
+            // Tipo 2 con la tabla de la diap. 34: f supuesta 0.04, D=0.267, L=300, hL=20, aire, e=0
+            Tuberia t2;
+            verdad("tipo 2 diap. 34 ok", tuberiaQ(20, 0.267, 300, 0, 1.655e-5, t2, false, 0.04, 1e-6));
+            cerca("tipo 2 f", t2.f, 0.01951, 2e-5);
+            cerca("tipo 2 V", t2.v, 4.23, 0.01);
+            cerca("tipo 2 Q (diap.: 0.24)", t2.Q, 0.2369, 5e-4);
+        }
+        // Ejemplo 8-3 en SI (e = 2e-6 m es un supuesto para acero inoxidable)
+        {
+            double rho = 62.36 * 16.01846337, mu = 7.536e-4 * 1.488163944;
+            Tuberia t83 = tuberiaHf(0.2 * 0.028316846592, 2 * 0.0254, 200 * 0.3048, 2e-6, mu / rho);
+            cerca("ej 8-3 Re", t83.Re, 126431.87574377304, 1e-2);
+            cerca("ej 8-3 hf", t83.hf, 8.299860925062047, 1e-6);
+            cerca("ej 8-3 dP (Pa)", rho * G * t83.hf, 81332.99810804892, 1e-2);
+            cerca("ej 8-3 error %", t83.errRel, 1.206668880384545, 1e-6);
+        }
+        // Sistema ingles (diap. 15-19, Ejemplo 8-3): ft, lbm, g = gc = 32.2
+        {
+            fijarUnidades(true);
+            cerca("ingles g", G, 32.2, 1e-12);
+            double rho = 62.36, mu = 7.536e-4, D = 2.0 / 12;
+            Tuberia ti = tuberiaHf(0.2, D, 200, 0.000007, mu / rho);
+            cerca("ej 8-3 ingles V (diap.: 9.17 ft/s)", ti.v, 9.167324722093174, 1e-6);
+            cerca("ej 8-3 ingles Re (diap.: 126400)", ti.Re, 126431.87581159992, 1e-2);
+            cerca("ej 8-3 ingles f Colebrook (diap.: 0.0174)", ti.f, 0.017396782403351574, 1e-8);
+            cerca("ej 8-3 ingles f Haaland (diap.: 0.0172)", ti.fH, 0.017184921927523356, 1e-8);
+            cerca("ej 8-3 ingles hL ft (diap.: 27.3)", ti.hf, 27.242661880126082, 1e-6);
+            double dP = rho * G * ti.hf / GC;   // lbf/ft2
+            cerca("ej 8-3 ingles dP lbf/ft2 (diap.: 1700)", dP, 1698.8523948446625, 1e-4);
+            cerca("ej 8-3 ingles psi (diap.: 11.8)", dP / 144, 11.80, 0.02);
+            cerca("ej 8-3 ingles potencia W (diap.: 461)", 0.2 * dP * 1.355818, 461, 1.0);
+            cerca("manning ingles k=1.486", KMANNING, 1.486, 1e-12);
+            fijarUnidades(false);
+            cerca("SI g restaurada", G, 9.81, 1e-12);
+            cerca("SI gc", GC, 1.0, 1e-12);
+        }
+        verdad("laminar: fH es NaN", std::isnan(tuberiaHf(0.0005, 0.1, 50, 0.0001, 1e-4).fH));
+
         Tuberia l = tuberiaHf(0.0005, 0.1, 50, 0.0001, 1e-4);   // laminar
         cerca("laminar hf", l.hf, 0.10383197102835168, 1e-9);
         verdad("laminar tuberiaQ ok", tuberiaQ(l.hf, 0.1, 50, 0.0001, 1e-4, q));
