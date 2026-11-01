@@ -15,6 +15,11 @@ Friccion factorFriccion(double Re, double eD, bool traza, double tol = 1e-10);
 
 double perdidaDarcy(double f, double L, double D, double v);   // hf = f L/D v^2/2g
 
+// Darcy despejada. Partiendo de hL = f (L/D) V^2/2g con V = 4Q/(pi D^2):
+//   hL = 8 f L Q^2 / (pi^2 g D^5)
+double dDarcy(double f, double L, double Q, double hf);              // D = [8 f L Q^2/(pi^2 g hL)]^(1/5)
+double qDarcy(double f, double D, double L, double hf, double& v);   // V = sqrt(2 g D hL/(f L)), Q = V pi D^2/4
+
 // f = Colebrook (valor "exacto" de referencia). fH = Haaland en el mismo Re y e/D.
 // errRel = |fH - f| / f * 100 (%). hfH = perdida calculada con fH. Si es laminar (Re < 2300)
 // Haaland no aplica: fH, errRel y hfH quedan en NaN.

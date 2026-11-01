@@ -52,6 +52,15 @@ double perdidaDarcy(double f, double L, double D, double v) {
     return f * (L / D) * v * v / (2 * G);
 }
 
+double dDarcy(double f, double L, double Q, double hf) {
+    return std::pow(8 * f * L * Q * Q / (PI * PI * G * hf), 0.2);
+}
+
+double qDarcy(double f, double D, double L, double hf, double& v) {
+    v = std::sqrt(2 * G * D * hf / (f * L));
+    return v * PI * D * D / 4;
+}
+
 // Agrega la comparacion Haaland vs Colebrook a una Tuberia que ya tiene v, Re y f.
 static void compararHaaland(Tuberia& t, double L, double D, double eps) {
     if (t.Re < 2300) {   // laminar: Haaland no aplica
@@ -131,28 +140,31 @@ bool tuberiaD(double Q, double hf, double L, double eps, double nu, double& D, T
     return true;
 }
 
-// Enfoque iterativo de la clase para el tipo 3 (diap. 23 y 25): se supone D, se calcula la perdida
-// hL(D) con Colebrook y se compara con la pedida. hL = f (L/D) V^2/2g con V = 4Q/(pi D^2) crece
-// como 1/D^5 (con f casi constante), asi que el D corregido es D * (hL calculada / hL pedida)^(1/5):
-// si hL calculada > pedida, D sube; si es menor, baja. Se repite hasta que D deje de cambiar.
+// Enfoque iterativo de la clase para el tipo 3 (diap. 23 y 25). En cada vuelta D queda fijo:
+// con el se calculan V, Re, e/D y f (Haaland de arranque, Colebrook hasta converger). Con ese f y la
+// hL pedida se despeja D de Darcy (hL = f (L/D) V^2/2g, V = 4Q/(pi D^2)  ->  hL = 8 f L Q^2/(pi^2 g D^5)):
+//     D nuevo = [ 8 f L Q^2 / (pi^2 g hL) ]^(1/5) = D * (hL calculada / hL pedida)^(1/5)
+// Se repite con el D nuevo hasta que D deje de cambiar.
 bool tuberiaDiter(double Q, double hf, double L, double eps, double nu, double D0,
                   double& D, Tuberia& out, int& iter, bool traza) {
     D = D0;
     iter = 0;
     if (traza)
-        std::cout << " it         D        Re         f        hL\n";
+        std::cout << " it         D       Re   f Haal   f Cole     D nuevo\n";
     while (iter < 100) {
         Tuberia t = tuberiaHf(Q, D, L, eps, nu);
         ++iter;
+        // D nuevo: Darcy despejada para D con la f de Colebrook y la hL pedida
+        double Dn = D * std::pow(t.hf / hf, 0.2);
         if (traza) {
             std::cout << std::setw(3) << iter;
             num(D, 10, 6);
-            num(t.Re, 10, 0);
-            num(t.f, 10, 6);
-            num(t.hf, 10, 4);
+            num(t.Re, 9, 0);
+            num(t.fH, 9, 5);
+            num(t.f, 9, 5);
+            num(Dn, 12, 6);
             finTabla();
         }
-        double Dn = D * std::pow(t.hf / hf, 0.2);
         if (!std::isfinite(Dn) || Dn <= 0) return false;
         bool listo = std::fabs(Dn - D) / D < 1e-6;
         D = Dn;

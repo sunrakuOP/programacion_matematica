@@ -211,6 +211,20 @@ int main() {
             cerca("tipo 2 V", t2.v, 4.23, 0.01);
             cerca("tipo 2 Q (diap.: 0.24)", t2.Q, 0.2369, 5e-4);
         }
+        // Darcy despejada (ultimo paso de los tipos 3 y 2)
+        cerca("dDarcy (f=0.018011, ej 8-4)", dDarcy(0.018011, 150, 0.35, 20), 0.26740608303910374, 1e-9);
+        {
+            double Vd, Qd = qDarcy(0.019510713, 0.267, 300, 20, Vd);
+            cerca("qDarcy V (ej 8-5)", Vd, 4.230804254416619, 1e-9);
+            cerca("qDarcy Q (ej 8-5)", Qd, 0.2368837865115492, 1e-9);
+            cerca("ida y vuelta Q -> D", dDarcy(0.019510713, 300, Qd, 20), 0.267, 1e-9);
+            // la D de Colebrook iterada es punto fijo del despeje: dDarcy(f(D)) = D
+            double Dit, D0 = swameeD(0.35, 20, 150, 0, 1.655e-5);
+            Tuberia tt;
+            int it;
+            tuberiaDiter(0.35, 20, 150, 0, 1.655e-5, D0, Dit, tt, it, false);
+            cerca("D es punto fijo del despeje", dDarcy(tt.f, 150, 0.35, 20), Dit, 1e-6);
+        }
         // Ejemplo 8-3 en SI (e = 2e-6 m es un supuesto para acero inoxidable)
         {
             double rho = 62.36 * 16.01846337, mu = 7.536e-4 * 1.488163944;

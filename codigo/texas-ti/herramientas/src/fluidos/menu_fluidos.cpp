@@ -85,13 +85,42 @@ static void mostrarPresion(double rho, double hL, double Q) {
 }
 
 // ---------------------------------------------------------------- opcion 1
+// Pide lo necesario para llegar a Re (segun el dato que traiga el problema) y de ahi saca e/D,
+// f Haaland, f Colebrook y el error. V = Q/(pi D^2/4), Re = V D / nu = rho V D / mu.
 static void opFriccion() {
-    cout << "\nFactor de friccion\n";
-    double Re = leerNum("Re: ");
-    double eps = leerNum("Rugosidad e (misma unidad que D): ");
-    double D = leerNum("Diametro D: ");
-    if (Re <= 0 || eps < 0 || D <= 0) { cout << "Re>0, e>=0, D>0\n"; return; }
+    cout << "\nFACTOR DE FRICCION f\nQue datos tienes?\n"
+         << "1. Q y D\n2. V y D\n3. Re y D\n";
+    int v = leerEntero("Opcion: ", 1, 3);
+    double Q = 0, V = 0, Re = 0, nu = 1, rho = 0;
+    double D;
+    if (v == 1) {
+        Q = pedir("Q", U->Q);
+        D = pedir("D", U->L);
+    } else if (v == 2) {
+        V = pedir("V", vel());
+        D = pedir("D", U->L);
+    } else {
+        Re = leerNum("Re: ");
+        D = pedir("D", U->L);
+    }
+    double eps = pedir("Rugosidad e (0 si liso)", U->L);
+    if (v != 3) rho = leerFluido(nu);   // para Re hace falta la viscosidad
+    if (D <= 0 || eps < 0 || (v == 1 && Q <= 0) || (v == 2 && V <= 0) || (v == 3 && Re <= 0) ||
+        (v != 3 && nu <= 0)) {
+        cout << "Datos invalidos\n";
+        return;
+    }
     bool traza = leerEntero("Ver iteraciones? (1=si 0=no): ", 0, 1) == 1;
+    cout << "\n";
+    if (v == 1) {
+        V = 4 * Q / (PI * D * D);
+        cout << "V = Q/(pi D^2/4) = " << V << " " << vel() << "\n";
+    }
+    if (v != 3) {
+        Re = V * D / nu;
+        cout << (rho > 0 ? "Re = rho V D / mu\n" : "Re = V D / nu\n");
+    }
+    mostrarRegimen(Re);
     mostrarFriccion(Re, eps / D, traza);
 }
 
@@ -124,19 +153,25 @@ static void opTipo2() {
     Tuberia t;
     cout << "\n";
     if (!tuberiaQ(hf, D, L, eps, nu, t, true, f0, 1e-6)) { cout << "No convergio\n"; return; }
-    cout << "V = " << t.v << " " << vel() << "\nQ = V pi D^2/4 = " << t.Q << " " << U->Q << "\n";
     mostrarRegimen(t.Re);
     mostrarFriccion(t.Re, eps / D);
-    mostrarPresion(rho, hf, t.Q);
+    // Ultimo paso: Q despejado de Darcy con la f de Colebrook final y la hL dada
+    double V, Qd = qDarcy(t.f, D, L, hf, V);
+    cout << "V = sqrt(2 g hL/(f L/D)) = " << V << " " << vel() << "\n"
+         << "Q = V pi D^2/4 = " << Qd << " " << U->Q << "\n";
+    mostrarPresion(rho, hf, Qd);
     cout << "Q Swamee-Jain = " << swameeQ(hf, D, L, eps, nu) << " " << U->Q << "\n";
     avisoExplicita(eps, D, t.Re, 2000);
 }
 
 // Resultado final de un tipo 3: D, e/D, V, Re, f, error y la perdida resultante contra la pedida.
-static void resumenTipo3(double D, double eps, const Tuberia& t, double hf, double rho) {
+static void resumenTipo3(double D, double eps, const Tuberia& t, double hf, double L, double rho) {
     cout << "D = " << D << " " << U->L << "\nV = " << t.v << " " << vel() << "\n";
     mostrarRegimen(t.Re);
     mostrarFriccion(t.Re, eps / D);
+    // Ultimo paso: D despejado de Darcy con la f de Colebrook final y la hL pedida
+    cout << "D despejado de Darcy = " << dDarcy(t.f, L, t.Q, hf) << " " << U->L
+         << "  (con f Colebrook y hL pedida)\n";
     cout << "hL = " << t.hf << " " << U->L << "  (f Colebrook)\n";
     if (t.Re >= 2300) cout << "hL = " << t.hfH << " " << U->L << "  (f Haaland)\n";
     cout << "hL pedida = " << hf << " " << U->L << "  -> "
@@ -154,7 +189,7 @@ static void opTipo3Swamee() {
     double D = swameeD(Q, hf, L, eps, nu);
     cout << "\nD Swamee-Jain = " << D << " " << U->L << "\n";
     Tuberia t = tuberiaHf(Q, D, L, eps, nu);   // con ese D: V, Re, f y la perdida que resulta
-    resumenTipo3(D, eps, t, hf, rho);
+    resumenTipo3(D, eps, t, hf, L, rho);
     avisoExplicita(eps, D, t.Re, 5000);
 }
 
@@ -173,7 +208,9 @@ static void opTipo3Iterado() {
     int iter;
     if (!tuberiaDiter(Q, hf, L, eps, nu, D0, D, t, iter, true)) { cout << "No convergio\n"; return; }
     cout << "Convergio en " << iter << " vueltas\n";
-    resumenTipo3(D, eps, t, hf, rho);
+    // Error del profesor (Ej. 8-4): cuanto se aparta el D de Swamee-Jain del D final (diap. 25: < 2 %)
+    cout << "Error D (Swamee vs final) = " << std::fabs(D0 - D) / D * 100 << " %\n";
+    resumenTipo3(D, eps, t, hf, L, rho);
 }
 
 // ---------------------------------------------------------------- opcion 6 (otro tema)
@@ -192,55 +229,24 @@ static void opManning() {
     if (ingles) cout << "(Manning con k = 1.486)\n";
 }
 
-// ---------------------------------------------------------------- opcion 7: velocidad y Reynolds
-// Segun el dato que traiga el problema. Re = V D / nu = rho V D / mu = 4 Q / (pi nu D).
-static void opVelRe() {
-    cout << "\nVELOCIDAD Y REYNOLDS\nQue datos tienes?\n"
-         << "1. Q y D   -> V, Re\n"
-         << "2. V y D   -> Q, Re\n"
-         << "3. Re y D  -> V, Q\n"
-         << "4. Q y Re  -> D, V\n";
-    int v = leerEntero("Opcion: ", 1, 4);
-    double Q = 0, D = 0, V = 0, Re = 0;
-    switch (v) {
-        case 1: Q = pedir("Q", U->Q); D = pedir("D", U->L); break;
-        case 2: V = pedir("V", vel()); D = pedir("D", U->L); break;
-        case 3: Re = leerNum("Re: "); D = pedir("D", U->L); break;
-        default: Q = pedir("Q", U->Q); Re = leerNum("Re: "); break;
-    }
-    double nu, rho = leerFluido(nu);
-    if (nu <= 0 || (v != 3 && v != 4 && D <= 0) || (v == 1 && Q <= 0) || (v == 2 && V <= 0) ||
-        (v == 3 && (Re <= 0 || D <= 0)) || (v == 4 && (Q <= 0 || Re <= 0))) {
-        cout << "Datos invalidos\n";
-        return;
-    }
-    cout << "\n";
-    switch (v) {
-        case 1:
-            V = 4 * Q / (PI * D * D);
-            Re = V * D / nu;
-            cout << "V = Q/(pi D^2/4)\nRe = V D / nu\n";
-            break;
-        case 2:
-            Q = V * PI * D * D / 4;
-            Re = V * D / nu;
-            cout << "Q = V pi D^2/4\nRe = V D / nu\n";
-            break;
-        case 3:
-            V = Re * nu / D;
-            Q = V * PI * D * D / 4;
-            cout << "V = Re nu / D\nQ = V pi D^2/4\n";
-            break;
-        default:
-            D = 4 * Q / (PI * nu * Re);
-            V = 4 * Q / (PI * D * D);
-            cout << "D = 4 Q / (pi nu Re)\nV = Q/(pi D^2/4)\n";
-            break;
-    }
-    cout << "\nV  = " << V << " " << vel() << "\nQ  = " << Q << " " << U->Q << "\nD  = " << D << " "
-         << U->L << "\n";
-    mostrarRegimen(Re);
-    if (rho > 0) cout << "(Re = rho V D / mu)\n";
+// ---------------------------------------------------------------- opciones 8 y 9: Darcy despejada
+// Ultimo paso de los tipos 3 y 2, para cuando ya tienes la f (por ejemplo la de Colebrook a mano).
+static void opDespejarD() {
+    cout << "\nDESPEJAR D DE DARCY (tipo 3)\nD = [8 f L Q^2 / (pi^2 g hL)]^(1/5)\n";
+    double f = leerNum("f (Colebrook): "), L = pedir("L", U->L);
+    double Q = pedir("Q", U->Q), hf = pedir("hL pedida", U->L);
+    if (f <= 0 || L <= 0 || Q <= 0 || hf <= 0) { cout << "Datos invalidos\n"; return; }
+    double D = dDarcy(f, L, Q, hf);
+    cout << "\nD = " << D << " " << U->L << "\nV = " << 4 * Q / (PI * D * D) << " " << vel() << "\n";
+}
+
+static void opDespejarQ() {
+    cout << "\nDESPEJAR Q DE DARCY (tipo 2)\nV = sqrt(2 g D hL / (f L)),  Q = V pi D^2/4\n";
+    double f = leerNum("f (Colebrook): "), L = pedir("L", U->L);
+    double D = pedir("D", U->L), hf = pedir("hL", U->L);
+    if (f <= 0 || L <= 0 || D <= 0 || hf <= 0) { cout << "Datos invalidos\n"; return; }
+    double V, Q = qDarcy(f, D, L, hf, V);
+    cout << "\nV = " << V << " " << vel() << "\nQ = " << Q << " " << U->Q << "\n";
 }
 
 void menuFluidos() {
@@ -248,16 +254,17 @@ void menuFluidos() {
     int op;
     do {
         cout << "\n--- FLUIDOS (" << (ingles ? "ingles" : "SI") << ") ---\n"
-             << "1. Factor f (Haaland+Colebrook)\n"
+             << "1. Factor f (con V, Re y e/D)\n"
              << "2. Tipo 1: perdida hL (dado Q)\n"
              << "3. Tipo 2: caudal Q (dado hL)\n"
              << "4. Tipo 3: D por Swamee-Jain\n"
              << "5. Tipo 3: D iterando hasta hL\n"
              << "6. Canal Manning (otro tema)\n"
-             << "7. Velocidad y Reynolds\n"
-             << "8. Cambiar sistema de unidades\n"
+             << "7. Cambiar sistema de unidades\n"
+             << "8. Despejar D de Darcy (dado f)\n"
+             << "9. Despejar Q de Darcy (dado f)\n"
              << "0. Salir\n";
-        op = leerEntero("Opcion: ", 0, 8);
+        op = leerEntero("Opcion: ", 0, 9);
         switch (op) {
             case 1: opFriccion(); break;
             case 2: opTipo1(); break;
@@ -265,8 +272,9 @@ void menuFluidos() {
             case 4: opTipo3Swamee(); break;
             case 5: opTipo3Iterado(); break;
             case 6: opManning(); break;
-            case 7: opVelRe(); break;
-            case 8: elegirUnidades(); break;
+            case 7: elegirUnidades(); break;
+            case 8: opDespejarD(); break;
+            case 9: opDespejarQ(); break;
             default: break;
         }
     } while (op != 0);
