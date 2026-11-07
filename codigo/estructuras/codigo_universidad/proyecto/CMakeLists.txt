@@ -10,6 +10,7 @@ add_executable(urgencias
     main.cpp
     src/modelo/Enums.cpp
     src/modelo/Paciente.cpp
+    src/modelo/Medico.cpp
     src/hospital/Cama.cpp
     src/hospital/Sala.cpp
 )

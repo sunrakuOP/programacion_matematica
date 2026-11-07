@@ -6,13 +6,25 @@ class Sala {
 private:
     Cama* cabeza;
     Cama* cola;
-    int n;
+    Cama* camaActual; // donde esta parado el doctor en este momento
+
+    static const int cantidadCamas = 10;
+
+    void agregarCama(int nc);
+
 public:
-    Sala(int t): cabeza(nullptr), cola(nullptr), n(t) {}
+    Sala();
 
     ~Sala();
 
-    void agregarCama(int nc);
+    Cama& getCamaActual() const;
+
+    bool moverDerecha();
+    bool moverIzquierda();
+
+    int camasDesocupadas() const;
+
+    void mostrar() const;
 };
 
 #endif

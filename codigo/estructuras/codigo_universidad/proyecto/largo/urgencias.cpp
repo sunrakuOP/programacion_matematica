@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <list>
 
 /* ARCHIVO DE ORGANIZACION
 
@@ -155,7 +156,7 @@ public:
     Cama* anterior;
 
     Cama(int nc, Cama* s, Cama* a): 
-        numeroCama(nc), estadoC(EstadoCama::vacia), paciente(nullptr), turnosRestantes(0), siguiente(s), anterior(a) {}
+        estadoC(EstadoCama::vacia), paciente(nullptr), turnosRestantes(0), numeroCama(nc), siguiente(s), anterior(a) {}
 
     // getters de los atributos privados para usar fuera de la clase
     EstadoCama getEstadoCama() const { return estadoC; }
@@ -239,21 +240,12 @@ class Sala {
 private:
     Cama* cabeza; 
     Cama* cola;
-    int n;
-public:
-    Sala(int t): cabeza(nullptr), cola(nullptr), n(t) {}
-    
-    ~Sala() {
-        Cama* auxiliar = cabeza;
-        while(auxiliar != nullptr) {
-            Cama* siguienteCama = auxiliar->siguiente;
-            delete auxiliar;
-            auxiliar = siguienteCama;
-        }
-    }
+    Cama* camaActual; // donde esta parado el doctor en este momento
+
+    static const int cantidadCamas = 10;
 
     void agregarCama(int nc) {
-        if(nc <= 0 || nc > 10) {
+        if(nc <= 0 || nc > cantidadCamas) {
             return;
         }
 
@@ -267,9 +259,181 @@ public:
         cola->siguiente = nueva;
         cola = nueva;
     }
+
+public:
+    Sala(): cabeza(nullptr), cola(nullptr), camaActual(nullptr) {
+        for(int i=1; i < cantidadCamas + 1; ++i) {
+            agregarCama(i);
+        }
+        camaActual = cabeza;
+    }
+    
+    ~Sala() {
+        Cama* auxiliar = cabeza;
+        while(auxiliar != nullptr) {
+            Cama* siguienteCama = auxiliar->siguiente;
+            delete auxiliar;
+            auxiliar = siguienteCama;
+        }
+    }
+
+    Cama& getCamaActual() const { return *(camaActual); } // desreferenciando
+
+    bool moverDerecha() {
+        if(this->camaActual->siguiente == nullptr) {
+            return false;
+        }
+        camaActual = camaActual->siguiente;
+        return true;
+    }
+
+    bool moverIzquierda() {
+        if(this->camaActual->anterior == nullptr) {
+            return false;
+        }
+        camaActual = camaActual->anterior;
+        return true;
+    }
+
+
+    int camasDesocupadas() const {
+        Cama* auxiliar = cabeza;
+        int cuenta = 0;
+        while(auxiliar != nullptr) {
+            if(auxiliar->getEstadoCama() == EstadoCama::vacia) {
+                cuenta++;
+            }
+            auxiliar = auxiliar->siguiente;
+        }
+        return cuenta;
+    }
+
+
+    void mostrar() const {
+        // linea 1: las camas, con "=" solo entre ellas
+        Cama* auxiliar = cabeza;
+        while(auxiliar != nullptr) {
+            if(auxiliar->numeroCama < 10) {
+                std::cout<<"[ #"<< auxiliar->numeroCama <<":";
+            } else {
+                std::cout<<"[#"<< auxiliar->numeroCama <<":";
+            }
+
+            if(auxiliar->getEstadoCama() == EstadoCama::vacia) {
+                std::cout<<"V  ]";
+            } else if(auxiliar->getEstadoCama() == EstadoCama::mantenimiento) {
+                std::cout<<"X  ]";
+            } else if(auxiliar->getPaciente()->getGravedad() == Gravedad::critico) {
+                std::cout<<"P1*]";
+            } else {
+                std::cout<<"P"<< aNumero(auxiliar->getPaciente()->getGravedad()) <<" ]";
+            }
+
+            if(auxiliar->siguiente != nullptr) {
+                std::cout<<"=";
+            }
+            auxiliar = auxiliar->siguiente;
+        }
+        std::cout<<std::endl;
+
+        // linea 2: la M debajo de la cama actual (cada celda mide 9, igual que arriba)
+        auxiliar = cabeza;
+        while(auxiliar != nullptr) {
+            if(auxiliar == camaActual) {
+                std::cout<<"    M    ";
+            } else {
+                std::cout<<"         ";
+            }
+
+            if(auxiliar->siguiente != nullptr) {
+                std::cout<<" ";
+            }
+            auxiliar = auxiliar->siguiente;
+        }
+        std::cout<<std::endl;
+    }
 };
 
 
+
+class Medico {
+private:
+    std::string nombreMedico;
+    int turnosJornadaActual;
+    bool enJornada;
+
+    // iba a hacer yo mismo la implementacion de la lista pero quiero aprender a usar la stl entonces lo hare asi
+    std::list<int> historialJornadas;
+
+    static const int maxTurnosJornada = 50;
+
+public:
+    Medico(const std::string& n): nombreMedico(n), turnosJornadaActual(0), enJornada(false) {}
+
+    std::string getNombreMedico() const { return nombreMedico; }
+
+    bool iniciarJornada() {
+        if(enJornada) {
+            return false;
+        }
+        enJornada = true;
+        turnosJornadaActual = 0;
+        return true;
+    }
+
+    bool registrarTurno() {
+        if(this->turnosJornadaActual >= maxTurnosJornada || !enJornada) {
+            return false;
+        }
+        turnosJornadaActual++;
+        return true;
+    }
+
+    bool jornadaCompleta() const {
+        if(turnosJornadaActual == maxTurnosJornada) {
+            return true;
+        }
+        return false;
+    }
+
+    bool terminarJornada() {
+        if(!enJornada) {
+            return false;
+        }
+        historialJornadas.push_back(turnosJornadaActual);
+        enJornada = false;
+        return true;
+    }
+
+    int jornadasTrabajadas() const {
+        return (int)historialJornadas.size();
+    }
+
+    int turnoDeJornada(int indice) const {
+        int tamanoLista = (int)historialJornadas.size();
+        if(indice > tamanoLista - 1 || indice < 0) {
+            return -1;
+        }
+
+        // usar iteradores para moverse por la lista
+        auto it = historialJornadas.begin();
+        for(int i=0; i < indice && it != historialJornadas.end(); ++i) {
+            it++;
+        }   
+        return *it;
+    }
+
+    void mostrar() const {
+        std::cout<<"Nombre medico: "<< nombreMedico <<std::endl;
+        std::cout<<"Jornadas: "<< jornadasTrabajadas() <<std::endl;
+        int i = 0;
+        for(auto it = historialJornadas.begin(); it != historialJornadas.end(); ++it) {
+            std::cout<<"Jornada "<< i <<": "<< *it <<std::endl;
+            ++i;
+        }
+    }
+
+};
 
 
 
