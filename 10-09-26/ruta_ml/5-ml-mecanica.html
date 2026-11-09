@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>5 · ML aplicado a ingeniería mecánica · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill active" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 5</div>
+<h1 class="hero">ML aplicado a ingeniería mecánica</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> llevar todo lo anterior a problemas de tu carrera: redescubrir leyes físicas con datos, modelos sustitutos de simulaciones FEM, mantenimiento predictivo, series de tiempo, redes informadas por la física, optimización de diseño y cinemática de un brazo. Cierra con un proyecto integrador que une FEM y ML.</p></blockquote>
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#m501">5.1 Mapa del campo: dónde aparece ML en ingeniería mecánica</a></li>
+<li><a href="#m502">5.2 Descubrir una ley física con datos: la viga en voladizo</a></li>
+<li><a href="#m503">5.3 Modelos sustitutos (surrogates) de simulaciones FEM</a></li>
+<li><a href="#m504">5.4 Mantenimiento predictivo: señales de vibración</a></li>
+<li><a href="#m505">5.5 Series de tiempo y estimación de estado</a></li>
+<li><a href="#m506">5.6 ML informado por la física: PINNs</a></li>
+<li><a href="#m507">5.7 Optimización de diseño con modelos sustitutos y optimización topológica</a></li>
+<li><a href="#m508">5.8 Visión, control y robótica</a></li>
+</ol>
+</div>
+<div class="topic" id="m501" data-topic="m501">
+<div class="topichead"><h3><span class="badge MEC">5.1</span> Mapa del campo: dónde aparece ML en ingeniería mecánica</h3><label class="checklabel"><input type="checkbox" data-t="m501"><small class="sans">hecho</small></label></div>
+<p>Antes de entrar a los temas, un mapa de dónde se usa. Lo armé con reseñas y estudios (los enlaces están abajo); varios son resúmenes o notas de proveedores, así que tomalos como orientación y no como evidencia de que algo "funciona siempre".</p>
+<div class="tablewrap sans"><table><thead><tr><th>Área</th><th>Qué se hace con ML</th><th>Tema de esta fase</th></tr></thead><tbody>
+<tr><td><strong>Diseño</strong></td><td>modelos sustitutos de simulaciones caras, optimización de forma y topología</td><td>5.3, 5.7</td></tr>
+<tr><td><strong>Simulación</strong></td><td>acelerar solvers (FEM, CFD), ecuaciones informadas por la física</td><td>5.3, 5.6</td></tr>
+<tr><td><strong>Manufactura</strong></td><td>inspección visual de defectos, control de procesos</td><td>5.8</td></tr>
+<tr><td><strong>Mantenimiento</strong></td><td>predecir fallas desde vibración, temperatura, corriente</td><td>5.4, 5.5</td></tr>
+<tr><td><strong>Control y robótica</strong></td><td>aprender políticas de control, estimación de estado</td><td>5.5, 5.8</td></tr>
+<tr><td><strong>Materiales y datos experimentales</strong></td><td>ajustar leyes empíricas a mediciones</td><td>5.2</td></tr>
+</tbody></table></div>
+<ul>
+<li>Reseña sobre <a href="https://www.peeref.com/works/26077551">ML en optimización estructural y multidisciplinaria</a>: parte de las limitaciones de la optimización convencional y revisa cómo ML puede acelerar la síntesis de diseños. Es la fuente más cercana a tu área.</li>
+<li>Panorama de <a href="https://neuralconcept.com/post/applications-of-machine-learning-in-mechanical-engineering">aplicaciones de ML en ingeniería mecánica</a> (de un proveedor de software: leelo como comentario, no como paper): modelos sustitutos con pocos parámetros de diseño, detección de anomalías en sensores y clasificación de causas de defectos.</li>
+<li>Reseña de <a href="https://vjol.info.vn/jmst/article/view/132802">IA y ML en ingeniería mecánica</a> (revista, 2026): mantenimiento predictivo, integridad estructural, optimización de diseño e inspección de calidad.</li>
+</ul>
+<div class="legal warn"><span class="tag sans">Alcance</span>Solo leí los <strong>resúmenes</strong> de estas fuentes (no los textos completos). Sirven para ubicarte; si vas a citarlas en la tesis, abrí cada una y verificá que dice lo que acá se resume.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Elegí <strong>tres</strong> aplicaciones de la tabla que te interesen. Para cada una escribí en media página: qué dato de entrada tendría (¿una señal? ¿una imagen? ¿parámetros de diseño?), qué querrías predecir y cuántos ejemplos podrías conseguir. Esa última pregunta (¿de dónde saco los datos?) es la que decide si el proyecto es viable.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿En qué aplicaciones de la tabla podés <strong>generar los datos vos mismo con una simulación</strong> y en cuáles necesitás mediciones reales? ¿Qué diferencia práctica trae eso?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes</span><span>Ruta al FEM, <a href="../ruta-fem/4-elementos-finitos.html">bloque 4 (elementos finitos)</a> y <a href="../ruta-fem/8-tesis.html">tesis</a></span></div>
+</div>
+</div>
+
+<div class="topic" id="m502" data-topic="m502">
+<div class="topichead"><h3><span class="badge MEC">5.2</span> Descubrir una ley física con datos: la viga en voladizo</h3><label class="checklabel"><input type="checkbox" data-t="m502"><small class="sans">hecho</small></label></div>
+<p>El primer ejemplo conecta lo que estudiás en mecánica con lo que programás en ML. La flecha en el extremo de una viga en voladizo con carga puntual \(P\) es \(\delta = PL^3/(3EI)\). Imaginá que <strong>no conocés</strong> esa fórmula y tenés 300 mediciones de \(\delta\) para distintos \(L\) y \(P\), cada una con 2% de error de medición. Una ley de potencias se vuelve lineal con <strong>logaritmos</strong>: \(\ln\delta = a + b\ln L + c\ln P\). Eso es una regresión lineal (1.2) y recupera los exponentes:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">surrogate_viga.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include &lt;utility&gt;
+
+<span class="k">using</span> <span class="t">Matriz</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;&gt;;
+<span class="k">using</span> <span class="t">Vector</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;;
+
+<span class="t">Vector</span> <span class="fn">resolver</span>(<span class="t">Matriz</span> A, <span class="t">Vector</span> b) {
+    <span class="k">int</span> n = A.<span class="fn">size</span>();
+    <span class="k">for</span> (<span class="k">int</span> c = <span class="n">0</span>; c &lt; n; ++c) {
+        <span class="k">int</span> p = c;
+        <span class="k">for</span> (<span class="k">int</span> f = c + <span class="n">1</span>; f &lt; n; ++f) <span class="k">if</span> (<span class="t">std</span>::<span class="fn">fabs</span>(A[f][c]) &gt; <span class="t">std</span>::<span class="fn">fabs</span>(A[p][c])) p = f;
+        <span class="t">std</span>::<span class="fn">swap</span>(A[c], A[p]); <span class="t">std</span>::<span class="fn">swap</span>(b[c], b[p]);
+        <span class="k">for</span> (<span class="k">int</span> f = c + <span class="n">1</span>; f &lt; n; ++f) { <span class="k">double</span> m = A[f][c] / A[c][c]; <span class="k">for</span> (<span class="k">int</span> k = c; k &lt; n; ++k) A[f][k] -= m * A[c][k]; b[f] -= m * b[c]; }
+    }
+    <span class="t">Vector</span> <span class="fn">x</span>(n);
+    <span class="k">for</span> (<span class="k">int</span> i = n - <span class="n">1</span>; i &gt;= <span class="n">0</span>; --i) { <span class="k">double</span> s = b[i]; <span class="k">for</span> (<span class="k">int</span> j = i + <span class="n">1</span>; j &lt; n; ++j) s -= A[i][j] * x[j]; x[i] = s / A[i][i]; }
+    <span class="k">return</span> x;
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="c">// viga en voladizo: flecha en el extremo  delta = P L^3 / (3 E I)</span>
+    <span class="k">const</span> <span class="k">double</span> E = <span class="n">210e9</span>, base = <span class="n">0.05</span>, alto = <span class="n">0.10</span>, I = base * alto * alto * alto / <span class="n">12</span>;
+    <span class="k">auto</span> flecha = [&amp;](<span class="k">double</span> L, <span class="k">double</span> P) { <span class="k">return</span> P * L * L * L / (<span class="n">3</span> * E * I); };
+
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">21</span>);
+    <span class="t">std</span>::uniform_real_distribution&lt;<span class="k">double</span>&gt; <span class="fn">uL</span>(<span class="n">0.5</span>, <span class="n">3.0</span>), <span class="fn">uP</span>(<span class="n">100</span>, <span class="n">2000</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ruido</span>(<span class="n">0</span>, <span class="n">0.02</span>);        <span class="c">// 2% de error de medicion</span>
+    <span class="k">const</span> <span class="k">int</span> n = <span class="n">300</span>;
+    <span class="t">Matriz</span> <span class="fn">X</span>(n, <span class="t">Vector</span>(<span class="n">3</span>));
+    <span class="t">Vector</span> <span class="fn">y</span>(n);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) {
+        <span class="k">double</span> L = <span class="fn">uL</span>(gen), P = <span class="fn">uP</span>(gen);
+        <span class="k">double</span> medida = <span class="fn">flecha</span>(L, P) * (<span class="n">1</span> + <span class="fn">ruido</span>(gen));
+        X[i] = {<span class="n">1.0</span>, <span class="t">std</span>::<span class="fn">log</span>(L), <span class="t">std</span>::<span class="fn">log</span>(P)};             <span class="c">// modelo lineal en LOGARITMOS</span>
+        y[i] = <span class="t">std</span>::<span class="fn">log</span>(medida);
+    }
+    <span class="t">Matriz</span> <span class="fn">A</span>(<span class="n">3</span>, <span class="t">Vector</span>(<span class="n">3</span>, <span class="n">0.0</span>));                            <span class="c">// ecuaciones normales</span>
+    <span class="t">Vector</span> <span class="fn">r</span>(<span class="n">3</span>, <span class="n">0.0</span>);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) <span class="k">for</span> (<span class="k">int</span> a = <span class="n">0</span>; a &lt; <span class="n">3</span>; ++a) { r[a] += X[i][a] * y[i]; <span class="k">for</span> (<span class="k">int</span> b = <span class="n">0</span>; b &lt; <span class="n">3</span>; ++b) A[a][b] += X[i][a] * X[i][b]; }
+    <span class="t">Vector</span> w = <span class="fn">resolver</span>(A, r);
+
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"exponente de L  : "</span> &lt;&lt; w[<span class="n">1</span>] &lt;&lt; <span class="s">"   (teoria: 3)\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"exponente de P  : "</span> &lt;&lt; w[<span class="n">2</span>] &lt;&lt; <span class="s">"   (teoria: 1)\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"ordenada        : "</span> &lt;&lt; w[<span class="n">0</span>] &lt;&lt; <span class="s">"   (teoria: "</span> &lt;&lt; -<span class="t">std</span>::<span class="fn">log</span>(<span class="n">3</span> * E * I) &lt;&lt; <span class="s">")\n"</span>;
+    <span class="k">double</span> L = <span class="n">2.0</span>, P = <span class="n">1000.0</span>;
+    <span class="k">double</span> pred = <span class="t">std</span>::<span class="fn">exp</span>(w[<span class="n">0</span>] + w[<span class="n">1</span>] * <span class="t">std</span>::<span class="fn">log</span>(L) + w[<span class="n">2</span>] * <span class="t">std</span>::<span class="fn">log</span>(P));
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"flecha para L = 2 m, P = 1000 N:  modelo = "</span> &lt;&lt; pred * <span class="n">1000</span> &lt;&lt; <span class="s">" mm   exacta = "</span> &lt;&lt; <span class="fn">flecha</span>(L, P) * <span class="n">1000</span> &lt;&lt; <span class="s">" mm\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>exponente de L  : 2.99915   (teoria: 3)
+exponente de P  : 0.999811   (teoria: 1)
+ordenada        : -14.7785   (teoria: -14.7806)
+flecha para L = 2 m, P = 1000 N:  modelo = 3.04813 mm   exacta = 3.04762 mm</pre></div>
+<ul>
+<li>Los exponentes recuperados son <strong>2.99915</strong> (teoría: 3) y <strong>0.99981</strong> (teoría: 1): la regresión <em>redescubrió</em> que la flecha crece con \(L^3\) y con \(P\) a partir de datos con ruido.</li>
+<li>La ordenada \(-14.7785\) corresponde a \(-\ln(3EI)\) (teoría: −14.7806). De ahí se podría despejar \(EI\), o sea, <strong>identificar la rigidez de la viga</strong> midiendo.</li>
+<li>Predicción para \(L=2\) m, \(P=1000\) N: modelo 3.0481 mm contra exacta 3.0476 mm (error de 0.02%).</li>
+</ul>
+<p><strong>Por qué esto importa:</strong> el truco del logaritmo (transformar para volver lineal) y el uso de la regresión como herramienta de <em>identificación</em> de parámetros físicos son la base de gran parte del ajuste experimental en ingeniería: ensayos de tracción, fatiga, curvas de desgaste.</p>
+<div class="legal warn"><span class="tag sans">Sintético</span>Los datos de este ejemplo son <strong>sintéticos</strong>: los generé yo con la fórmula exacta más 2% de ruido. En un ensayo real el modelo puede no ser de potencia, el ruido no ser multiplicativo, y las variables estar correlacionadas. El código es el mismo; lo difícil es el análisis de lo que sale.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Cambiá el ruido a 10% y a 30% y observá cuánto se degradan los exponentes; ¿cuántas mediciones necesitás para recuperar el 3 con error menor a 1%? (b) Agregá una variable irrelevante (por ejemplo la temperatura) y verificá que su coeficiente sale cercano a 0. (c) Probá con una ley que <strong>no</strong> sea de potencia (por ejemplo \(\delta = \delta_0 + k P\) con un offset) y mirá qué pasa con el ajuste logarítmico. (d) Calculá \(EI\) a partir de la ordenada y comparalo con el real.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si los exponentes de \(L\) y \(P\) hubieran dado 2.0 y 1.5, ¿qué te diría eso sobre el modelo físico que supusiste? ¿Qué harías antes de confiar en la ley?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes</span><span>1.2 (mínimos cuadrados) y <a href="../ruta-fem/3-mecanica.html">Ruta al FEM, bloque 3 (mecánica)</a></span></div>
+<div class="r"><span class="k">Después</span><span>5.3</span></div>
+</div>
+</div>
+
+<div class="topic" id="m503" data-topic="m503">
+<div class="topichead"><h3><span class="badge FEM">5.3</span> Modelos sustitutos (surrogates) de simulaciones FEM</h3><label class="checklabel"><input type="checkbox" data-t="m503"><small class="sans">hecho</small></label></div>
+<p>Una simulación FEM puede tardar minutos u horas. Si querés explorar miles de diseños (variar espesores, cargas, materiales), no alcanza el tiempo. La idea del <strong>modelo sustituto</strong>: correr la simulación unas decenas o cientos de veces, entrenar un modelo que aprenda la relación <em>parámetros → resultado</em>, y usar ese modelo (que responde en microsegundos) para explorar.</p>
+<p>El procedimiento, que es el mismo en toda la industria:</p>
+<ol>
+<li><strong>Diseño de experimentos:</strong> elegir los puntos de simulación. En vez de una grilla (que crece exponencialmente con los parámetros), un muestreo que cubra bien el espacio: <strong>hipercubo latino</strong>.</li>
+<li>Correr las simulaciones y juntar el conjunto (parámetros → salida de interés: tensión máxima, flecha, frecuencia propia).</li>
+<li>Entrenar el modelo (regresión con regularización, red neuronal, proceso gaussiano) con <strong>validación cruzada</strong> (2.12).</li>
+<li>Medir el error sobre simulaciones <strong>que el modelo no vio</strong>. Y avisar los límites: dentro del rango de entrenamiento interpola bien; fuera de ese rango, <strong>extrapola mal</strong>.</li>
+<li>Usarlo, pero verificando los diseños finales con la simulación completa.</li>
+</ol>
+<div class="obra"><span class="tag sans">Ejercicio</span>Con tu <code>ElementoBarra</code>/<code>Malla</code> de <code>codigo/PROYECTO/</code> (o la viga analítica de 5.2 si todavía no tenés el solver): (a) generá 200 simulaciones variando 2 o 3 parámetros con hipercubo latino; (b) entrená una regresión polinómica con ridge (2.3) y un MLP (3.4); (c) medí el error en 50 simulaciones nuevas y graficá <strong>error contra número de simulaciones de entrenamiento</strong>; (d) compará el tiempo de una simulación contra el de una predicción. Si un día tenés el solver 2D de calor, repetí con la temperatura máxima.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué una grilla de 10 valores por parámetro es inviable con 6 parámetros? ¿Cuántas simulaciones serían?</div>
+<div class="legal"><span class="tag sans">Fuente</span>Hay trabajo publicado que combina estas dos ideas: <a href="https://techfinder.rutgers.edu/tech/Finite-Element-based_Methodology_for_Training_Neural_Network_Surrogate_Models">redes neuronales entrenadas con ayuda de un solver de elementos finitos</a> (FE-PINN, de Rutgers) y una <a href="https://arxiv.org/pdf/2109.12482">CNN informada por la física para predecir campos de temperatura</a>. Solo leí los resúmenes; el primero es la página de transferencia tecnológica de una universidad, con tono promocional.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes en tu ruta</span><span><a href="../ruta-fem/4-elementos-finitos.html">Ruta al FEM, bloque 4</a>; 2.3, 2.12, 3.4</span></div>
+<div class="r"><span class="k">Libros</span><span>Brunton &amp; Kutz, <em>Data-Driven Science and Engineering</em> (sitio con código y videos: <a href="https://databookuw.com">databookuw.com</a>, citado por la editorial)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m504" data-topic="m504">
+<div class="topichead"><h3><span class="badge MEC">5.4</span> Mantenimiento predictivo: señales de vibración</h3><label class="checklabel"><input type="checkbox" data-t="m504"><small class="sans">hecho</small></label></div>
+<p>Una máquina rotativa con un rodamiento dañado vibra distinto. Predecir la falla <em>antes</em> de que pase es uno de los usos más rentables de ML en la industria. El flujo clásico: <strong>medir</strong> (acelerómetro) → <strong>extraer características</strong> → <strong>clasificar</strong> (sano / falla) o <strong>detectar anomalías</strong>.</p>
+<p>Las características típicas de una señal \(x(t)\) de \(N\) muestras: valor <strong>RMS</strong> \(\sqrt{\frac1N\sum x^2}\) (energía), <strong>curtosis</strong> (qué tan "picuda" es la señal: los golpes de un rodamiento dañado la suben), valores <strong>pico</strong>, y el <strong>espectro</strong> de frecuencias, que se calcula con la <strong>FFT</strong> (transformada rápida de Fourier). La FFT de Cooley-Tukey es además un lindo ejercicio de recursión de divide y vencerás, igual que el merge sort.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) <strong>Simulá</strong> señales: una vibración sana (senoidal de 50 Hz más ruido) y una defectuosa (la misma más impulsos periódicos que representen golpes del rodamiento). (b) Implementá la FFT recursiva (para largos potencia de 2) y verificala contra una DFT directa \(O(N^2)\). (c) Extraé RMS, curtosis y las 3 frecuencias dominantes. (d) Clasificá sano/defectuoso con tu regresión logística (2.4) y tu árbol (2.6) y medí con validación cruzada.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si la FFT tiene complejidad \(O(N\log N)\) y la DFT directa \(O(N^2)\), ¿cuántas veces más rápida es la FFT para \(N = 4096\), en orden de magnitud?</div>
+<div class="legal warn"><span class="tag sans">Datos reales</span>Hay conjuntos de datos reales muy usados para esto: el de rodamientos de la Case Western Reserve University (CWRU) y el de degradación de motores turbofan C-MAPSS de la NASA. <strong>Los conozco de nombre, pero no verifiqué que sigan disponibles ni dónde están alojados</strong>: buscalos antes de planificar algo que dependa de ellos. Empezá con tus datos simulados.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes</span><span>2.6, 2.7, 3.11 (detección de anomalías con autoencoder)</span></div>
+<div class="r"><span class="k">Libros</span><span>Brunton &amp; Kutz (señales y análisis espectral, sistemas dinámicos)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m505" data-topic="m505">
+<div class="topichead"><h3><span class="badge MEC">5.5</span> Series de tiempo y estimación de estado</h3><label class="checklabel"><input type="checkbox" data-t="m505"><small class="sans">hecho</small></label></div>
+<p>Muchos datos de ingeniería son <strong>series de tiempo</strong>: temperatura, posición, corriente. Tres herramientas, de lo clásico a lo moderno:</p>
+<ul>
+<li><strong>Autorregresión (AR):</strong> predecir el valor de ahora con los \(p\) anteriores, \(x_t \approx a_1 x_{t-1} + \cdots + a_p x_{t-p}\). Los coeficientes salen de una regresión lineal (1.2). Un sistema masa-resorte-amortiguador es exactamente un AR(2).</li>
+<li><strong>Filtro de Kalman:</strong> estimar el estado real de un sistema (posición, velocidad) combinando un modelo físico con mediciones ruidosas. Es lo que usan desde un GPS hasta un robot. La versión 1D es corta y vale la pena programarla.</li>
+<li><strong>Métodos modernos de identificación de sistemas dinámicos</strong> (descomposición modal dinámica, regresión dispersa de ecuaciones) y redes recurrentes (3.9): el libro de Brunton y Kutz se centra en esta intersección entre sistemas dinámicos y ML.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Simulá un oscilador amortiguado \(m\ddot x + c\dot x + kx = 0\) con ruido de medición, ajustá un AR(2) por mínimos cuadrados y predecí 50 pasos hacia adelante; compará con la solución exacta. (b) Programá un filtro de Kalman 1D para estimar la posición de un móvil con velocidad constante a partir de mediciones con ruido y mostrá que el error del filtro es menor que el de las mediciones crudas. (c) Estimá la <strong>vida útil restante</strong> de un sistema que se degrada exponencialmente a partir de datos hasta cierto punto.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Un AR(2) tiene dos coeficientes. ¿Cuántos parámetros físicos (m, c, k) tiene el oscilador del que sale? ¿Por qué eso hace que el AR(2) sea una buena descripción?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span>Brunton &amp; Kutz, 2.ª ed. (dinámica y control con ML); <em>Deep Learning</em> (Goodfellow), cap. 10</span></div>
+<div class="r"><span class="k">Antes</span><span>1.2, 3.9</span></div>
+</div>
+</div>
+
+<div class="topic" id="m506" data-topic="m506">
+<div class="topichead"><h3><span class="badge FEM">5.6</span> ML informado por la física: PINNs</h3><label class="checklabel"><input type="checkbox" data-t="m506"><small class="sans">hecho</small></label></div>
+<p>Una <strong>PINN</strong> (<em>physics-informed neural network</em>) es una red neuronal \(u_\theta(x)\) cuya función de pérdida no usa solo datos: también exige que la red <strong>cumpla la ecuación diferencial</strong>. Por ejemplo, para \(-u''(x) = f(x)\) en \([0,1]\) con \(u(0)=u(1)=0\), la pérdida es la suma de tres términos: el error contra los datos (si los hay), el <strong>residuo de la ecuación</strong> \((u_\theta''+f)^2\) en muchos puntos de colocación, y el error en las condiciones de borde. Las derivadas \(u_\theta'\) y \(u_\theta''\) las calcula la <strong>derivación automática</strong> (3.5, 4.5).</p>
+<p>El trabajo original es el de Raissi, Perdikaris y Karniadakis (<em>Journal of Computational Physics</em>, vol. 378, 2019, pp. 686-707); una <a href="https://arxiv.org/html/2408.16806v1">revisión posterior de los mismos autores</a> cubre las extensiones. El libro <a href="https://arxiv.org/abs/2109.05237"><em>Physics-based Deep Learning</em></a> (Thuerey y colaboradores, TUM) es una introducción práctica y gratuita, con ejemplos en notebooks.</p>
+<ul>
+<li><strong>Ventaja:</strong> no necesita malla y puede combinar datos reales con la física; es especialmente interesante en <strong>problemas inversos</strong> (descubrir un parámetro desconocido, como una conductividad, a partir de mediciones).</li>
+<li><strong>Límite honesto:</strong> en un problema directo y bien planteado, FEM suele ser <strong>más preciso y más rápido</strong> que una PINN, y entrenar PINNs es sensible (varios términos de pérdida que compiten). No la tomes como reemplazo de FEM: tomala como una herramienta complementaria.</li>
+</ul>
+<div class="legal warn"><span class="tag sans">Sin ejecutar</span>Todo esto salió de las fuentes citadas y de mi conocimiento del tema. <strong>No ejecuté ningún código de PINN</strong> y no verifiqué los resultados numéricos de las referencias. El ejercicio de abajo es para que lo verifiques vos.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Después de 4.5 (PyTorch): resolvé \(-u''=\pi^2\sin(\pi x)\) en \([0,1]\), \(u(0)=u(1)=0\), cuya solución exacta es \(\sin(\pi x)\). (a) Con una PINN (red 1-20-20-1 tanh, 100 puntos de colocación). (b) Con un FEM 1D de elementos lineales (el de tu ruta de FEM). (c) Compará el error contra la exacta y el tiempo de cada uno. (d) Repetí (a) para identificar el término fuente desconocido a partir de mediciones de \(u\).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>En una PINN, ¿de dónde sale \(u_\theta''(x)\)? ¿Por qué hace falta que la activación sea derivable dos veces (la ReLU, por ejemplo, no sirve)?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><a href="https://arxiv.org/abs/2109.05237"><em>Physics-based Deep Learning</em></a> (Thuerey et al.); Brunton &amp; Kutz, 2.ª ed. (capítulo de ML informado por la física)</span></div>
+<div class="r"><span class="k">Antes</span><span>3.5, 4.5 y, para el FEM 1D, <a href="../ruta-fem/4-elementos-finitos.html">Ruta al FEM bloque 4</a></span></div>
+</div>
+</div>
+
+<div class="topic" id="m507" data-topic="m507">
+<div class="topichead"><h3><span class="badge MEC">5.7</span> Optimización de diseño con modelos sustitutos y optimización topológica</h3><label class="checklabel"><input type="checkbox" data-t="m507"><small class="sans">hecho</small></label></div>
+<p>Optimizar un diseño significa buscar los parámetros (dimensiones, formas) que minimizan una cosa (peso, costo) sujeto a restricciones (flecha máxima, tensión admisible). Si cada evaluación es una simulación FEM, el costo se dispara. El modelo sustituto de 5.3 lo evita: <strong>se optimiza el sustituto</strong> (barato) y se verifica el resultado con la simulación completa.</p>
+<p>La <strong>optimización topológica</strong> va más lejos: decide dónde poner y dónde sacar material dentro de un dominio. El método clásico (SIMP) resuelve un FEM en cada iteración; la reseña que cité en 5.1 menciona usos de ML para acelerar esas iteraciones. Es un tema de investigación activa, no una receta cerrada.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Con la viga de 5.2 (base \(b\) y alto \(h\) variables): minimizá el área \(bh\) sujeta a flecha \(\le 5\) mm para \(L=2\) m, \(P=1000\) N. Resolvelo (a) con una búsqueda aleatoria sobre el sustituto de 5.2, (b) con descenso por gradiente con penalización (1.6) y (c) analíticamente, y comprobá que los tres coinciden. Anotá cuántas evaluaciones de la "simulación cara" usó cada método.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Un diseño optimizado sobre el sustituto da flecha 4.9 mm; verificado con la simulación completa da 5.4 mm. ¿Qué hacés? ¿Qué te dice eso del sustituto?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Fuente</span><span>la <a href="https://www.peeref.com/works/26077551">reseña de ML en optimización estructural</a> (solo leí el resumen)</span></div>
+<div class="r"><span class="k">Antes</span><span>5.2, 5.3, 1.6</span></div>
+</div>
+</div>
+
+<div class="topic" id="m508" data-topic="m508">
+<div class="topichead"><h3><span class="badge MEC">5.8</span> Visión, control y robótica</h3><label class="checklabel"><input type="checkbox" data-t="m508"><small class="sans">hecho</small></label></div>
+<p>Dos usos que cierran el mapa. <strong>Visión para manufactura:</strong> una CNN (3.8) que clasifica fotos de piezas como buenas o defectuosas, o que localiza una costura de soldadura. <strong>Control y robótica:</strong> estimar y mover un mecanismo con modelos aprendidos; el aprendizaje por refuerzo (3.12) aparece cuando no hay un modelo cómodo.</p>
+<p>Si el proyecto del <strong>brazo robótico de soldadura</strong> del laboratorio avanza, estos temas aplican directo: (a) la <strong>cinemática</strong> (dónde queda la punta dado el ángulo de cada articulación) es un problema de cálculo, no de ML; (b) la cinemática <em>inversa</em> (qué ángulos dan una posición deseada) se resuelve con descenso por gradiente, justo lo que hiciste en 1.6; (c) la visión puede seguir la costura. Siempre empezando en simulación.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Programá la cinemática directa de un brazo plano de 2 eslabones (\(x = l_1\cos\theta_1 + l_2\cos(\theta_1+\theta_2)\), análogo para \(y\)). (b) Resolvé la <strong>cinemática inversa</strong> minimizando la distancia al objetivo con descenso por gradiente (el gradiente es la <strong>jacobiana</strong>, que podés derivar a mano y comprobar con 1.5). (c) Probá con un objetivo fuera del alcance y con una configuración cercana a la singularidad (brazo estirado) y anotá qué pasa. (d) Dibujalo en SVG (1.8).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Un brazo de 2 eslabones de largos 1 y 0.5 m: ¿cuál es el alcance máximo y cuál el mínimo? ¿Qué le pasa al descenso por gradiente si el objetivo está fuera de ese anillo?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes</span><span>3.8, 3.12, 1.5, 1.6</span></div>
+<div class="r"><span class="k">Contexto</span><span>el proyecto del brazo robótico del laboratorio está en una nota aparte; este ejercicio es independiente del robot real</span></div>
+</div>
+</div>
+
+<h2 class="withrule">Proyecto integrador: de la malla al modelo sustituto</h2>
+<p>Es el hito <strong>H4</strong> de <a href="7-ruta-combinada.html">la ruta combinada</a>. Se hace cuando tengas Chapra terminado y el solver de conducción de calor funcionando, pero conviene tenerlo en mente desde ahora.</p>
+<ol>
+<li><strong>Problema:</strong> una placa rectangular con temperaturas fijas en los bordes y una fuente de calor de intensidad variable. La temperatura máxima depende de pocos parámetros (conductividad, intensidad, posición de la fuente).</li>
+<li><strong>Datos:</strong> tu FEM resuelve 200 casos elegidos con hipercubo latino (5.3) y guardás parámetros → temperatura máxima.</li>
+<li><strong>Modelo:</strong> una regresión con ridge (2.3) y un MLP (3.4 o 4.5), con validación cruzada (2.12).</li>
+<li><strong>Evaluación honesta:</strong> error en 50 casos nuevos, fuera y dentro del rango de entrenamiento; tiempo de una simulación contra una predicción.</li>
+<li><strong>Extensión (tesis):</strong> una PINN para el mismo problema (5.6) y una comparación escrita de cuándo gana cada método.</li>
+</ol>
+<div class="legal warn"><span class="tag sans">Propuesta</span>Esto es una <strong>propuesta de proyecto</strong>, no un resultado: todavía no lo hice ni sé cuánto va a costar en tu caso. Está para que veas adónde apunta la ruta.</div>
+<div class="prevnext">
+  <a class="pn" href="4-herramientas.html"><span>Anterior</span><b>← Herramientas: Python y el ecosistema</b></a>
+  <a class="pn next" href="6-libros-y-cursos.html"><span>Siguiente</span><b>Libros, cursos y fuentes →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

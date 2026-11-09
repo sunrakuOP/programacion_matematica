@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1 · Base numérica y datos · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill active" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 1</div>
+<h1 class="hero">Base numérica y datos</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> tener en C++ las piezas numéricas que todo modelo de ML usa: matrices, mínimos cuadrados, estadística y datos, derivadas, descenso por gradiente, rendimiento y una forma de <em>ver</em> los resultados. Nada de esto es ML todavía: es el piso sobre el que se apoya. Se solapa a propósito con la <a href="../ruta_codigo/3-metodos-numericos.html">Ruta de Código fase 3</a>: acá se reutiliza, no se repite.</p></blockquote>
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#m101">1.1 Álgebra lineal aplicada: la matriz como herramienta de ML</a></li>
+<li><a href="#m102">1.2 Sistemas de ecuaciones y mínimos cuadrados</a></li>
+<li><a href="#m103">1.3 Probabilidad y estadística en código</a></li>
+<li><a href="#m104">1.4 Datos: cargar, normalizar y separar en entrenamiento y prueba</a></li>
+<li><a href="#m105">1.5 Derivadas y gradiente en código (y cómo comprobarlos)</a></li>
+<li><a href="#m106">1.6 Optimización: el descenso por gradiente</a></li>
+<li><a href="#m107">1.7 Eficiencia: por qué el orden de los bucles importa</a></li>
+<li><a href="#m108">1.8 Ver los resultados: escribir un SVG desde C++</a></li>
+</ol>
+</div>
+<div class="topic" id="m101" data-topic="m101">
+<div class="topichead"><h3><span class="badge ML">1.1</span> Álgebra lineal aplicada: la matriz como herramienta de ML</h3><label class="checklabel"><input type="checkbox" data-t="m101"><small class="sans">hecho</small></label></div>
+<p>En ML casi todo es multiplicar matrices. Los datos son una matriz \(X\) de \(n\) filas (ejemplos) por \(d\) columnas (características); los pesos de un modelo lineal son un vector \(w\) de largo \(d\); y predecir es calcular \(Xw\). Una capa de una red neuronal es lo mismo con \(W\) en vez de \(w\). Por eso la primera pieza de esta ruta no es "un algoritmo": es tener una <code>Matriz</code> y un <code>Vector</code> cómodos y rápidos.</p>
+<p><strong>No la reescribas de cero.</strong> Ya tenés <code>Matriz&lt;T&gt;</code> y <code>Vector2D/3D</code> en <code>codigo/PROYECTO/</code>, y el tema <a href="../ruta_codigo/3-metodos-numericos.html#c301">3.1 de la Ruta de Código</a> hace el producto matriz-vector. Lo que ML necesita <em>además</em> es: transpuesta, producto matriz-matriz, producto elemento a elemento (Hadamard), suma por filas/columnas y un <code>dot</code> entre vectores.</p>
+<ul>
+<li><strong>Layout:</strong> guardar los \(n \times d\) valores en <strong>una sola tira</strong> de memoria, fila a fila (<em>row-major</em>). Es lo que usa NumPy, Eigen por defecto no (usa column-major), y es lo que hace que el tema 1.7 funcione.</li>
+<li><strong>Dimensiones:</strong> \((n \times d)(d \times k) \to (n \times k)\). El 80% de los bugs de ML en código son dimensiones que no cierran; hacé que tu clase lo verifique y lance una excepción con un mensaje claro.</li>
+<li><strong>Costo:</strong> multiplicar \((n \times d)\) por \((d \times k)\) cuesta \(n \cdot d \cdot k\) multiplicaciones.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>Ampliá tu <code>Matriz</code> con <code>transpuesta()</code>, <code>operator*(Matriz)</code>, <code>hadamard(Matriz)</code>, <code>sumaPorColumnas()</code> y <code>dot(Vector, Vector)</code>. Escribí el test (Catch2, como en <code>PROYECTO/tests/</code>) <em>antes</em> del código: producto de una <code>2×3</code> por una <code>3×2</code> con números que verifiques a mano, y que la multiplicación de dimensiones incompatibles lance excepción.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con \(X\) de 1000×20 y \(W\) de 20×5: ¿de qué tamaño es \(XW\) y cuántas multiplicaciones hace? (Contestá con los dos números.)</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes en tu ruta</span><span><a href="../ruta_codigo/3-metodos-numericos.html#c301">Ruta de Código 3.1</a></span></div>
+<div class="r"><span class="k">Teoría (repaso)</span><span><em>Mathematics for Machine Learning</em>, cap. 2 (Álgebra lineal), ver <a href="6-libros-y-cursos.html">libros</a></span></div>
+<div class="r"><span class="k">Después</span><span>1.7 (cómo se multiplica rápido) y 4.6 (Eigen)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m102" data-topic="m102">
+<div class="topichead"><h3><span class="badge ML">1.2</span> Sistemas de ecuaciones y mínimos cuadrados</h3><label class="checklabel"><input type="checkbox" data-t="m102"><small class="sans">hecho</small></label></div>
+<p>La regresión lineal es un problema de <strong>mínimos cuadrados</strong>: encontrar \(w\) que haga mínimo \(\|Xw - y\|^2\). Derivando e igualando a cero sale un sistema de ecuaciones, las <strong>ecuaciones normales</strong>: \(X^T X\, w = X^T y\). Y ese sistema ya lo sabés resolver: es el Gauss de Chapra (con pivoteo parcial). Es decir, tu primer modelo de ML es la eliminación gaussiana aplicada a una matriz que armaste con tus datos.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">minimos_cuadrados.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include &lt;utility&gt;
+
+<span class="k">using</span> <span class="t">Matriz</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;&gt;;
+<span class="k">using</span> <span class="t">Vector</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;;
+
+<span class="c">// Gauss con pivoteo parcial (el de Chapra, ahora con el intercambio de filas)</span>
+<span class="t">Vector</span> <span class="fn">resolver</span>(<span class="t">Matriz</span> A, <span class="t">Vector</span> b) {
+    <span class="k">int</span> n = A.<span class="fn">size</span>();
+    <span class="k">for</span> (<span class="k">int</span> c = <span class="n">0</span>; c &lt; n; ++c) {
+        <span class="k">int</span> p = c;
+        <span class="k">for</span> (<span class="k">int</span> f = c + <span class="n">1</span>; f &lt; n; ++f) <span class="k">if</span> (<span class="t">std</span>::<span class="fn">fabs</span>(A[f][c]) &gt; <span class="t">std</span>::<span class="fn">fabs</span>(A[p][c])) p = f;
+        <span class="t">std</span>::<span class="fn">swap</span>(A[c], A[p]); <span class="t">std</span>::<span class="fn">swap</span>(b[c], b[p]);
+        <span class="k">for</span> (<span class="k">int</span> f = c + <span class="n">1</span>; f &lt; n; ++f) {
+            <span class="k">double</span> m = A[f][c] / A[c][c];
+            <span class="k">for</span> (<span class="k">int</span> k = c; k &lt; n; ++k) A[f][k] -= m * A[c][k];
+            b[f] -= m * b[c];
+        }
+    }
+    <span class="t">Vector</span> <span class="fn">x</span>(n);
+    <span class="k">for</span> (<span class="k">int</span> i = n - <span class="n">1</span>; i &gt;= <span class="n">0</span>; --i) {
+        <span class="k">double</span> s = b[i];
+        <span class="k">for</span> (<span class="k">int</span> j = i + <span class="n">1</span>; j &lt; n; ++j) s -= A[i][j] * x[j];
+        x[i] = s / A[i][i];
+    }
+    <span class="k">return</span> x;
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">42</span>);
+    <span class="t">std</span>::uniform_real_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ux</span>(<span class="n">0</span>, <span class="n">10</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ruido</span>(<span class="n">0</span>, <span class="n">0.5</span>);
+
+    <span class="k">int</span> n = <span class="n">200</span>;
+    <span class="t">Matriz</span> <span class="fn">X</span>(n, <span class="t">Vector</span>(<span class="n">2</span>));                                 <span class="c">// matriz de diseno: columna de 1 y columna de x</span>
+    <span class="t">Vector</span> <span class="fn">y</span>(n);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) { <span class="k">double</span> x = <span class="fn">ux</span>(gen); X[i] = {<span class="n">1.0</span>, x}; y[i] = <span class="n">3.0</span> * x + <span class="n">2.0</span> + <span class="fn">ruido</span>(gen); }
+
+    <span class="c">// ecuaciones normales:  (X^T X) w = X^T y</span>
+    <span class="t">Matriz</span> <span class="fn">XtX</span>(<span class="n">2</span>, <span class="t">Vector</span>(<span class="n">2</span>, <span class="n">0.0</span>));
+    <span class="t">Vector</span> <span class="fn">Xty</span>(<span class="n">2</span>, <span class="n">0.0</span>);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i)
+        <span class="k">for</span> (<span class="k">int</span> a = <span class="n">0</span>; a &lt; <span class="n">2</span>; ++a) {
+            Xty[a] += X[i][a] * y[i];
+            <span class="k">for</span> (<span class="k">int</span> b = <span class="n">0</span>; b &lt; <span class="n">2</span>; ++b) XtX[a][b] += X[i][a] * X[i][b];
+        }
+    <span class="t">Vector</span> w = <span class="fn">resolver</span>(XtX, Xty);
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"ordenada = "</span> &lt;&lt; w[<span class="n">0</span>] &lt;&lt; <span class="s">"  (real 2)    pendiente = "</span> &lt;&lt; w[<span class="n">1</span>] &lt;&lt; <span class="s">"  (real 3)\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>ordenada = 2.05733  (real 2)    pendiente = 2.99335  (real 3)</pre></div>
+<p>Los datos eran \(y = 3x + 2\) más ruido; el modelo recuperó ordenada ≈ 2.06 y pendiente ≈ 2.99. Que no dé exactamente 2 y 3 no es un error: el ruido hace que el mínimo de <em>esta</em> muestra sea ligeramente distinto del real.</p>
+<div class="legal warn"><span class="tag sans">Ojo</span><strong>No inviertas la matriz.</strong> Se resuelve el sistema (Gauss/LU), no se calcula \((X^TX)^{-1}\): es más lento y menos preciso. Además, formar \(X^TX\) <strong>eleva al cuadrado el número de condición</strong>; por eso las librerías serias usan QR o SVD en vez de las ecuaciones normales. Para este curso las normales alcanzan, pero guardá la idea (la retomamos en 2.3 con regularización).</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Generalizá <code>minimos_cuadrados.cpp</code> a \(d\) características (columna de 1 + \(d\) columnas) y ajustá un plano \(y = a + bx_1 + cx_2\) con datos que generes vos. Compará con la solución exacta que usaste para generarlos.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué no conviene calcular \((X^TX)^{-1}\) explícitamente y multiplicar por \(X^Ty\)? Nombrá dos razones.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes en tu ruta</span><span><a href="../ruta_codigo/3-metodos-numericos.html#c302">Ruta de Código 3.2</a> (Gauss) y Chapra (sistemas lineales, regresión)</span></div>
+<div class="r"><span class="k">Teoría</span><span><em>Mathematics for Machine Learning</em>, cap. 9 (Regresión lineal); <em>ISLR</em> cap. 3</span></div>
+<div class="r"><span class="k">Después</span><span>2.2 (regresión por descenso de gradiente) y 2.3 (ridge)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m103" data-topic="m103">
+<div class="topichead"><h3><span class="badge ML">1.3</span> Probabilidad y estadística en código</h3><label class="checklabel"><input type="checkbox" data-t="m103"><small class="sans">hecho</small></label></div>
+<p>Tu repaso de probabilidad y estadística va por tu cuenta; acá va la parte de <strong>código</strong>: generar datos aleatorios <em>reproducibles</em>, y calcular lo que el resto de la ruta usa todo el tiempo (media, varianza, covarianza, desvío).</p>
+<p>En C++ se usa <code>&lt;random&gt;</code>: un <strong>motor</strong> (<code>std::mt19937</code>, con semilla fija para que el experimento sea repetible) y una <strong>distribución</strong> (<code>std::normal_distribution</code>, <code>std::uniform_real_distribution</code>). La semilla fija es oro: cuando un modelo falla, necesitás poder reproducir exactamente los mismos datos.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">estadistica.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">42</span>);                                   <span class="c">// semilla fija: reproducible</span>
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">normal</span>(<span class="n">10.0</span>, <span class="n">2.0</span>);     <span class="c">// media 10, desvío 2</span>
+    <span class="k">const</span> <span class="k">int</span> n = <span class="n">100000</span>;
+    <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt; <span class="fn">v</span>(n);
+    <span class="k">for</span> (<span class="k">double</span>&amp; x : v) x = <span class="fn">normal</span>(gen);
+
+    <span class="k">double</span> suma = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">double</span> x : v) suma += x;
+    <span class="k">double</span> media = suma / n;
+
+    <span class="k">double</span> ss = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">double</span> x : v) ss += (x - media) * (x - media);
+    <span class="k">double</span> varianza = ss / (n - <span class="n">1</span>);                         <span class="c">// muestral: n-1</span>
+
+    <span class="k">int</span> dentro = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">double</span> x : v) <span class="k">if</span> (<span class="t">std</span>::<span class="fn">fabs</span>(x - media) &lt; <span class="t">std</span>::<span class="fn">sqrt</span>(varianza)) ++dentro;
+
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"media     = "</span> &lt;&lt; media &lt;&lt; <span class="s">"   (teorica 10)\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"varianza  = "</span> &lt;&lt; varianza &lt;&lt; <span class="s">"   (teorica 4)\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"dentro de 1 desvio = "</span> &lt;&lt; <span class="k">double</span>(dentro) / n &lt;&lt; <span class="s">"   (teorico 0.6827)\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>media     = 10.0027   (teorica 10)
+varianza  = 4.00287   (teorica 4)
+dentro de 1 desvio = 0.68209   (teorico 0.6827)</pre></div>
+<ul>
+<li>La varianza <strong>muestral</strong> divide por \(n-1\), no por \(n\) (corrección de Bessel). Con \(n=100000\) no se nota; con \(n=5\) sí.</li>
+<li>La proporción dentro de un desvío da 0.6821 y la teórica es 0.6827: más muestras acercan los dos números (ley de los grandes números).</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Escribí un histograma en ASCII de 20 intervalos para esas 100.000 muestras. (b) Generá normales a mano con <strong>Box-Muller</strong> a partir de <code>uniform_real_distribution</code> y compará media/varianza con las de <code>normal_distribution</code>. (c) Estimá \(\pi\) por Monte Carlo (puntos al azar en el cuadrado unidad, proporción dentro del círculo) y mirá cómo baja el error al subir \(n\).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con \(n=2\) datos, \(\{1, 3\}\): ¿cuánto da la varianza dividiendo por \(n\) y cuánto dividiendo por \(n-1\)?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Teoría (repaso)</span><span><em>Mathematics for Machine Learning</em>, cap. 6 (Probabilidad y distribuciones); <em>ISLR</em> cap. 2</span></div>
+<div class="r"><span class="k">Referencia C++</span><span><code>&lt;random&gt;</code> en cppreference (motores y distribuciones)</span></div>
+<div class="r"><span class="k">Después</span><span>2.1 (evaluar modelos con datos de prueba) y 2.13 (modelos probabilísticos)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m104" data-topic="m104">
+<div class="topichead"><h3><span class="badge ML">1.4</span> Datos: cargar, normalizar y separar en entrenamiento y prueba</h3><label class="checklabel"><input type="checkbox" data-t="m104"><small class="sans">hecho</small></label></div>
+<p>Los modelos no ven "la realidad": ven una tabla. El 80% del trabajo práctico es preparar esa tabla. Tres reglas que aparecen en todos lados:</p>
+<ul>
+<li><strong>Estandarizar</strong> cada característica (restar la media, dividir por el desvío) para que ninguna domine por tener unidades más grandes (la altura en cm contra el peso en kg). Sin esto, el descenso por gradiente (1.6) se vuelve lentísimo.</li>
+<li><strong>Separar antes de calcular nada:</strong> el conjunto de <em>prueba</em> representa datos que el modelo nunca vio. Si calculás la media usando también esos datos, el modelo "espió" el examen. Esto se llama <strong>fuga de datos</strong> (<em>data leakage</em>) y es el error más común y más caro.</li>
+<li><strong>Reproducibilidad:</strong> mezclar los índices con una semilla fija.</li>
+</ul>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">zscore_split.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;algorithm&gt;
+<span class="c">#</span>include &lt;numeric&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">7</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">alturas</span>(<span class="n">170</span>, <span class="n">10</span>), <span class="fn">pesos</span>(<span class="n">70</span>, <span class="n">15</span>);
+    <span class="k">const</span> <span class="k">int</span> n = <span class="n">1000</span>;
+    <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;&gt; <span class="fn">X</span>(n, <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;(<span class="n">2</span>));
+    <span class="k">for</span> (<span class="k">auto</span>&amp; fila : X) { fila[<span class="n">0</span>] = <span class="fn">alturas</span>(gen); fila[<span class="n">1</span>] = <span class="fn">pesos</span>(gen); }
+
+    <span class="c">// 1) mezclar los indices y separar 80% / 20%  (ANTES de calcular estadisticas)</span>
+    <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">int</span>&gt; <span class="fn">idx</span>(n);
+    <span class="t">std</span>::<span class="fn">iota</span>(idx.<span class="fn">begin</span>(), idx.<span class="fn">end</span>(), <span class="n">0</span>);
+    <span class="t">std</span>::<span class="fn">shuffle</span>(idx.<span class="fn">begin</span>(), idx.<span class="fn">end</span>(), gen);
+    <span class="k">int</span> nTrain = n * <span class="n">8</span> / <span class="n">10</span>;
+
+    <span class="c">// 2) media y desvio SOLO con el train</span>
+    <span class="k">double</span> media[<span class="n">2</span>] = {<span class="n">0</span>, <span class="n">0</span>}, desvio[<span class="n">2</span>] = {<span class="n">0</span>, <span class="n">0</span>};
+    <span class="k">for</span> (<span class="k">int</span> k = <span class="n">0</span>; k &lt; nTrain; ++k) <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; <span class="n">2</span>; ++j) media[j] += X[idx[k]][j] / nTrain;
+    <span class="k">for</span> (<span class="k">int</span> k = <span class="n">0</span>; k &lt; nTrain; ++k) <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; <span class="n">2</span>; ++j) desvio[j] += <span class="t">std</span>::<span class="fn">pow</span>(X[idx[k]][j] - media[j], <span class="n">2</span>) / nTrain;
+    <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; <span class="n">2</span>; ++j) desvio[j] = <span class="t">std</span>::<span class="fn">sqrt</span>(desvio[j]);
+
+    <span class="c">// 3) estandarizar todo con ESAS estadisticas</span>
+    <span class="k">for</span> (<span class="k">auto</span>&amp; fila : X) <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; <span class="n">2</span>; ++j) fila[j] = (fila[j] - media[j]) / desvio[j];
+
+    <span class="k">double</span> mTrain = <span class="n">0</span>, mTest = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">int</span> k = <span class="n">0</span>; k &lt; nTrain; ++k) mTrain += X[idx[k]][<span class="n">0</span>] / nTrain;
+    <span class="k">for</span> (<span class="k">int</span> k = nTrain; k &lt; n; ++k) mTest += X[idx[k]][<span class="n">0</span>] / (n - nTrain);
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"train = "</span> &lt;&lt; nTrain &lt;&lt; <span class="s">"  test = "</span> &lt;&lt; n - nTrain &lt;&lt; <span class="s">"\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"media de la altura estandarizada: train = "</span> &lt;&lt; mTrain &lt;&lt; <span class="s">"  test = "</span> &lt;&lt; mTest &lt;&lt; <span class="s">"\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>train = 800  test = 200
+media de la altura estandarizada: train = 4.19283e-15  test = -0.219416</pre></div>
+<p>Mirá la última línea: la media de la altura estandarizada en <em>train</em> es 0 (4e-15, ruido de coma flotante) por construcción, pero en <em>test</em> da −0.22. <strong>No es un bug:</strong> el test usó las estadísticas del train, y su media real es distinta. Si la forzaras a 0 usando datos del test, estarías filtrando información.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Armá una clase <code>Dataset</code> con <code>cargarCSV(ruta)</code>, <code>estandarizar(media, desvio)</code>, <code>dividir(proporcion, semilla)</code> y <code>oneHot(columna)</code>. Probala con un CSV chico que escribas a mano (10 filas, una columna de texto con 3 categorías). Pensá qué hacer con valores faltantes y escribí tu decisión como comentario.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la media estandarizada del test no da 0? Y si la hubieras calculado con todos los datos juntos antes de separar, ¿qué error estarías cometiendo?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Teoría</span><span><em>Hands-On Machine Learning</em> (Géron), cap. 2 (proyecto de punta a punta); <em>ISLR</em> cap. 5 (remuestreo)</span></div>
+<div class="r"><span class="k">Antes en tu ruta</span><span>Parser de CSV: strings y <code>&lt;fstream&gt;</code>; mapas para one-hot (<a href="../ruta_codigo/1-estructuras-de-datos.html">Ruta de Código, fase 1</a>)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m105" data-topic="m105">
+<div class="topichead"><h3><span class="badge ML">1.5</span> Derivadas y gradiente en código (y cómo comprobarlos)</h3><label class="checklabel"><input type="checkbox" data-t="m105"><small class="sans">hecho</small></label></div>
+<p>Entrenar un modelo es bajar una "montaña" de error. La dirección de máxima subida es el <strong>gradiente</strong>: el vector de derivadas parciales. Para cualquier función \(f(x,y)\), el gradiente es \((\partial f/\partial x,\ \partial f/\partial y)\). En redes neuronales, la <strong>regla de la cadena</strong> aplicada capa por capa (backpropagation, 3.3) calcula ese gradiente para millones de parámetros.</p>
+<p>Tenés una forma de calcular derivadas <em>sin cálculo</em>: la <strong>diferencia central</strong>, \(f'(x) \approx (f(x+h) - f(x-h)) / 2h\) (la misma que usaste en <code>derivada(f, x)</code> con lambdas). Sirve para algo más importante que calcular: <strong>verificar</strong> el gradiente que derivaste a mano. Esa técnica se llama <em>gradient check</em> y es la herramienta de depuración más valiosa del bloque de redes neuronales.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">gradcheck.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include &lt;functional&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+
+<span class="c">// f(x, y) = x^2 * y + sin(y)</span>
+<span class="k">double</span> <span class="fn">f</span>(<span class="k">double</span> x, <span class="k">double</span> y) { <span class="k">return</span> x * x * y + <span class="t">std</span>::<span class="fn">sin</span>(y); }
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">double</span> x = <span class="n">1.5</span>, y = <span class="n">0.8</span>;
+    <span class="c">// gradiente analitico (a mano): df/dx = 2xy ; df/dy = x^2 + cos(y)</span>
+    <span class="k">double</span> gx = <span class="n">2</span> * x * y, gy = x * x + <span class="t">std</span>::<span class="fn">cos</span>(y);
+
+    <span class="c">// gradiente numerico: diferencia central</span>
+    <span class="k">for</span> (<span class="k">double</span> h : {<span class="n">1e-1</span>, <span class="n">1e-3</span>, <span class="n">1e-5</span>, <span class="n">1e-8</span>}) {
+        <span class="k">double</span> nx = (<span class="fn">f</span>(x + h, y) - <span class="fn">f</span>(x - h, y)) / (<span class="n">2</span> * h);
+        <span class="k">double</span> ny = (<span class="fn">f</span>(x, y + h) - <span class="fn">f</span>(x, y - h)) / (<span class="n">2</span> * h);
+        <span class="k">double</span> err = <span class="t">std</span>::<span class="fn">sqrt</span>((nx - gx) * (nx - gx) + (ny - gy) * (ny - gy)) /
+                     <span class="t">std</span>::<span class="fn">sqrt</span>(gx * gx + gy * gy);
+        <span class="t">std</span>::cout &lt;&lt; <span class="s">"h = "</span> &lt;&lt; h &lt;&lt; <span class="s">"   error relativo = "</span> &lt;&lt; err &lt;&lt; <span class="s">"\n"</span>;
+    }
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"analitico: ("</span> &lt;&lt; gx &lt;&lt; <span class="s">", "</span> &lt;&lt; gy &lt;&lt; <span class="s">")\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>h = 0.1   error relativo = 0.000305388
+h = 0.001   error relativo = 3.05541e-08
+h = 1e-05   error relativo = 8.19652e-12
+h = 1e-08   error relativo = 7.15366e-09
+analitico: (2.4, 2.94671)</pre></div>
+<p>Fijate en la columna del error: baja con \(h\) hasta \(10^{-5}\) (8e-12) y <strong>vuelve a subir</strong> con \(10^{-8}\) (7e-9). Dos errores compiten: el de aproximación (baja con \(h\)) y el de redondeo (sube cuando restás dos números casi iguales). El mejor \(h\) está en el medio.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Hacé el <em>gradient check</em> de la función de pérdida de la regresión lineal, \(L(w,b) = \frac{1}{n}\sum (wx_i + b - y_i)^2\): derivá \(\partial L/\partial w\) y \(\partial L/\partial b\) a mano, y compará con diferencias centrales sobre unos 20 datos. El error relativo tiene que dar menos de \(10^{-6}\).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el error con \(h=10^{-8}\) es peor que con \(h=10^{-5}\), si \(h\) más chico debería aproximar mejor?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes en tu ruta</span><span>Lambdas como <code>f(x)</code> y <code>derivada</code> (STL 1c.2); Chapra (derivación numérica)</span></div>
+<div class="r"><span class="k">Teoría</span><span><em>Mathematics for Machine Learning</em>, cap. 5 (Cálculo vectorial)</span></div>
+<div class="r"><span class="k">Después</span><span>3.3 (backprop) y 3.5 (derivación automática)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m106" data-topic="m106">
+<div class="topichead"><h3><span class="badge ML">1.6</span> Optimización: el descenso por gradiente</h3><label class="checklabel"><input type="checkbox" data-t="m106"><small class="sans">hecho</small></label></div>
+<p>Casi todo el ML moderno es: definir una función de pérdida \(L(\theta)\) y buscar los parámetros \(\theta\) que la minimicen, dando pasos en dirección contraria al gradiente: \(\theta \leftarrow \theta - \eta\, \nabla L(\theta)\). El número \(\eta\) es la <strong>tasa de aprendizaje</strong> (<em>learning rate</em>), y es el hiperparámetro más importante que vas a tocar.</p>
+<p>Con \(f(x) = (x-3)^2\) el paso es \(x \leftarrow x - \eta \cdot 2(x-3)\). Cada paso multiplica la distancia al mínimo por \((1 - 2\eta)\). Si \(|1-2\eta| &lt; 1\) converge; si no, no. Con la cuenta a la vista, el resultado se puede predecir antes de ejecutar:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">gd_lr.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+
+<span class="c">// f(x) = (x - 3)^2   -&gt;   f'(x) = 2(x - 3)   -&gt;   minimo en x = 3</span>
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">for</span> (<span class="k">double</span> lr : {<span class="n">0.1</span>, <span class="n">0.9</span>, <span class="n">1.0</span>, <span class="n">1.1</span>}) {
+        <span class="k">double</span> x = <span class="n">0.0</span>;
+        <span class="k">for</span> (<span class="k">int</span> it = <span class="n">0</span>; it &lt; <span class="n">20</span>; ++it) x -= lr * <span class="n">2</span> * (x - <span class="n">3</span>);
+        <span class="t">std</span>::cout &lt;&lt; <span class="s">"lr = "</span> &lt;&lt; lr &lt;&lt; <span class="s">"   x tras 20 pasos = "</span> &lt;&lt; x &lt;&lt; <span class="s">"\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>lr = 0.1   x tras 20 pasos = 2.96541
+lr = 0.9   x tras 20 pasos = 2.96541
+lr = 1   x tras 20 pasos = 0
+lr = 1.1   x tras 20 pasos = -112.013</pre></div>
+<ul>
+<li><code>lr = 0.1</code>: factor 0.8, converge suave. <code>lr = 0.9</code>: factor −0.8, <strong>oscila</strong> de un lado a otro pero converge, igual de lento (el mismo 2.96541).</li>
+<li><code>lr = 1.0</code>: factor −1, queda <strong>atrapado</strong> saltando entre dos puntos para siempre (x=0 y x=6). <code>lr = 1.1</code>: factor −1.2, <strong>diverge</strong> (x = −112 y creciendo).</li>
+</ul>
+<p>Esto conecta con Chapra: el método de <strong>Newton</strong> elige el paso usando la segunda derivada y por eso en una parábola llega en un solo paso; el descenso por gradiente simple necesita ajustar \(\eta\) a mano. Los optimizadores del tema 3.6 (momentum, Adam) son maneras de automatizar esa elección.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Escribí <code>descender(f_grad, x0, lr, pasos)</code> con una lambda para el gradiente y probala en (a) la parábola, (b) \(f(x,y) = x^2 + 10y^2\), (c) la función de Rosenbrock. Para cada una, encontrá a mano el rango de <code>lr</code> que converge y verificalo corriendo.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Para \(f(x) = a(x-3)^2\) el factor de cada paso es \(1 - 2a\eta\). ¿Cuál es el \(\eta\) máximo que converge si \(a = 10\)?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes en tu ruta</span><span>Chapra: optimización unidimensional y multidimensional, Newton-Raphson (<a href="../ruta_codigo/3-metodos-numericos.html#c307">Ruta de Código 3.7</a>)</span></div>
+<div class="r"><span class="k">Teoría</span><span><em>Mathematics for Machine Learning</em>, cap. 7 (Optimización continua); <em>Deep Learning</em> (Goodfellow), cap. 4 y 8</span></div>
+<div class="r"><span class="k">Después</span><span>2.2 (regresión), 3.6 (optimizadores)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m107" data-topic="m107">
+<div class="topichead"><h3><span class="badge ML">1.7</span> Eficiencia: por qué el orden de los bucles importa</h3><label class="checklabel"><input type="checkbox" data-t="m107"><small class="sans">hecho</small></label></div>
+<p>Entrenar modelos significa multiplicar matrices millones de veces, así que el costo constante importa tanto como el Big-O. La memoria funciona por <strong>líneas de caché</strong>: cuando leés un <code>double</code>, el procesador trae también los vecinos. Si tu bucle recorre la memoria en el orden en que está guardada, usás todo lo que trajo; si "salta" entre filas, tiras la mayor parte.</p>
+<p>Probalo con la misma multiplicación \(C = AB\) de 400×400, escrita con dos órdenes de bucles. Ambos hacen exactamente \(400^3\) multiplicaciones y dan el mismo resultado:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">matmul_orden.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;chrono&gt;
+
+<span class="k">using</span> <span class="t">Mat</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;;                            <span class="c">// n*n en una sola tira (fila a fila)</span>
+
+<span class="k">template</span> &lt;<span class="k">class</span> F&gt; <span class="k">double</span> <span class="fn">ms</span>(F f) {
+    <span class="k">auto</span> t = <span class="t">std</span>::chrono::steady_clock::<span class="fn">now</span>();
+    <span class="fn">f</span>();
+    <span class="k">return</span> <span class="t">std</span>::chrono::duration&lt;<span class="k">double</span>, <span class="t">std</span>::milli&gt;(<span class="t">std</span>::chrono::steady_clock::<span class="fn">now</span>() - t).<span class="fn">count</span>();
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">const</span> <span class="k">int</span> n = <span class="n">400</span>;
+    <span class="t">Mat</span> <span class="fn">A</span>(n * n, <span class="n">1.0</span>), <span class="fn">B</span>(n * n, <span class="n">2.0</span>), <span class="fn">C1</span>(n * n, <span class="n">0.0</span>), <span class="fn">C2</span>(n * n, <span class="n">0.0</span>);
+
+    <span class="k">double</span> t1 = <span class="fn">ms</span>([&amp;] {                                    <span class="c">// orden i-j-k: B se recorre "saltando" filas</span>
+        <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; n; ++j) {
+            <span class="k">double</span> s = <span class="n">0</span>;
+            <span class="k">for</span> (<span class="k">int</span> k = <span class="n">0</span>; k &lt; n; ++k) s += A[i * n + k] * B[k * n + j];
+            C1[i * n + j] = s;
+        }
+    });
+    <span class="k">double</span> t2 = <span class="fn">ms</span>([&amp;] {                                    <span class="c">// orden i-k-j: todo se recorre seguido</span>
+        <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) <span class="k">for</span> (<span class="k">int</span> k = <span class="n">0</span>; k &lt; n; ++k) {
+            <span class="k">double</span> a = A[i * n + k];
+            <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; n; ++j) C2[i * n + j] += a * B[k * n + j];
+        }
+    });
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"i-j-k: "</span> &lt;&lt; t1 &lt;&lt; <span class="s">" ms   i-k-j: "</span> &lt;&lt; t2 &lt;&lt; <span class="s">" ms   mismo resultado: "</span> &lt;&lt; (C1 == C2) &lt;&lt; <span class="s">"\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>i-j-k: 108.634 ms   i-k-j: 15.9686 ms   mismo resultado: 1</pre></div>
+<p>El orden <code>i-k-j</code> es unas <strong>6.8 veces más rápido</strong> en esta Mac (<code>-O2</code>; el número exacto depende de tu máquina, así que corrélo en tu PC con Windows para comparar). La razón: en <code>i-j-k</code>, el bucle interior recorre <code>B[k*n+j]</code> saltando <code>n</code> posiciones por vez (una columna); en <code>i-k-j</code> recorre <code>B[k*n+j]</code> con <code>j</code> creciendo (una fila, seguida en memoria).</p>
+<div class="legal warn"><span class="tag sans">Medición</span>Los tiempos de este tema son <strong>de mi Mac</strong>, medidos una vez. No los cites como universales: lo que se mantiene es la <em>relación</em> (acceso seguido gana a acceso con saltos), no el valor absoluto.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Agregá una tercera versión con <strong>bloques</strong> (<em>tiling</em>): dividí las matrices en bloques de 32×32 y multiplicá bloque a bloque. Medí. (b) Medí lo mismo con <code>-O0</code> y <code>-O3</code> y anotá cuánto cambia cada versión. (c) Cuando llegues al tema 4.6, compará con <code>Eigen</code>.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>En el orden <code>i-j-k</code>, ¿qué matriz se recorre "saltando" en el bucle interior (A, B o C) y por qué eso es lento?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes en tu ruta</span><span>Medición con <code>&lt;chrono&gt;</code> (<a href="../ruta_codigo/1-estructuras-de-datos.html">Ruta de Código, fase 1</a>); el integrador de la tienda (Parte C)</span></div>
+<div class="r"><span class="k">Después</span><span>4.2 (NumPy hace esto por vos, con BLAS) y 4.6 (Eigen)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m108" data-topic="m108">
+<div class="topichead"><h3><span class="badge ML">1.8</span> Ver los resultados: escribir un SVG desde C++</h3><label class="checklabel"><input type="checkbox" data-t="m108"><small class="sans">hecho</small></label></div>
+<p>Un modelo que no podés mirar es un modelo que no entendés. Antes de aprender matplotlib (4.3), podés dibujar con lo que ya tenés: un archivo <strong>SVG</strong> es texto con etiquetas (<code>&lt;circle&gt;</code>, <code>&lt;line&gt;</code>) que el navegador abre sin instalar nada. Es la misma técnica que vas a usar para dibujar la malla del Integrador 2.</p>
+<p>El truco es una pequeña función que convierte coordenadas del problema a coordenadas de pantalla, teniendo en cuenta que en SVG el eje \(y\) crece hacia <strong>abajo</strong>:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">svg_scatter.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;fstream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;<span class="t">string</span>&gt;
+
+<span class="k">struct</span> P { <span class="k">double</span> x, y; <span class="k">int</span> clase; };
+
+<span class="c">// Escribe un SVG: puntos coloreados por clase + una recta (y = m x + c).  Se abre en el navegador.</span>
+<span class="k">void</span> <span class="fn">escribirSVG</span>(<span class="k">const</span> <span class="t">std</span>::<span class="t">string</span>&amp; ruta, <span class="k">const</span> <span class="t">std</span>::<span class="t">vector</span>&lt;P&gt;&amp; pts, <span class="k">double</span> m, <span class="k">double</span> c,
+                 <span class="k">double</span> xmin, <span class="k">double</span> xmax, <span class="k">double</span> ymin, <span class="k">double</span> ymax) {
+    <span class="k">const</span> <span class="k">int</span> W = <span class="n">480</span>, H = <span class="n">360</span>;
+    <span class="k">auto</span> X = [&amp;](<span class="k">double</span> x) { <span class="k">return</span> (x - xmin) / (xmax - xmin) * W; };
+    <span class="k">auto</span> Y = [&amp;](<span class="k">double</span> y) { <span class="k">return</span> H - (y - ymin) / (ymax - ymin) * H; };    <span class="c">// el eje y de SVG crece hacia abajo</span>
+    <span class="t">std</span>::ofstream <span class="fn">f</span>(ruta);
+    f &lt;&lt; <span class="s">"&lt;svg xmlns='http://www.w3.org/2000/svg' width='"</span> &lt;&lt; W &lt;&lt; <span class="s">"' height='"</span> &lt;&lt; H &lt;&lt; <span class="s">"' style='background:#fff'&gt;\n"</span>;
+    <span class="k">for</span> (<span class="k">const</span> P&amp; p : pts)
+        f &lt;&lt; <span class="s">"&lt;circle cx='"</span> &lt;&lt; <span class="fn">X</span>(p.x) &lt;&lt; <span class="s">"' cy='"</span> &lt;&lt; <span class="fn">Y</span>(p.y) &lt;&lt; <span class="s">"' r='3' fill='"</span> &lt;&lt; (p.clase ? <span class="s">"#d95f02"</span> : <span class="s">"#1b9e77"</span>) &lt;&lt; <span class="s">"'/&gt;\n"</span>;
+    f &lt;&lt; <span class="s">"&lt;line x1='"</span> &lt;&lt; <span class="fn">X</span>(xmin) &lt;&lt; <span class="s">"' y1='"</span> &lt;&lt; <span class="fn">Y</span>(m * xmin + c) &lt;&lt; <span class="s">"' x2='"</span> &lt;&lt; <span class="fn">X</span>(xmax) &lt;&lt; <span class="s">"' y2='"</span> &lt;&lt; <span class="fn">Y</span>(m * xmax + c)
+      &lt;&lt; <span class="s">"' stroke='black' stroke-width='2'/&gt;\n&lt;/svg&gt;\n"</span>;
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">g</span>(<span class="n">1</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">r</span>(<span class="n">0</span>, <span class="n">1</span>);
+    <span class="t">std</span>::<span class="t">vector</span>&lt;P&gt; pts;
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; <span class="n">150</span>; ++i) { <span class="k">int</span> c = i % <span class="n">2</span>; <span class="k">double</span> mu = c ? <span class="n">1.5</span> : -<span class="n">1.5</span>; pts.<span class="fn">push_back</span>({mu + <span class="fn">r</span>(g), mu + <span class="fn">r</span>(g), c}); }
+    <span class="fn">escribirSVG</span>(<span class="s">"puntos.svg"</span>, pts, -<span class="n">1.0</span>, <span class="n">0.0</span>, -<span class="n">5</span>, <span class="n">5</span>, -<span class="n">5</span>, <span class="n">5</span>);     <span class="c">// la frontera ideal: x + y = 0</span>
+}</code></pre></div></div>
+<p>Lo compilé y lo corrí: genera <code>puntos.svg</code> (150 círculos y una recta, XML válido, unos 8,6 KB). Abrilo con el navegador y vas a ver las dos nubes de puntos con la frontera ideal \(x+y=0\). Cuando tengas tu regresión logística (2.4), dibujá la frontera que <em>aprendió</em> tu modelo en vez de la ideal.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Extendé <code>escribirSVG</code> para: (a) dibujar los ejes con marcas, (b) pintar de color el fondo según lo que el modelo predice en una grilla de 40×40 (así se ve la región de decisión), (c) aceptar una lista de rectas para comparar. Usala en 2.4, 2.5 y 2.6.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si el punto \((x, y) = (2, 3)\) está en un gráfico con \(x \in [0, 4]\), \(y \in [0, 6]\) y un lienzo de 480×360, ¿en qué píxel (cx, cy) se dibuja? Recordá que el eje \(y\) de SVG crece hacia abajo.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes en tu ruta</span><span>Archivos con <code>&lt;fstream&gt;</code>; después, la malla del Integrador 2</span></div>
+<div class="r"><span class="k">Después</span><span>4.3 (matplotlib) y, para visualizar mallas con resultados, <a href="../ruta_codigo/4-graficos-interfaces.html">Ruta de Código fase 4</a></span></div>
+</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="0-indice.html"><span>Anterior</span><b>← Índice y mapa de cobertura</b></a>
+  <a class="pn next" href="2-aprendizaje-clasico.html"><span>Siguiente</span><b>Aprendizaje automático clásico →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

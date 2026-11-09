@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>0 · Índice y mapa de cobertura · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill active" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Complemento de la <a href="../ruta_codigo/0-indice.html">Ruta de Código</a></div>
+<h1 class="hero">Ruta de Machine Learning</h1>
+<blockquote class="obj"><p><strong>Qué es esto:</strong> una ruta de ML pensada para quien ya programa en C++ y maneja la matemática. El énfasis está en la parte <strong>aplicada</strong>: cómo se lleva cada idea a código, con ejercicios, y cómo se conecta con tus estructuras de datos, tus métodos numéricos y tu FEM. Nada de esto reemplaza la Ruta de Código ni la Ruta al FEM: corre en paralelo y se apoya en ellas.</p></blockquote>
+<h2 class="withrule">Mapa de cobertura: qué ya programaste y qué falta</h2>
+<p>Comparé los temarios de varios cursos y libros de referencia (la lista completa está en la <a href="6-libros-y-cursos.html">página de fuentes</a>) con lo que ya hay en tu código. La columna "Dónde lo tenés" es lo que encontré en tu repositorio o en tu ruta; "parcial" quiere decir que hay una parte hecha (por ejemplo, la <code>Matriz</code> existe pero todavía no tiene lo que ML necesita).</p>
+<p>Resultado: de <strong>45</strong> temas, <strong>4</strong> ya están cubiertos, <strong>5</strong> parcialmente y <strong>36</strong> faltan. Ese número alto de "falta" es esperable: nunca empezaste ML. Lo importante es que lo que <strong>falta</strong> son casi siempre aplicaciones de lo que <strong>ya tenés</strong> (hash, árboles, lambdas, matrices, métodos numéricos).</p>
+<div class="tablewrap sans"><table class="cov"><thead><tr><th>Tema de un temario "experto"</th><th>Dónde lo tenés</th><th>Estado</th><th>En esta ruta</th></tr></thead><tbody>
+<tr><td colspan="4"><strong>A · Programación y estructuras de datos</strong></td></tr>
+<tr><td>C++ moderno: POO, templates, RAII, STL</td><td><code>codigo/cpp-repaso/</code>, <code>libreria_stl/</code></td><td><span class="ok">✔ cubierto</span></td><td>base</td></tr>
+<tr><td>Listas, pilas, colas, hash, <code>map</code>/<code>set</code>, ordenamiento, búsqueda, complejidad</td><td><code>estructuras/codigo_universidad/</code></td><td><span class="ok">✔ cubierto</span></td><td>base</td></tr>
+<tr><td>Lambdas y funciones como parámetro</td><td><code>libreria_stl/lambdas/</code></td><td><span class="ok">✔ cubierto</span></td><td>se usa en 2.12, 3.5</td></tr>
+<tr><td>Árboles: BST, heaps, kd-tree / quad-tree</td><td>siguiente en la ruta (<a href="../ruta_codigo/2-arboles-grafos.html">Ruta de Código fase 2</a>)</td><td><span class="no">✘ falta</span></td><td>2.5, 2.6</td></tr>
+<tr><td>Grafos y orden topológico</td><td>después de árboles</td><td><span class="no">✘ falta</span></td><td>3.5</td></tr>
+<tr><td colspan="4"><strong>B · Matemática aplicada al código (la teoría la manejás vos)</strong></td></tr>
+<tr><td>Vectores y matrices en código</td><td><code>Matriz&lt;T&gt;</code>, <code>Vector2D/3D</code> en <code>PROYECTO/</code>; Chapra en curso</td><td><span class="par">◐ parcial</span></td><td>1.1</td></tr>
+<tr><td>Sistemas lineales (Gauss, LU)</td><td>Chapra en curso; <a href="../ruta_codigo/3-metodos-numericos.html#c302">Ruta de Código 3.2</a></td><td><span class="par">◐ parcial</span></td><td>1.2</td></tr>
+<tr><td>Mínimos cuadrados y ecuaciones normales</td><td>—</td><td><span class="no">✘ falta</span></td><td>1.2</td></tr>
+<tr><td>Probabilidad y estadística en código (<code>&lt;random&gt;</code>, estimadores)</td><td>repaso teórico por tu cuenta</td><td><span class="no">✘ falta</span></td><td>1.3</td></tr>
+<tr><td>Derivadas numéricas y gradiente</td><td>tu <code>derivada(f, x)</code> con lambdas</td><td><span class="par">◐ parcial</span></td><td>1.5</td></tr>
+<tr><td>Optimización: descenso por gradiente, Newton</td><td>Chapra pendiente</td><td><span class="no">✘ falta</span></td><td>1.6</td></tr>
+<tr><td>Autovalores (método de la potencia) y PCA</td><td><a href="../ruta_codigo/3-metodos-numericos.html#c304">Ruta de Código 3.4</a></td><td><span class="par">◐ parcial</span></td><td>2.11</td></tr>
+<tr><td>Eficiencia y medición (<code>&lt;chrono&gt;</code>, caché)</td><td>benchmarks de ordenamiento; integrador 1 (Parte C pendiente)</td><td><span class="par">◐ parcial</span></td><td>1.7</td></tr>
+<tr><td colspan="4"><strong>C · Datos y evaluación</strong></td></tr>
+<tr><td>Carga, limpieza y normalización de datos</td><td>—</td><td><span class="no">✘ falta</span></td><td>1.4</td></tr>
+<tr><td>Conjuntos train/val/test, validación cruzada, métricas</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.1, 2.12</td></tr>
+<tr><td>Visualización de resultados</td><td>solo planeado (SVG en 1.8)</td><td><span class="no">✘ falta</span></td><td>1.8, 4.3</td></tr>
+<tr><td colspan="4"><strong>D · Aprendizaje automático clásico</strong></td></tr>
+<tr><td>Regresión lineal y logística</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.2, 2.4</td></tr>
+<tr><td>Regularización (ridge, lasso)</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.3</td></tr>
+<tr><td>k vecinos más cercanos</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.5</td></tr>
+<tr><td>Árboles de decisión, bosques aleatorios, boosting</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.6 a 2.8</td></tr>
+<tr><td>SVM y kernels</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.9</td></tr>
+<tr><td>k-means y PCA</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.10, 2.11</td></tr>
+<tr><td>Modelos probabilísticos (Naive Bayes, mezclas gaussianas, EM)</td><td>—</td><td><span class="no">✘ falta</span></td><td>2.13</td></tr>
+<tr><td colspan="4"><strong>E · Aprendizaje profundo</strong></td></tr>
+<tr><td>Perceptrón multicapa, activaciones, funciones de pérdida</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.1, 3.2</td></tr>
+<tr><td>Backpropagation</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.3, 3.4</td></tr>
+<tr><td>Derivación automática (grafo de cómputo)</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.5</td></tr>
+<tr><td>Optimizadores, regularización y diagnóstico del entrenamiento</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.6, 3.7</td></tr>
+<tr><td>Redes convolucionales</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.8</td></tr>
+<tr><td>Redes recurrentes (RNN, LSTM)</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.9</td></tr>
+<tr><td>Atención y transformers</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.10</td></tr>
+<tr><td>Autoencoders y modelos generativos</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.11</td></tr>
+<tr><td>Aprendizaje por refuerzo</td><td>—</td><td><span class="no">✘ falta</span></td><td>3.12</td></tr>
+<tr><td colspan="4"><strong>F · Herramientas del ecosistema</strong></td></tr>
+<tr><td>Python y NumPy</td><td>—</td><td><span class="no">✘ falta</span></td><td>4.1, 4.2</td></tr>
+<tr><td>pandas y matplotlib</td><td>—</td><td><span class="no">✘ falta</span></td><td>4.3</td></tr>
+<tr><td>scikit-learn</td><td>—</td><td><span class="no">✘ falta</span></td><td>4.4</td></tr>
+<tr><td>PyTorch</td><td>—</td><td><span class="no">✘ falta</span></td><td>4.5</td></tr>
+<tr><td>Eigen, mlpack, modelos entrenados en Python desde C++</td><td>Eigen está en tu Mac pero sin usar</td><td><span class="no">✘ falta</span></td><td>4.6</td></tr>
+<tr><td>Experimentos reproducibles</td><td>—</td><td><span class="no">✘ falta</span></td><td>4.7</td></tr>
+<tr><td colspan="4"><strong>G · Aplicado a ingeniería mecánica</strong></td></tr>
+<tr><td>Malla y topología (nodos, aristas, borde, hash propio)</td><td><code>libreria_stl/mapas/mallado1.cpp</code>, <code>funcionHashUnd.cpp</code></td><td><span class="ok">✔ cubierto</span></td><td>5.3</td></tr>
+<tr><td>FEM completo: matriz de rigidez, ensamble, solución</td><td>diferido hasta terminar Chapra (<a href="../ruta-fem/4-elementos-finitos.html">Ruta al FEM</a>)</td><td><span class="no">✘ falta</span></td><td>Fase F</td></tr>
+<tr><td>Modelos sustitutos de simulaciones</td><td>—</td><td><span class="no">✘ falta</span></td><td>5.2, 5.3</td></tr>
+<tr><td>Mantenimiento predictivo, vibraciones, series de tiempo</td><td>—</td><td><span class="no">✘ falta</span></td><td>5.4, 5.5</td></tr>
+<tr><td>PINNs y ML informado por la física</td><td>—</td><td><span class="no">✘ falta</span></td><td>5.6</td></tr>
+<tr><td>Optimización de diseño con modelos sustitutos</td><td>—</td><td><span class="no">✘ falta</span></td><td>5.7</td></tr>
+<tr><td>Visión y control en manufactura y robótica</td><td>—</td><td><span class="no">✘ falta</span></td><td>5.8</td></tr>
+</tbody></table></div>
+<div class="legal warn"><span class="tag sans">Cómo leerlo</span>"Cubierto" significa que lo programaste vos, según lo que vi en tu repositorio. No evalúo cuánto lo dominás, solo si existe el código. Puede que me falte algún archivo tuyo: si encontrás una fila mal marcada, corregila directamente en tu copia.</div>
+<h2 class="withrule">Las cinco fases de ML</h2>
+<div class="blockcards sans">
+  <a class="blockcard" href="1-base-numerica.html"><div class="num">FASE 1</div><h3>Base numérica y datos</h3><p>Álgebra lineal en código, mínimos cuadrados, estadística, datos, gradiente, descenso, eficiencia, SVG.</p><div class="frac" data-block-frac="m1">0/8</div></a>
+  <a class="blockcard" href="2-aprendizaje-clasico.html"><div class="num">FASE 2</div><h3>Aprendizaje clásico</h3><p>Regresión, regularización, logística, k-NN, árboles, bosques, boosting, SVM, k-means, PCA, validación.</p><div class="frac" data-block-frac="m2">0/13</div></a>
+  <a class="blockcard" href="3-redes-neuronales.html"><div class="num">FASE 3</div><h3>Redes neuronales</h3><p>MLP, backpropagation a mano, autodiff en C++, optimizadores, CNN, RNN, transformers, refuerzo.</p><div class="frac" data-block-frac="m3">0/12</div></a>
+  <a class="blockcard" href="4-herramientas.html"><div class="num">FASE 4</div><h3>Herramientas</h3><p>Python, NumPy, pandas, scikit-learn, PyTorch, Eigen, experimentos reproducibles.</p><div class="frac" data-block-frac="m4">0/7</div></a>
+  <a class="blockcard" href="5-ml-mecanica.html"><div class="num">FASE 5</div><h3>ML en ingeniería mecánica</h3><p>Leyes físicas, modelos sustitutos de FEM, vibraciones, PINNs, diseño, robótica.</p><div class="frac" data-block-frac="m5">0/8</div></a>
+</div>
+<div class="blockcards sans">
+  <a class="blockcard" href="6-libros-y-cursos.html"><div class="num">REFERENCIAS</div><h3>Libros, cursos y fuentes</h3><p>Qué leer, en qué orden, y qué pude verificar de cada recurso.</p></a>
+  <a class="blockcard" href="7-ruta-combinada.html"><div class="num">PLANO DE CONJUNTO</div><h3>La ruta combinada</h3><p>Cómo se juntan estructuras, Chapra, FEM y ML en paralelo, con criterios de paso y proyectos.</p></a>
+</div>
+<h2 class="withrule">Cómo usar esta ruta</h2>
+<ul>
+<li><strong>Cada tema tiene el mismo formato:</strong> idea, código que <strong>compilé y corrí</strong> (con la salida real), un ejercicio que escribís vos, una autoevaluación y dónde profundizar.</li>
+<li><strong>Vos escribís el código.</strong> Los programas de la página son ejemplos verificados para que veas la forma; los ejercicios son para que los hagas sin copiar.</li>
+<li><strong>Cuando algo dice "no lo ejecuté" o "no lo verifiqué", es literal.</strong> Está marcado con un recuadro amarillo. Lo que sí corrí tiene la salida pegada.</li>
+<li>Los números de tiempo son de mi Mac. En tu otra PC van a dar distinto; compará las relaciones, no los valores.</li>
+<li>La ruta es <strong>paralela</strong> a las otras: no hay que terminar una para empezar la siguiente. El orden recomendado está en <a href="7-ruta-combinada.html">la ruta combinada</a>.</li>
+</ul>
+<h2 class="withrule">Fuentes del temario</h2>
+<p>El temario sale de comparar estas fuentes (detalle y enlaces en <a href="6-libros-y-cursos.html">Libros, cursos y fuentes</a>): el curso CS229 de Stanford, la <em>Machine Learning Specialization</em> de Andrew Ng, <em>An Introduction to Statistical Learning</em>, <em>Dive into Deep Learning</em>, <em>Deep Learning</em> de Goodfellow y colaboradores, <em>Hands-On Machine Learning</em> de Géron, <em>Mathematics for Machine Learning</em>, y <em>Data-Driven Science and Engineering</em> de Brunton y Kutz para el enfoque de ingeniería.</p>
+<div class="prevnext">
+  <div class="pn ghost"></div>
+  <a class="pn next" href="1-base-numerica.html"><span>Siguiente</span><b>Base numérica y datos →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

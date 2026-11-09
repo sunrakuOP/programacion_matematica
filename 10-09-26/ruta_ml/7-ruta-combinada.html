@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>7 · La ruta combinada · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill active" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Plano de conjunto</div>
+<h1 class="hero">La ruta combinada</h1>
+<blockquote class="obj"><p>Cómo avanzan en paralelo estructuras de datos, métodos numéricos, FEM y machine learning: el núcleo que comparten, las fases con su criterio de paso y los proyectos integradores.</p></blockquote>
+<p>Esta página es el <strong>plano de conjunto</strong>: cómo se encajan las cuatro vías que ya tenés (estructuras de datos en este chat, métodos numéricos con Chapra, la ruta de FEM, y ahora ML) para avanzarlas en paralelo sin que se pisen. Es un temario <strong>preliminar</strong>: las fases son un orden, no fechas, y cada una tiene un <strong>criterio de paso</strong> para saber si podés abrir la siguiente.</p>
+<h2 class="withrule">El núcleo compartido</h2>
+<p>Las cuatro vías comparten un mismo núcleo de piezas. Se programa <strong>una vez</strong> y se reutiliza:</p>
+<div class="tablewrap sans"><table><thead><tr><th>Pieza (se escribe una vez)</th><th>La usa FEM / métodos numéricos</th><th>La usa ML</th></tr></thead><tbody>
+<tr><td><code>Matriz</code> y <code>Vector</code> + Gauss/LU (1.1, 1.2)</td><td>resolver \(Ku = F\)</td><td>regresión por mínimos cuadrados</td></tr>
+<tr><td>derivadas numéricas y <em>gradient check</em> (1.5)</td><td>verificar derivadas, Newton-Raphson</td><td>depurar backprop</td></tr>
+<tr><td>descenso por gradiente y Newton (1.6)</td><td>raíces y mínimos (Chapra)</td><td>entrenar modelos</td></tr>
+<tr><td>método de la potencia / autovalores (Ruta de Código 3.4)</td><td>frecuencias y modos</td><td>PCA</td></tr>
+<tr><td>árboles y recursión (Ruta de Código fase 2)</td><td>búsqueda espacial en mallas</td><td>k-NN con kd-tree, árboles de decisión</td></tr>
+<tr><td>grafos y orden topológico</td><td>conectividad de la malla, reordenar nodos</td><td>grafo de cómputo (autodiff)</td></tr>
+<tr><td>SVG / gráficos (1.8)</td><td>dibujar la malla</td><td>ver fronteras y curvas de pérdida</td></tr>
+</tbody></table></div>
+<h2 class="withrule">Las fases</h2>
+<div class="fase"><h4>Fase A · Ahora</h4>
+<ul>
+<li><strong>Estructuras (este chat):</strong> cerrar <code>&lt;numeric&gt;</code> y <code>sort</code> con criterio, y el Integrador 2 (topología de malla).</li>
+<li><strong>Chapra:</strong> lo que lleves (sistemas lineales).</li>
+<li><strong>ML (ligero):</strong> 1.1, 1.2, 1.3, 1.4. Se solapan con la Ruta de Código 3.1 y 3.2, así que no repetís trabajo.</li>
+</ul>
+<p><strong>Criterio de paso:</strong> tu <code>Matriz</code> multiplica y transpone con tests, y tu <code>resolver</code> (Gauss con pivoteo) coincide con una referencia en un sistema de 5×5.</p>
+</div>
+<div class="fase"><h4>Fase B · Árboles y métodos de Chapra</h4>
+<ul>
+<li><strong>Estructuras:</strong> BST, AVL, heaps y quad-tree (Ruta de Código 2.1 a 2.4).</li>
+<li><strong>Chapra:</strong> regresión por mínimos cuadrados, optimización.</li>
+<li><strong>ML:</strong> 1.5, 1.6, 1.7 y, apenas termines árboles, 2.5 (k-NN con kd-tree) y 2.6 (árbol de decisión). Son aplicaciones directas de lo que acabás de programar.</li>
+</ul>
+<p><strong>Criterio de paso:</strong> descenso por gradiente con una lambda para la función y el gradiente, verificado con <em>gradient check</em>; un árbol de decisión que clasifique el problema del anillo con más del 95% en prueba.</p>
+</div>
+<div class="fase"><h4>Fase C · Grafos y el aprendizaje clásico</h4>
+<ul>
+<li><strong>Estructuras:</strong> grafos, recorridos, orden topológico (Ruta de Código 2.5 a 2.10).</li>
+<li><strong>Chapra:</strong> autovalores, interpolación.</li>
+<li><strong>ML:</strong> 2.1 a 2.4 y 2.7 a 2.13 (regresión, regularización, logística, bosques, boosting, k-means, PCA, validación). Todo en C++, comparando con scikit-learn en cuanto tengas 4.4.</li>
+</ul>
+<p><strong>Criterio de paso:</strong> una función <code>validacionCruzada</code> genérica con lambdas que elija \(\lambda\) de ridge; k-means y PCA que coincidan con scikit-learn en datos que exportes a CSV.</p>
+</div>
+<div class="fase"><h4>Fase D · Redes neuronales</h4>
+<ul>
+<li><strong>Estructuras:</strong> ya tenés lo que hace falta (grafos, lambdas).</li>
+<li><strong>ML:</strong> 3.1 a 3.7 (MLP, pérdidas, backprop a mano, XOR, autodiff, optimizadores, entrenamiento estable).</li>
+</ul>
+<p><strong>Criterio de paso (el hito más importante):</strong> tu autodiff entrena un MLP sobre un problema no lineal (el anillo de 2.5) y los gradientes pasan el <em>gradient check</em>.</p>
+</div>
+<div class="fase"><h4>Fase E · Herramientas profesionales</h4>
+<ul>
+<li><strong>ML:</strong> 4.1 a 4.7 (Python, NumPy, pandas, scikit-learn, PyTorch, Eigen, experimentos reproducibles) y los panoramas 3.8 a 3.12 (CNN, secuencias, transformers, generativos, refuerzo).</li>
+</ul>
+<p><strong>Criterio de paso:</strong> reproducís en PyTorch tu XOR y el anillo, y entendés por qué una línea de <code>loss.backward()</code> hace lo que tu <code>backward</code> de C++.</p>
+</div>
+<div class="fase"><h4>Fase F · Convergencia: FEM + ML</h4>
+<ul>
+<li><strong>Condición:</strong> Chapra terminado y base de transferencia de calor.</li>
+<li><strong>FEM:</strong> ensamble, condiciones de contorno y solución de la conducción de calor 2D (Ruta al FEM bloque 4; mallado M4 a M6).</li>
+<li><strong>ML:</strong> 5.1 a 5.8; el proyecto integrador de abajo.</li>
+</ul>
+<p><strong>Criterio de paso:</strong> un modelo sustituto entrenado con tus propias simulaciones, con su error medido en simulaciones nuevas y su tiempo comparado con el solver.</p>
+</div>
+<h2 class="withrule">Los proyectos integradores (uno por hito)</h2>
+<div class="tablewrap sans"><table><thead><tr><th>Hito</th><th>Proyecto</th><th>Qué demuestra</th></tr></thead><tbody>
+<tr><td><strong>H1</strong></td><td>Mini-biblioteca numérica: <code>Matriz</code>, Gauss/LU, mínimos cuadrados, descenso por gradiente, con tests</td><td>dominás el núcleo común</td></tr>
+<tr><td><strong>H2</strong></td><td>Clasificadores desde cero (logística, k-NN con kd-tree, árbol, bosque) validados contra scikit-learn</td><td>sabés implementar y verificar modelos clásicos</td></tr>
+<tr><td><strong>H3</strong></td><td>Mini-framework de redes (autodiff + MLP + Adam) que entrena dígitos de 8×8</td><td>entendés el aprendizaje profundo por dentro</td></tr>
+<tr><td><strong>H4</strong></td><td>Modelo sustituto de conducción de calor (tu FEM genera los datos; tu red los aprende)</td><td>unís mallado, FEM y ML</td></tr>
+<tr><td><strong>H5</strong></td><td>Extensión para la tesis: PINN contra FEM en un problema de calor, con análisis honesto de dónde gana cada uno</td><td>tesis de nivel de investigación</td></tr>
+</tbody></table></div>
+<h2 class="withrule">El ritmo (sugerencia flexible)</h2>
+<p>Cuatro vías en paralelo se pueden desbordar. Una forma de repartir el tiempo, para ajustar a tu semestre:</p>
+<div class="tablewrap sans"><table><thead><tr><th>Tipo de sesión</th><th>Frecuencia sugerida</th><th>Qué hacés</th></tr></thead><tbody>
+<tr><td>Estructuras (este chat)</td><td>2 por semana</td><td>el tema nuevo de árboles/grafos, con ejercicio</td></tr>
+<tr><td>Chapra (chat aparte)</td><td>1 por semana</td><td>el capítulo en curso</td></tr>
+<tr><td>ML</td><td>1 por semana</td><td>un tema de esta ruta: leés, programás el ejercicio y lo verificás</td></tr>
+<tr><td>Cierre</td><td>1 por semana, corta</td><td>commit y push, actualizar <code>ESTADO_RUTA.md</code>, apuntar qué quedó pendiente</td></tr>
+</tbody></table></div>
+<div class="legal warn"><span class="tag sans">Ritmo</span>Estas frecuencias son una <strong>sugerencia mía</strong>, no un cálculo basado en tu horario. Si en una semana de parciales solo hacés Estructuras, no pasa nada: la ruta no tiene fechas. Lo que sí conviene es no dejar el cierre semanal: es lo que evita perder el hilo entre tus dos PCs.</div>
+<h2 class="withrule">Dónde se inclina la ruta (decisión futura)</h2>
+<p>Con lo que hoy sabés, hay tres destinos posibles. <strong>No hace falta decidir ahora</strong>: las fases A a D sirven para los tres. La decisión se toma recién al llegar a la Fase E.</p>
+<div class="tablewrap sans"><table><thead><tr><th>Camino</th><th>Qué sería</th><th>Cuándo tiene sentido</th></tr></thead><tbody>
+<tr><td><strong>A. ML generalista</strong></td><td>modelos de datos, visión, lenguaje</td><td>si lo que más te atrae es el ML en sí, sin atarlo a la mecánica</td></tr>
+<tr><td><strong>B. ML científico / de ingeniería</strong> (SciML)</td><td>sustitutos de simulación, PINNs, identificación de sistemas, mantenimiento predictivo</td><td>si querés juntar ML con FEM, termofluidos y tu tesis. Es el que más usa lo que ya estudiás</td></tr>
+<tr><td><strong>C. Robótica y control</strong></td><td>cinemática, estimación, refuerzo, visión</td><td>si el proyecto del brazo robótico del laboratorio avanza o si querés trabajar en robots</td></tr>
+</tbody></table></div>
+<p>Mi lectura, que podés contradecir: el camino <strong>B</strong> es el que más aprovecha la combinación mecánica + sistemas + C++ + tu tesis de elementos finitos, y es el que menos obliga a competir en áreas muy saturadas. Pero es una opinión, no un dato: lo vamos a hablar con evidencia cuando hayas hecho H2 y H3 y sepas qué te divierte más.</p>
+<h2 class="withrule">Trabajar en dos PCs</h2>
+<ul>
+<li>La verdad vive en el repositorio: <a href="../../CLAUDE.md"><code>CLAUDE.md</code></a> (el protocolo) y <a href="../../ESTADO_RUTA.md"><code>ESTADO_RUTA.md</code></a> (el estado). Al empezar en una PC: <code>git pull</code>; al terminar: <code>git push</code>.</li>
+<li><strong>Ojo con los tildes de "hecho" de estas páginas:</strong> el progreso se guarda en el <code>localStorage</code> <strong>de cada navegador</strong>, así que no se sincroniza entre tu Mac y tu PC con Windows (ni entre navegadores). Para el avance real de la ruta, usá <code>ESTADO_RUTA.md</code>; los tildes son solo un apoyo visual local.</li>
+<li>Entornos: <code>requirements.txt</code> para Python y <code>CMakeLists.txt</code> para C++ en el repo (4.7).</li>
+</ul>
+<div class="prevnext">
+  <a class="pn" href="6-libros-y-cursos.html"><span>Anterior</span><b>← Libros, cursos y fuentes</b></a>
+  <div class="pn ghost"></div>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

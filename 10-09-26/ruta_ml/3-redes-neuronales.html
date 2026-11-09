@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3 · Redes neuronales y aprendizaje profundo · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill active" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 3</div>
+<h1 class="hero">Redes neuronales y aprendizaje profundo</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> entender las redes neuronales construyéndolas: una neurona, un MLP, backpropagation derivada a mano, un motor de derivación automática propio en C++, optimizadores, y un panorama de convolucionales, recurrentes, transformers, generativos y refuerzo. La regla es la misma de siempre: <em>gradient check</em> de todo.</p></blockquote>
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#m301">3.1 La neurona, las capas y la red (MLP)</a></li>
+<li><a href="#m302">3.2 Funciones de pérdida y la capa de salida</a></li>
+<li><a href="#m303">3.3 Backpropagation: derivar el entrenamiento a mano</a></li>
+<li><a href="#m304">3.4 Un MLP desde cero en C++: el XOR</a></li>
+<li><a href="#m305">3.5 Derivación automática: el grafo de cómputo (micrograd en C++)</a></li>
+<li><a href="#m306">3.6 Optimizadores: SGD, momentum y Adam</a></li>
+<li><a href="#m307">3.7 Entrenar bien: inicialización, regularización y diagnóstico</a></li>
+<li><a href="#m308">3.8 Convoluciones y redes convolucionales (CNN)</a></li>
+<li><a href="#m309">3.9 Secuencias: redes recurrentes (RNN, LSTM) — panorama</a></li>
+<li><a href="#m310">3.10 Atención y transformers — panorama</a></li>
+<li><a href="#m311">3.11 Autoencoders y modelos generativos — panorama</a></li>
+<li><a href="#m312">3.12 Aprendizaje por refuerzo — panorama</a></li>
+</ol>
+</div>
+<div class="topic" id="m301" data-topic="m301">
+<div class="topichead"><h3><span class="badge ML">3.1</span> La neurona, las capas y la red (MLP)</h3><label class="checklabel"><input type="checkbox" data-t="m301"><small class="sans">hecho</small></label></div>
+<p>Una <strong>neurona</strong> hace lo que ya hacés en la regresión logística (2.4): calcula \(z = w\cdot x + b\) y le aplica una función no lineal, la <strong>activación</strong>, \(a = f(z)\). Una <strong>capa</strong> es un montón de neuronas en paralelo, o sea una matriz: \(a = f(Wx + b)\), con \(W\) de tamaño (neuronas × entradas). Un <strong>MLP</strong> (perceptrón multicapa) apila capas: la salida de una es la entrada de la siguiente.</p>
+<p>La no linealidad es lo que hace que la red sirva. Sin ella, dos capas lineales se reducen a una sola (\(W_2(W_1x) = (W_2W_1)x\)) y la red no podría resolver ni un XOR.</p>
+<div class="tablewrap sans"><table><thead><tr><th>Activación</th><th>Fórmula</th><th>Rango</th><th>Para qué</th></tr></thead><tbody>
+<tr><td>sigmoide</td><td>\(1/(1+e^{-z})\)</td><td>(0, 1)</td><td>salida de probabilidad; en capas ocultas tiende a saturar (3.7)</td></tr>
+<tr><td>tanh</td><td>\((e^z - e^{-z})/(e^z + e^{-z})\)</td><td>(−1, 1)</td><td>centrada en 0; la que usa el XOR de 3.4</td></tr>
+<tr><td>ReLU</td><td>\(\max(0, z)\)</td><td>[0, ∞)</td><td>la más usada en capas ocultas: barata y no satura para \(z&gt;0\)</td></tr>
+</tbody></table></div>
+<p><strong>Contar parámetros</strong> es un hábito útil: una capa de \(m\) entradas y \(k\) neuronas tiene \(mk + k\) parámetros (pesos más sesgos). Una red 784-128-10 (imágenes de 28×28 clasificadas en 10 clases) tiene \((784\cdot128 + 128) + (128\cdot10 + 10) = 101{.}770\).</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Escribí una clase <code>Capa</code> (con tu <code>Matriz</code>) que guarde \(W\) y \(b\), tenga <code>adelante(entrada)</code> y reciba la activación como una lambda (<code>std::function&lt;double(double)&gt;</code>). Armá una red de 3 capas, hacé el <em>forward</em> con pesos fijos que puedas verificar a mano y hacé que lance una excepción clara si las dimensiones no cierran.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuántos parámetros tiene una red 10-20-5 (10 entradas, 20 neuronas ocultas, 5 salidas)? Mostrá la cuenta capa por capa.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>Neural Networks and Deep Learning</em> (Nielsen), cap. 1; <em>Dive into Deep Learning</em>, capítulo de perceptrones multicapa; <em>Deep Learning</em> (Goodfellow), cap. 6</span></div>
+<div class="r"><span class="k">Antes</span><span>2.4 (regresión logística = una neurona) y 1.1 (matrices)</span></div>
+<div class="r"><span class="k">Después</span><span>3.3 y 3.4</span></div>
+</div>
+</div>
+
+<div class="topic" id="m302" data-topic="m302">
+<div class="topichead"><h3><span class="badge ML">3.2</span> Funciones de pérdida y la capa de salida</h3><label class="checklabel"><input type="checkbox" data-t="m302"><small class="sans">hecho</small></label></div>
+<p>La <strong>pérdida</strong> le dice a la red cuánto se equivoca; todo el entrenamiento es bajarla. Según el problema:</p>
+<div class="tablewrap sans"><table><thead><tr><th>Problema</th><th>Salida</th><th>Pérdida</th></tr></thead><tbody>
+<tr><td>regresión</td><td>un número (sin activación)</td><td>error cuadrático medio \(\frac1n\sum(\hat y - y)^2\)</td></tr>
+<tr><td>2 clases</td><td>sigmoide</td><td>entropía cruzada binaria \(-[y\ln\hat y + (1-y)\ln(1-\hat y)]\)</td></tr>
+<tr><td>\(K\) clases</td><td><strong>softmax</strong></td><td>entropía cruzada \(-\ln \hat y_{\text{clase correcta}}\)</td></tr>
+</tbody></table></div>
+<p>El <strong>softmax</strong> convierte \(K\) números cualquiera en \(K\) probabilidades que suman 1: \(\text{softmax}(z)_i = e^{z_i}/\sum_j e^{z_j}\). Ejemplo con \(z = (2, 1, 0)\): las exponenciales son 7.389, 2.718 y 1; suman 11.107; el resultado es \((0.665,\ 0.245,\ 0.090)\). Si la clase correcta es la primera, la pérdida es \(-\ln 0.665 = 0.408\).</p>
+<div class="legal warn"><span class="tag sans">Estabilidad numérica</span>Con \(z\) grandes (por ejemplo 1000) \(e^{z}\) desborda a infinito. La versión estable <strong>resta el máximo</strong> antes de exponenciar (\(e^{z_i - \max z}\)), que da el mismo resultado. Y \(\ln(0)\) es \(-\infty\): hay que acotar las probabilidades (por ejemplo, a \(10^{-12}\)) antes de aplicar el logaritmo.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Implementá <code>softmax</code> estable y <code>entropiaCruzada</code>. Pasales \(z = (1000, 1001, 1002)\) y comprobá que no da <code>nan</code>; probá también que la versión ingenua sí lo da. Después verificá con <em>gradient check</em> (1.5) que el gradiente de softmax + entropía cruzada respecto de \(z\) es simplemente \(\hat y - y\).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuánto da \(\text{softmax}(0,\ \ln 2,\ \ln 3)\)? (Pista: las exponenciales son 1, 2 y 3.) ¿Y por qué restar el máximo no cambia el resultado?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>Deep Learning</em> (Goodfellow), cap. 6 (unidades de salida y costos); d2l (regresión softmax)</span></div>
+<div class="r"><span class="k">Antes</span><span>2.4</span></div>
+</div>
+</div>
+
+<div class="topic" id="m303" data-topic="m303">
+<div class="topichead"><h3><span class="badge ML">3.3</span> Backpropagation: derivar el entrenamiento a mano</h3><label class="checklabel"><input type="checkbox" data-t="m303"><small class="sans">hecho</small></label></div>
+<p>Entrenar una red es aplicar el descenso por gradiente (1.6) a todos sus pesos. El problema es calcular el gradiente de la pérdida respecto de <em>cada</em> peso. <strong>Backpropagation</strong> no es un algoritmo misterioso: es la <strong>regla de la cadena</strong> aplicada de la salida hacia la entrada, reutilizando cálculos intermedios.</p>
+<p>Tomá la red del XOR de 3.4: una capa oculta de tanh y una salida sigmoide con entropía cruzada. Hacia adelante:</p>
+<ul>
+<li>\(z_1 = W_1 x + b_1\)  →  \(h = \tanh(z_1)\)  →  \(z_2 = w_2\cdot h + b_2\)  →  \(\hat y = \sigma(z_2)\)  →  \(L = -[y\ln\hat y + (1-y)\ln(1-\hat y)]\)</li>
+</ul>
+<p>Hacia atrás se va derivando paso por paso, y cada derivada reutiliza la del paso siguiente:</p>
+<ul>
+<li>\(\delta_2 = \partial L/\partial z_2 = \hat y - y\)  (la simplificación elegante de sigmoide + entropía cruzada)</li>
+<li>\(\partial L/\partial w_2 = \delta_2\, h\)  y  \(\partial L/\partial b_2 = \delta_2\)</li>
+<li>\(\partial L/\partial h = \delta_2\, w_2\)  y luego  \(\delta_1 = \partial L/\partial z_1 = (\delta_2\, w_2) \odot (1 - h^2)\)  (la derivada de tanh es \(1 - \tanh^2\))</li>
+<li>\(\partial L/\partial W_1 = \delta_1\, x^T\)  y  \(\partial L/\partial b_1 = \delta_1\)</li>
+</ul>
+<p><strong>La regla práctica para no equivocarte con las dimensiones:</strong> el gradiente de una matriz tiene siempre <strong>el mismo tamaño que la matriz</strong> (\(\partial L/\partial W_1\) es 4×2 si \(W_1\) es 4×2). Si te da otro tamaño, hay una transpuesta mal.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Con una red 2-2-1 de pesos que elijas (números chicos), un ejemplo \(x=(1,0)\) y objetivo \(y=1\): calculá a mano el <em>forward</em>, la pérdida y los 9 gradientes. Después escribilos en C++ y verificalos con diferencias centrales (1.5). El error relativo tiene que bajar de \(10^{-6}\). Este ejercicio es el más importante de todo el bloque: si backprop te sale a mano, lo demás es ingeniería.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>En una red con \(W_1\) de 4×2, ¿de qué tamaño es \(\delta_1\), de qué tamaño es \(x\) y por qué \(\partial L/\partial W_1 = \delta_1 x^T\) da 4×2?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>Neural Networks and Deep Learning</em> (Nielsen), cap. 2 (derivación completa de backprop); <em>Deep Learning</em> (Goodfellow), cap. 6</span></div>
+<div class="r"><span class="k">Video</span><span>Karpathy, <em>The spelled-out intro to neural networks and backpropagation: building micrograd</em> (<a href="https://karpathy.ai/zero-to-hero.html">serie completa</a>)</span></div>
+<div class="r"><span class="k">Antes</span><span>1.5 (gradient check)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m304" data-topic="m304">
+<div class="topichead"><h3><span class="badge ML">3.4</span> Un MLP desde cero en C++: el XOR</h3><label class="checklabel"><input type="checkbox" data-t="m304"><small class="sans">hecho</small></label></div>
+<p>El <strong>XOR</strong> (1 si las dos entradas son distintas) es el ejemplo histórico: ninguna recta separa {(0,0), (1,1)} de {(0,1), (1,0)}, así que la regresión logística no puede. Una capa oculta sí. El programa que sigue entrena una red 2-4-1 con las fórmulas de 3.3, sin ninguna librería:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">mlp_xor.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+
+<span class="k">const</span> <span class="k">int</span> H = <span class="n">4</span>;                                            <span class="c">// neuronas ocultas</span>
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">1</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">init</span>(<span class="n">0</span>, <span class="n">0.8</span>);
+    <span class="k">double</span> W1[H][<span class="n">2</span>], b1[H], W2[H], b2 = <span class="n">0</span>;                  <span class="c">// capa 1: 2 -&gt; H (tanh), capa 2: H -&gt; 1 (sigmoide)</span>
+    <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; H; ++j) { W1[j][<span class="n">0</span>] = <span class="fn">init</span>(gen); W1[j][<span class="n">1</span>] = <span class="fn">init</span>(gen); b1[j] = <span class="n">0</span>; W2[j] = <span class="fn">init</span>(gen); }
+
+    <span class="k">double</span> X[<span class="n">4</span>][<span class="n">2</span>] = {{<span class="n">0</span>, <span class="n">0</span>}, {<span class="n">0</span>, <span class="n">1</span>}, {<span class="n">1</span>, <span class="n">0</span>}, {<span class="n">1</span>, <span class="n">1</span>}};
+    <span class="k">double</span> T[<span class="n">4</span>] = {<span class="n">0</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>};                             <span class="c">// XOR: ninguna recta lo separa</span>
+    <span class="k">auto</span> sig = [](<span class="k">double</span> z) { <span class="k">return</span> <span class="n">1.0</span> / (<span class="n">1.0</span> + <span class="t">std</span>::<span class="fn">exp</span>(-z)); };
+    <span class="k">double</span> lr = <span class="n">0.5</span>;
+
+    <span class="k">for</span> (<span class="k">int</span> epoca = <span class="n">0</span>; epoca &lt;= <span class="n">5000</span>; ++epoca) {
+        <span class="k">double</span> perdida = <span class="n">0</span>, dW1[H][<span class="n">2</span>] = {}, db1[H] = {}, dW2[H] = {}, db2 = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">int</span> n = <span class="n">0</span>; n &lt; <span class="n">4</span>; ++n) {
+            <span class="k">double</span> h[H], z2 = b2;                           <span class="c">// ---- hacia adelante</span>
+            <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; H; ++j) {
+                h[j] = <span class="t">std</span>::<span class="fn">tanh</span>(W1[j][<span class="n">0</span>] * X[n][<span class="n">0</span>] + W1[j][<span class="n">1</span>] * X[n][<span class="n">1</span>] + b1[j]);
+                z2 += W2[j] * h[j];
+            }
+            <span class="k">double</span> y = <span class="fn">sig</span>(z2);
+            perdida += -(T[n] * <span class="t">std</span>::<span class="fn">log</span>(y) + (<span class="n">1</span> - T[n]) * <span class="t">std</span>::<span class="fn">log</span>(<span class="n">1</span> - y));
+            <span class="k">double</span> dz2 = y - T[n];                          <span class="c">// ---- hacia atras (regla de la cadena)</span>
+            db2 += dz2;
+            <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; H; ++j) {
+                dW2[j] += dz2 * h[j];
+                <span class="k">double</span> dz1 = dz2 * W2[j] * (<span class="n">1</span> - h[j] * h[j]);      <span class="c">// d tanh = 1 - tanh^2</span>
+                dW1[j][<span class="n">0</span>] += dz1 * X[n][<span class="n">0</span>]; dW1[j][<span class="n">1</span>] += dz1 * X[n][<span class="n">1</span>]; db1[j] += dz1;
+            }
+        }
+        <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; H; ++j) { W2[j] -= lr * dW2[j] / <span class="n">4</span>; b1[j] -= lr * db1[j] / <span class="n">4</span>; W1[j][<span class="n">0</span>] -= lr * dW1[j][<span class="n">0</span>] / <span class="n">4</span>; W1[j][<span class="n">1</span>] -= lr * dW1[j][<span class="n">1</span>] / <span class="n">4</span>; }
+        b2 -= lr * db2 / <span class="n">4</span>;
+        <span class="k">if</span> (epoca % <span class="n">1000</span> == <span class="n">0</span>) <span class="t">std</span>::cout &lt;&lt; <span class="s">"epoca "</span> &lt;&lt; epoca &lt;&lt; <span class="s">"   perdida = "</span> &lt;&lt; perdida / <span class="n">4</span> &lt;&lt; <span class="s">"\n"</span>;
+    }
+    <span class="k">for</span> (<span class="k">int</span> n = <span class="n">0</span>; n &lt; <span class="n">4</span>; ++n) {
+        <span class="k">double</span> z2 = b2;
+        <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; H; ++j) z2 += W2[j] * <span class="t">std</span>::<span class="fn">tanh</span>(W1[j][<span class="n">0</span>] * X[n][<span class="n">0</span>] + W1[j][<span class="n">1</span>] * X[n][<span class="n">1</span>] + b1[j]);
+        <span class="t">std</span>::cout &lt;&lt; X[n][<span class="n">0</span>] &lt;&lt; <span class="s">" XOR "</span> &lt;&lt; X[n][<span class="n">1</span>] &lt;&lt; <span class="s">" -&gt; "</span> &lt;&lt; <span class="fn">sig</span>(z2) &lt;&lt; <span class="s">"   (esperado "</span> &lt;&lt; T[n] &lt;&lt; <span class="s">")\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>epoca 0   perdida = 0.836001
+epoca 1000   perdida = 0.00487364
+epoca 2000   perdida = 0.0022995
+epoca 3000   perdida = 0.00147396
+epoca 4000   perdida = 0.00106662
+epoca 5000   perdida = 0.000824194
+0 XOR 0 -&gt; 0.000153176   (esperado 0)
+0 XOR 1 -&gt; 0.99902   (esperado 1)
+1 XOR 0 -&gt; 0.999083   (esperado 1)
+1 XOR 1 -&gt; 0.00124442   (esperado 0)</pre></div>
+<ul>
+<li>La pérdida baja de 0.84 a 0.0008 y las cuatro predicciones quedan a menos de 0.002 del valor correcto: la red aprendió el XOR.</li>
+<li><strong>Los pesos se inicializan al azar, no en cero.</strong> Si todos fueran 0, las 4 neuronas ocultas tendrían exactamente los mismos gradientes y quedarían siempre idénticas (simetría): sería como tener una sola.</li>
+<li>Esto es <em>entrenamiento por lotes completos</em> (gradient descent): se acumula el gradiente de los 4 ejemplos y se da un paso. Con muchos datos se usan mini-lotes (3.6).</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Cambiá el XOR por el problema del disco y el anillo de 2.5 (que la regresión logística no pudo): red 2-8-1, dibujá la región de decisión en SVG (1.8). (b) Reescribilo con tus clases <code>Capa</code> (3.1) para que sea una red de profundidad arbitraria. (c) Hacé <em>gradient check</em> de toda la red. (d) Agregá mini-lotes.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si inicializás todos los pesos en 0, ¿por qué las 4 neuronas ocultas nunca se diferencian? Seguí un paso de entrenamiento con la fórmula de \(\delta_1\).</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>Neural Networks and Deep Learning</em> (Nielsen), cap. 1 y 2 (su red reconoce dígitos escritos a mano con este mismo esquema)</span></div>
+<div class="r"><span class="k">Antes</span><span>3.3</span></div>
+<div class="r"><span class="k">Después</span><span>3.5 (que el computador derive por vos)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m305" data-topic="m305">
+<div class="topichead"><h3><span class="badge DSA">3.5</span> Derivación automática: el grafo de cómputo (micrograd en C++)</h3><label class="checklabel"><input type="checkbox" data-t="m305"><small class="sans">hecho</small></label></div>
+<p>Derivar a mano cada red nueva es inviable. La solución, que está debajo de PyTorch y TensorFlow, es la <strong>derivación automática</strong> (<em>autodiff</em>): cada operación (+, ×, tanh…) registra <strong>cómo se deriva ella sola</strong>, y el sistema encadena esas reglas locales con la regla de la cadena. Se hace en dos pasadas: hacia adelante se calcula el valor y se arma un <strong>grafo dirigido sin ciclos</strong>; hacia atrás se recorre ese grafo en <strong>orden topológico inverso</strong> acumulando gradientes.</p>
+<p>Y acá se juntan dos cosas que ya estudiaste: cada nodo guarda su regla de derivada en una <strong>lambda</strong> (<code>std::function</code>) y el recorrido hacia atrás es un <strong>orden topológico</strong> (<a href="../ruta_codigo/2-arboles-grafos.html#c209">tema 2.9 de la Ruta de Código</a>). Este es el esquema de <em>micrograd</em> de Karpathy, traducido a C++:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">autodiff.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;memory&gt;
+<span class="c">#</span>include &lt;functional&gt;
+<span class="c">#</span>include &lt;unordered_set&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+
+<span class="k">struct</span> Nodo;
+<span class="k">using</span> V = <span class="t">std</span>::<span class="t">shared_ptr</span>&lt;Nodo&gt;;
+
+<span class="k">struct</span> Nodo {
+    <span class="k">double</span> dato, grad = <span class="n">0</span>;
+    <span class="t">std</span>::<span class="t">vector</span>&lt;V&gt; hijos;                                   <span class="c">// de quien depende este valor</span>
+    <span class="t">std</span>::<span class="t">function</span>&lt;<span class="k">void</span>()&gt; retroceder = [] {};               <span class="c">// la regla de la cadena de ESTA operacion</span>
+    <span class="k">explicit</span> <span class="fn">Nodo</span>(<span class="k">double</span> d) : <span class="fn">dato</span>(d) {}
+};
+V <span class="fn">valor</span>(<span class="k">double</span> d) { <span class="k">return</span> <span class="t">std</span>::make_shared&lt;Nodo&gt;(d); }
+
+V <span class="k">operator</span>+(V a, V b) {
+    V o = <span class="fn">valor</span>(a-&gt;dato + b-&gt;dato);
+    o-&gt;hijos = {a, b};
+    Nodo* p = o.<span class="fn">get</span>();
+    o-&gt;retroceder = [a, b, p] { a-&gt;grad += p-&gt;grad; b-&gt;grad += p-&gt;grad; };
+    <span class="k">return</span> o;
+}
+V <span class="k">operator</span>*(V a, V b) {
+    V o = <span class="fn">valor</span>(a-&gt;dato * b-&gt;dato);
+    o-&gt;hijos = {a, b};
+    Nodo* p = o.<span class="fn">get</span>();
+    o-&gt;retroceder = [a, b, p] { a-&gt;grad += b-&gt;dato * p-&gt;grad; b-&gt;grad += a-&gt;dato * p-&gt;grad; };
+    <span class="k">return</span> o;
+}
+V <span class="fn">tanh</span>(V a) {
+    V o = <span class="fn">valor</span>(<span class="t">std</span>::<span class="fn">tanh</span>(a-&gt;dato));
+    o-&gt;hijos = {a};
+    Nodo* p = o.<span class="fn">get</span>();
+    o-&gt;retroceder = [a, p] { a-&gt;grad += (<span class="n">1</span> - p-&gt;dato * p-&gt;dato) * p-&gt;grad; };
+    <span class="k">return</span> o;
+}
+
+<span class="k">void</span> <span class="fn">backward</span>(V salida) {
+    <span class="t">std</span>::<span class="t">vector</span>&lt;Nodo*&gt; orden;                               <span class="c">// orden topologico (DFS)</span>
+    <span class="t">std</span>::unordered_set&lt;Nodo*&gt; visto;
+    <span class="t">std</span>::<span class="t">function</span>&lt;<span class="k">void</span>(Nodo*)&gt; visitar = [&amp;](Nodo* n) {
+        <span class="k">if</span> (!visto.<span class="fn">insert</span>(n).second) <span class="k">return</span>;
+        <span class="k">for</span> (<span class="k">auto</span>&amp; h : n-&gt;hijos) <span class="fn">visitar</span>(h.<span class="fn">get</span>());
+        orden.<span class="fn">push_back</span>(n);
+    };
+    <span class="fn">visitar</span>(salida.<span class="fn">get</span>());
+    salida-&gt;grad = <span class="n">1</span>;
+    <span class="k">for</span> (<span class="k">auto</span> it = orden.<span class="fn">rbegin</span>(); it != orden.<span class="fn">rend</span>(); ++it) (*it)-&gt;<span class="fn">retroceder</span>();
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    V a = <span class="fn">valor</span>(<span class="n">2.0</span>), b = <span class="fn">valor</span>(-<span class="n">3.0</span>), c = <span class="fn">valor</span>(<span class="n">10.0</span>);
+    V f = <span class="fn">tanh</span>(a * b + c);                                  <span class="c">// f = tanh(a*b + c)</span>
+    <span class="fn">backward</span>(f);
+    <span class="k">double</span> z = <span class="n">2.0</span> * -<span class="n">3.0</span> + <span class="n">10.0</span>, d = <span class="n">1</span> - <span class="t">std</span>::<span class="fn">tanh</span>(z) * <span class="t">std</span>::<span class="fn">tanh</span>(z);   <span class="c">// derivada a mano</span>
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"f = "</span> &lt;&lt; f-&gt;dato &lt;&lt; <span class="s">"\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"df/da = "</span> &lt;&lt; a-&gt;grad &lt;&lt; <span class="s">"   (a mano: "</span> &lt;&lt; d * -<span class="n">3.0</span> &lt;&lt; <span class="s">")\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"df/db = "</span> &lt;&lt; b-&gt;grad &lt;&lt; <span class="s">"   (a mano: "</span> &lt;&lt; d * <span class="n">2.0</span> &lt;&lt; <span class="s">")\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"df/dc = "</span> &lt;&lt; c-&gt;grad &lt;&lt; <span class="s">"   (a mano: "</span> &lt;&lt; d &lt;&lt; <span class="s">")\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>f = 0.999329
+df/da = -0.00402285   (a mano: -0.00402285)
+df/db = 0.0026819   (a mano: 0.0026819)
+df/dc = 0.00134095   (a mano: 0.00134095)</pre></div>
+<ul>
+<li>El programa deriva \(f = \tanh(ab + c)\) con \(a=2,\ b=-3,\ c=10\). Los tres gradientes coinciden <strong>hasta el último dígito</strong> con los calculados a mano (\(\partial f/\partial a = (1-\tanh^2 z)\cdot b\), etc.).</li>
+<li><strong><code>grad +=</code> y no <code>grad =</code>:</strong> una variable puede usarse varias veces (por ejemplo \(f = a\cdot a\)) y cada uso aporta su parte al gradiente; hay que <strong>sumarlas</strong>.</li>
+<li><strong>Detalle de memoria:</strong> la lambda de cada nodo captura a sus <em>hijos</em> con <code>shared_ptr</code> pero a <em>sí mismo</em> con un puntero crudo <code>p</code>. Si capturara su propio <code>shared_ptr</code>, el nodo se apuntaría a sí mismo a través de su lambda: un ciclo de referencias, y la memoria nunca se liberaría.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Agregá <code>-</code>, <code>/</code>, <code>exp</code>, <code>pow</code> y <code>relu</code>. (b) Probá \(f = a\cdot a\) y mostrá que da \(2a\); si cambiás <code>+=</code> por <code>=</code> pasa a dar \(a\). (c) Armá una neurona \(\tanh(\sum w_ix_i + b)\) y un MLP 2-4-1 con estos nodos y entrená el XOR de 3.4: tiene que dar el mismo resultado que tu backprop manual. (d) Verificá cada gradiente con el <em>gradient check</em> de 1.5.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Para \(f = a\cdot a\) con \(a = 3\), ¿cuánto vale \(\partial f/\partial a\)? Seguí cómo <code>retroceder</code> de la multiplicación lo acumula dos veces y explicá por qué el resultado sería incorrecto con <code>=</code>.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Video</span><span>Karpathy, <em>Neural Networks: Zero to Hero</em>, lección 1 (micrograd): <a href="https://karpathy.ai/zero-to-hero.html">karpathy.ai/zero-to-hero</a></span></div>
+<div class="r"><span class="k">Libros</span><span>Géron, apéndice de autodiff; d2l (capítulo de cálculo y derivación automática)</span></div>
+<div class="r"><span class="k">Antes en tu ruta</span><span>Lambdas (STL 1c), grafos y orden topológico (<a href="../ruta_codigo/2-arboles-grafos.html">Ruta de Código 2.5 y 2.9</a>)</span></div>
+<div class="r"><span class="k">Después</span><span>4.5 (PyTorch hace esto con <code>loss.backward()</code>)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m306" data-topic="m306">
+<div class="topichead"><h3><span class="badge ML">3.6</span> Optimizadores: SGD, momentum y Adam</h3><label class="checklabel"><input type="checkbox" data-t="m306"><small class="sans">hecho</small></label></div>
+<p>El descenso por gradiente (1.6) se puede mejorar. Tres variantes, de menor a mayor sofisticación:</p>
+<ul>
+<li><strong>SGD / mini-lotes:</strong> en vez de usar los \(n\) datos para cada paso, usar un lote de, digamos, 32. Es mucho más barato por paso y el ruido ayuda a salir de zonas planas.</li>
+<li><strong>Momentum:</strong> acumular una "velocidad" \(v \leftarrow \beta v + g\) y moverse con ella. En un valle largo y angosto amortigua las oscilaciones de los costados y acelera a lo largo.</li>
+<li><strong>Adam:</strong> momentum más una tasa de aprendizaje <strong>propia para cada parámetro</strong>, escalada por el historial del tamaño de sus gradientes. Es el optimizador por defecto de la mayoría de las redes.</li>
+</ul>
+<p>Los comparé sobre el valle \(f(x,y) = x^2 + 10y^2\), partiendo de (5, 5) hasta llegar a \(f&lt;10^{-8}\):</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">optimizadores.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include &lt;<span class="t">string</span>&gt;
+
+<span class="c">// f(x, y) = x^2 + 10 y^2   (un "valle" alargado: lo que mas cuesta a un gradiente simple)</span>
+<span class="k">void</span> <span class="fn">gradiente</span>(<span class="k">double</span> x, <span class="k">double</span> y, <span class="k">double</span>&amp; gx, <span class="k">double</span>&amp; gy) { gx = <span class="n">2</span> * x; gy = <span class="n">20</span> * y; }
+<span class="k">double</span> <span class="fn">f</span>(<span class="k">double</span> x, <span class="k">double</span> y) { <span class="k">return</span> x * x + <span class="n">10</span> * y * y; }
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">const</span> <span class="k">int</span> MAX = <span class="n">5000</span>;
+    <span class="k">for</span> (<span class="t">std</span>::<span class="t">string</span> nombre : {<span class="s">"SGD"</span>, <span class="s">"momentum"</span>, <span class="s">"Adam"</span>}) {
+        <span class="k">double</span> x = <span class="n">5</span>, y = <span class="n">5</span>, vx = <span class="n">0</span>, vy = <span class="n">0</span>, mx = <span class="n">0</span>, my = <span class="n">0</span>, sx = <span class="n">0</span>, sy = <span class="n">0</span>;
+        <span class="k">int</span> paso = <span class="n">0</span>;
+        <span class="k">for</span> (; paso &lt; MAX &amp;&amp; <span class="fn">f</span>(x, y) &gt; <span class="n">1e-8</span>; ++paso) {
+            <span class="k">double</span> gx, gy;
+            <span class="fn">gradiente</span>(x, y, gx, gy);
+            <span class="k">if</span> (nombre == <span class="s">"SGD"</span>) { x -= <span class="n">0.09</span> * gx; y -= <span class="n">0.09</span> * gy; }
+            <span class="k">else</span> <span class="k">if</span> (nombre == <span class="s">"momentum"</span>) { vx = <span class="n">0.9</span> * vx + gx; vy = <span class="n">0.9</span> * vy + gy; x -= <span class="n">0.01</span> * vx; y -= <span class="n">0.01</span> * vy; }
+            <span class="k">else</span> {                                          <span class="c">// Adam</span>
+                <span class="k">double</span> b1 = <span class="n">0.9</span>, b2 = <span class="n">0.999</span>, e = <span class="n">1e-8</span>, lr = <span class="n">0.3</span>, t = paso + <span class="n">1</span>;
+                mx = b1 * mx + (<span class="n">1</span> - b1) * gx; my = b1 * my + (<span class="n">1</span> - b1) * gy;
+                sx = b2 * sx + (<span class="n">1</span> - b2) * gx * gx; sy = b2 * sy + (<span class="n">1</span> - b2) * gy * gy;
+                x -= lr * (mx / (<span class="n">1</span> - <span class="t">std</span>::<span class="fn">pow</span>(b1, t))) / (<span class="t">std</span>::<span class="fn">sqrt</span>(sx / (<span class="n">1</span> - <span class="t">std</span>::<span class="fn">pow</span>(b2, t))) + e);
+                y -= lr * (my / (<span class="n">1</span> - <span class="t">std</span>::<span class="fn">pow</span>(b1, t))) / (<span class="t">std</span>::<span class="fn">sqrt</span>(sy / (<span class="n">1</span> - <span class="t">std</span>::<span class="fn">pow</span>(b2, t))) + e);
+            }
+        }
+        <span class="t">std</span>::cout &lt;&lt; nombre &lt;&lt; <span class="s">":  "</span> &lt;&lt; paso &lt;&lt; <span class="s">" pasos,  f final = "</span> &lt;&lt; <span class="fn">f</span>(x, y) &lt;&lt; <span class="s">"\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>SGD:  56 pasos,  f final = 9.05981e-09
+momentum:  201 pasos,  f final = 1.44355e-09
+Adam:  188 pasos,  f final = 3.17389e-09</pre></div>
+<div class="legal warn"><span class="tag sans">Cuidado</span><strong>El resultado no dice "Adam es mejor", y es importante que lo leas bien.</strong> En este problema cuadrático, con una tasa de SGD <strong>afinada a mano</strong> (0.09, apenas debajo del límite de 0.1 que calculaste en 1.6), SGD gana con 56 pasos. Momentum y Adam necesitan ~200 pasos. La ventaja de Adam aparece cuando <em>no podés</em> afinar la tasa para cada capa y cada parámetro, que es el caso de una red real. Un optimizador "mejor" depende del problema: medilo.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Agregá RMSprop. (b) Para cada optimizador, buscá la mejor tasa de aprendizaje con un barrido y compará solo después de afinar todos. (c) Probalos en Rosenbrock. (d) Entrená el XOR de 3.4 con Adam y comparalo con el descenso simple en cantidad de épocas.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con momentum \(\beta = 0.9\) la tasa que funciona (0.01) es nueve veces menor que la de SGD (0.09). ¿Por qué? (Pista: ¿cuánto vale la suma \(1 + \beta + \beta^2 + \ldots\)?)</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>Deep Learning</em> (Goodfellow), cap. 8; d2l (capítulo de algoritmos de optimización)</span></div>
+<div class="r"><span class="k">Antes</span><span>1.6</span></div>
+</div>
+</div>
+
+<div class="topic" id="m307" data-topic="m307">
+<div class="topichead"><h3><span class="badge ML">3.7</span> Entrenar bien: inicialización, regularización y diagnóstico</h3><label class="checklabel"><input type="checkbox" data-t="m307"><small class="sans">hecho</small></label></div>
+<p>Una red que "no entrena" casi siempre es uno de pocos problemas conocidos. Conviene tenerlos a mano:</p>
+<ul>
+<li><strong>Gradientes que se desvanecen:</strong> con sigmoide, la derivada máxima es 0.25, y en saturación es casi 0 (con \(z=10\) vale \(\approx 4.5\times10^{-5}\)). En una red profunda, multiplicar muchas derivadas chicas deja un gradiente nulo en las primeras capas. ReLU y una buena inicialización lo mitigan. Lo opuesto, que <strong>explotan</strong>, se ve como una pérdida que se vuelve <code>nan</code>.</li>
+<li><strong>Inicialización:</strong> los pesos iniciales se escalan según el tamaño de la capa para que la varianza de las activaciones se mantenga entre capas (<strong>Xavier</strong> para tanh/sigmoide, <strong>He</strong> para ReLU).</li>
+<li><strong>Weight decay:</strong> sumar \(\lambda\|w\|^2\) a la pérdida. Es el ridge de 2.3 aplicado a los pesos de la red.</li>
+<li><strong>Dropout:</strong> durante el entrenamiento, apagar al azar una fracción de las neuronas en cada paso (y reescalar). Obliga a que ninguna neurona sea imprescindible.</li>
+<li><strong>Normalización por lotes</strong> (<em>batch norm</em>): normalizar las activaciones de cada capa con la media y el desvío del lote; estabiliza y acelera.</li>
+<li><strong>Parada temprana</strong> (<em>early stopping</em>): dejar de entrenar cuando la pérdida de validación deja de bajar.</li>
+</ul>
+<div class="tablewrap sans"><table><thead><tr><th>Lo que ves en las curvas</th><th>Diagnóstico probable</th></tr></thead><tbody>
+<tr><td>train baja, validación sube</td><td>sobreajuste: más regularización, más datos, menos capacidad, parada temprana</td></tr>
+<tr><td>las dos altas y planas</td><td>subajuste o tasa de aprendizaje mal elegida: modelo más grande, otra tasa</td></tr>
+<tr><td>pérdida <code>nan</code></td><td>tasa demasiado grande, gradientes explotando, o <code>log(0)</code></td></tr>
+<tr><td>train y validación bajan juntas</td><td>va bien: seguí</td></tr>
+</tbody></table></div>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Armá una red tanh de 6 capas y registrá la norma del gradiente por capa en el primer paso, con pesos \(N(0,1)\) ingenuos contra Xavier: tiene que verse que el gradiente se apaga hacia las primeras capas con la mala inicialización. (b) Implementá dropout en tu MLP. (c) Dibujá las curvas de train y validación y señalá el punto de parada temprana.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>La derivada de la sigmoide es \(\sigma(z)(1-\sigma(z))\). Calculala para \(z=0\) y para \(z=10\). ¿Qué le pasa a un gradiente que atraviesa 10 capas con \(z=10\) en cada una?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>Deep Learning</em> (Goodfellow), cap. 7 (regularización); d2l (capítulo de cálculo y de computación para aprendizaje profundo)</span></div>
+<div class="r"><span class="k">Curso</span><span>fast.ai <em>Practical Deep Learning</em> (<a href="https://course.fast.ai/">course.fast.ai</a>), enfoque práctico de diagnóstico</span></div>
+</div>
+</div>
+
+<div class="topic" id="m308" data-topic="m308">
+<div class="topichead"><h3><span class="badge ML">3.8</span> Convoluciones y redes convolucionales (CNN)</h3><label class="checklabel"><input type="checkbox" data-t="m308"><small class="sans">hecho</small></label></div>
+<p>Para imágenes, una capa densa tiene un problema: una imagen de 28×28 con 100 neuronas ocultas son 78.400 pesos, y encima ignora que un píxel está al lado de otro. Una <strong>convolución</strong> desliza un filtro chico (por ejemplo 3×3) por toda la imagen, usando los <strong>mismos pesos</strong> en cada posición: menos parámetros y detecta un patrón (un borde, una esquina) sin importar dónde aparezca.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">conv2d.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;iomanip&gt;
+
+<span class="k">using</span> <span class="t">Img</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;&gt;;
+
+<span class="c">// convolucion "valida" (sin relleno): la salida es mas chica que la entrada</span>
+<span class="t">Img</span> <span class="fn">convolucion</span>(<span class="k">const</span> <span class="t">Img</span>&amp; <span class="k">in</span>, <span class="k">const</span> <span class="t">Img</span>&amp; k) {
+    <span class="k">int</span> H = <span class="k">in</span>.<span class="fn">size</span>(), W = <span class="k">in</span>[<span class="n">0</span>].<span class="fn">size</span>(), kh = k.<span class="fn">size</span>(), kw = k[<span class="n">0</span>].<span class="fn">size</span>();
+    <span class="t">Img</span> <span class="fn">out</span>(H - kh + <span class="n">1</span>, <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;(W - kw + <span class="n">1</span>, <span class="n">0.0</span>));
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i + kh &lt;= H; ++i)
+        <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j + kw &lt;= W; ++j)
+            <span class="k">for</span> (<span class="k">int</span> a = <span class="n">0</span>; a &lt; kh; ++a)
+                <span class="k">for</span> (<span class="k">int</span> b = <span class="n">0</span>; b &lt; kw; ++b)
+                    out[i][j] += <span class="k">in</span>[i + a][j + b] * k[a][b];
+    <span class="k">return</span> out;
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">Img</span> <span class="fn">img</span>(<span class="n">6</span>, <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;(<span class="n">6</span>, <span class="n">0.0</span>));                <span class="c">// izquierda oscura (0), derecha clara (9)</span>
+    <span class="k">for</span> (<span class="k">auto</span>&amp; fila : img) <span class="k">for</span> (<span class="k">int</span> j = <span class="n">3</span>; j &lt; <span class="n">6</span>; ++j) fila[j] = <span class="n">9</span>;
+    <span class="t">Img</span> sobelX = {{-<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>}, {-<span class="n">2</span>, <span class="n">0</span>, <span class="n">2</span>}, {-<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>}};      <span class="c">// detecta bordes verticales</span>
+
+    <span class="t">Img</span> r = <span class="fn">convolucion</span>(img, sobelX);
+    <span class="k">for</span> (<span class="k">auto</span>&amp; fila : r) { <span class="k">for</span> (<span class="k">double</span> v : fila) <span class="t">std</span>::cout &lt;&lt; <span class="t">std</span>::<span class="fn">setw</span>(<span class="n">4</span>) &lt;&lt; v; <span class="t">std</span>::cout &lt;&lt; <span class="s">"\n"</span>; }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>   0  36  36   0
+   0  36  36   0
+   0  36  36   0
+   0  36  36   0</pre></div>
+<p>La imagen de 6×6 tiene la mitad izquierda oscura (0) y la derecha clara (9). El filtro es el <strong>Sobel vertical</strong>, que detecta bordes verticales. La salida (4×4, porque la ventana de 3×3 no sale de la imagen: \(6-3+1 = 4\)) vale 36 justo en las dos columnas centrales, donde la ventana abarca el borde, y 0 donde la imagen es uniforme.</p>
+<ul>
+<li><strong>En una CNN el filtro no se elige: se aprende</strong> por backpropagation, igual que cualquier otro peso.</li>
+<li><strong>Parámetros:</strong> el filtro 3×3 tiene 9 pesos. Una capa densa de 36 entradas (6×6) a 16 salidas tiene 576.</li>
+<li><strong>Pooling:</strong> reducir la resolución quedándose con el máximo (o el promedio) de cada bloque de 2×2. <strong>Padding</strong> y <strong>stride</strong> controlan el tamaño de salida.</li>
+<li>Se apilan convoluciones: las primeras detectan bordes, las siguientes combinaciones de bordes (formas), las últimas objetos.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Agregá <em>padding</em> y <em>stride</em> a <code>convolucion</code>. (b) Implementá <em>max pooling</em> 2×2. (c) Calculá el gradiente de la convolución respecto del filtro (es otra correlación) y verificalo con <em>gradient check</em>. (d) Generá imágenes sintéticas de 8×8 con una línea horizontal o una vertical y entrená un filtro para distinguirlas.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Entrada 28×28, filtro 5×5, sin padding y stride 1: ¿de qué tamaño es la salida? ¿Cuántas multiplicaciones hace esa capa por filtro?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Curso</span><span>Stanford CS231n (<em>Convolutional Neural Networks for Visual Recognition</em>), sitio oficial <a href="https://cs231n.stanford.edu">cs231n.stanford.edu</a> (las notas viven en el repo <code>cs231n.github.io</code>)</span></div>
+<div class="r"><span class="k">Libros</span><span>d2l (capítulos de redes convolucionales); <em>Deep Learning</em> (Goodfellow), cap. 9</span></div>
+<div class="r"><span class="k">Después</span><span>4.5 (PyTorch: <code>nn.Conv2d</code>)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m309" data-topic="m309">
+<div class="topichead"><h3><span class="badge ML">3.9</span> Secuencias: redes recurrentes (RNN, LSTM) — panorama</h3><label class="checklabel"><input type="checkbox" data-t="m309"><small class="sans">hecho</small></label></div>
+<p>Para series de tiempo, texto o señales, el orden importa. Una <strong>red recurrente</strong> mantiene un <strong>estado oculto</strong> \(h_t\) que resume lo visto hasta ahora: \(h_t = \tanh(W h_{t-1} + U x_t + b)\), con los <em>mismos</em> \(W, U\) en cada paso. Desplegada en el tiempo, una RNN que procesa 100 pasos es una red de 100 capas que comparte pesos, y se entrena con <em>backpropagation a través del tiempo</em>.</p>
+<p>Por eso sufre el desvanecimiento de gradientes de 3.7: el gradiente atraviesa 100 multiplicaciones. <strong>LSTM</strong> y <strong>GRU</strong> agregan "compuertas" que deciden qué recordar y qué olvidar, y permiten memoria larga. Para lenguaje fueron reemplazadas por los transformers (3.10), pero siguen apareciendo en series de tiempo chicas, como las de sensores (5.4, 5.5).</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Implementá el <em>forward</em> de una RNN simple sobre una secuencia de 20 pasos. (b) Implementá BPTT para 5 pasos y verificalo con <em>gradient check</em>. (c) Predecí el siguiente valor de una senoidal con ruido y mirá hasta qué horizonte funciona.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Una RNN procesa una secuencia de 100 pasos. ¿Con cuántas "capas" equivale la red desplegada, y cuántas veces se multiplica por \(W\) el gradiente que va del último paso al primero?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span>d2l (capítulos de redes recurrentes modernas); <em>Deep Learning</em> (Goodfellow), cap. 10</span></div>
+<div class="r"><span class="k">Después</span><span>5.4 y 5.5 (mantenimiento predictivo y series de tiempo)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m310" data-topic="m310">
+<div class="topichead"><h3><span class="badge ML">3.10</span> Atención y transformers — panorama</h3><label class="checklabel"><input type="checkbox" data-t="m310"><small class="sans">hecho</small></label></div>
+<p>Los modelos de lenguaje actuales, incluidos los que traducen, resumen y conversan, son <strong>transformers</strong>. Su idea central es la <strong>atención</strong>: para cada elemento de la secuencia, mirar <em>todos</em> los demás y decidir con qué peso mezclarlos. Cada elemento produce tres vectores: una <strong>consulta</strong> \(Q\), una <strong>clave</strong> \(K\) y un <strong>valor</strong> \(V\), y la salida es \(\text{softmax}(QK^T/\sqrt{d})\,V\).</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">atencion.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include &lt;iomanip&gt;
+
+<span class="k">using</span> M = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;&gt;;
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="c">// 3 palabras, cada una un vector de 2 numeros (ya proyectado a Q, K, V)</span>
+    M Q = {{<span class="n">1</span>, <span class="n">0</span>}, {<span class="n">0</span>, <span class="n">1</span>}, {<span class="n">1</span>, <span class="n">1</span>}};
+    M K = {{<span class="n">1</span>, <span class="n">0</span>}, {<span class="n">0</span>, <span class="n">1</span>}, {<span class="n">1</span>, <span class="n">1</span>}};
+    M V = {{<span class="n">1</span>, <span class="n">2</span>}, {<span class="n">3</span>, <span class="n">4</span>}, {<span class="n">5</span>, <span class="n">6</span>}};
+    <span class="k">int</span> n = <span class="n">3</span>, d = <span class="n">2</span>;
+
+    M <span class="fn">pesos</span>(n, <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;(n));
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) {
+        <span class="k">double</span> suma = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; n; ++j) {                       <span class="c">// puntaje = Q_i . K_j / sqrt(d)</span>
+            <span class="k">double</span> s = <span class="n">0</span>;
+            <span class="k">for</span> (<span class="k">int</span> t = <span class="n">0</span>; t &lt; d; ++t) s += Q[i][t] * K[j][t];
+            pesos[i][j] = <span class="t">std</span>::<span class="fn">exp</span>(s / <span class="t">std</span>::<span class="fn">sqrt</span>((<span class="k">double</span>)d));
+            suma += pesos[i][j];
+        }
+        <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; n; ++j) pesos[i][j] /= suma;    <span class="c">// softmax por fila</span>
+    }
+    <span class="t">std</span>::cout &lt;&lt; <span class="t">std</span>::fixed &lt;&lt; <span class="t">std</span>::<span class="fn">setprecision</span>(<span class="n">3</span>) &lt;&lt; <span class="s">"pesos de atencion:\n"</span>;
+    <span class="k">for</span> (<span class="k">auto</span>&amp; f : pesos) { <span class="k">for</span> (<span class="k">double</span> w : f) <span class="t">std</span>::cout &lt;&lt; <span class="t">std</span>::<span class="fn">setw</span>(<span class="n">7</span>) &lt;&lt; w; <span class="t">std</span>::cout &lt;&lt; <span class="s">"\n"</span>; }
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"salida = pesos * V:\n"</span>;
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) {
+        <span class="k">for</span> (<span class="k">int</span> t = <span class="n">0</span>; t &lt; d; ++t) {
+            <span class="k">double</span> s = <span class="n">0</span>;
+            <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; n; ++j) s += pesos[i][j] * V[j][t];
+            <span class="t">std</span>::cout &lt;&lt; <span class="t">std</span>::<span class="fn">setw</span>(<span class="n">7</span>) &lt;&lt; s;
+        }
+        <span class="t">std</span>::cout &lt;&lt; <span class="s">"\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>pesos de atencion:
+  0.401  0.198  0.401
+  0.198  0.401  0.401
+  0.248  0.248  0.503
+salida = pesos * V:
+  3.000  4.000
+  3.407  4.407
+  3.510  4.510</pre></div>
+<ul>
+<li>Cada fila de "pesos de atención" suma 1: es cuánta atención le presta ese elemento a cada uno de los tres.</li>
+<li>El tercer elemento, \((1,1)\), tiene mayor producto punto con su propia clave (2) que con las otras (1 y 1), y por eso se atiende a sí mismo con 0.503; su salida es una mezcla de los tres valores, ponderada por esos pesos.</li>
+<li>Se divide por \(\sqrt d\) porque los productos punto crecen con la dimensión \(d\) y empujarían el softmax a saturarse (casi todo el peso en un solo elemento, gradientes nulos).</li>
+<li><strong>Costo:</strong> compara todos contra todos, \(O(n^2 d)\) en el largo de la secuencia. Es el cuello de botella de los modelos de contexto largo.</li>
+</ul>
+<p>Un <strong>bloque de transformer</strong> agrega varias "cabezas" de atención en paralelo, una red densa (MLP), conexiones residuales (sumar la entrada a la salida) y normalización. Un modelo de lenguaje es una pila de estos bloques entrenada para predecir la siguiente palabra (o símbolo). El curso de Karpathy construye uno chico paso a paso.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Calculá a mano la primera fila de pesos de atención del ejemplo y compará con la salida. (b) Agregá <strong>máscara causal</strong> (que cada elemento solo mire los anteriores). (c) Hacé un modelo de lenguaje por caracteres trivial (cuentas de bigramas con <code>unordered_map</code>) para tener un punto de comparación antes de hacer el transformer.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si las filas de pesos suman 1 y \(V\) tiene valores entre 1 y 6, ¿entre qué valores puede estar cualquier componente de la salida? ¿Por qué?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Video</span><span>Karpathy, <em>Zero to Hero</em> (llega hasta construir un GPT): <a href="https://karpathy.ai/zero-to-hero.html">karpathy.ai/zero-to-hero</a></span></div>
+<div class="r"><span class="k">Libros</span><span>d2l (mecanismos de atención y transformers); <em>Understanding Deep Learning</em> (Prince), capítulo de transformers</span></div>
+</div>
+</div>
+
+<div class="topic" id="m311" data-topic="m311">
+<div class="topichead"><h3><span class="badge ML">3.11</span> Autoencoders y modelos generativos — panorama</h3><label class="checklabel"><input type="checkbox" data-t="m311"><small class="sans">hecho</small></label></div>
+<p>Un <strong>autoencoder</strong> es una red que aprende a comprimir y a reconstruir: una parte (el <em>codificador</em>) lleva la entrada a un vector chico, y la otra (el <em>decodificador</em>) intenta reconstruir la entrada original a partir de él. Si la reconstrucción es buena, ese vector chico capturó lo esencial. Con capas lineales y una pérdida cuadrática, es exactamente <strong>PCA</strong> (2.11); con no linealidades, es un PCA no lineal.</p>
+<p>Los modelos <strong>generativos</strong> van un paso más allá: no solo comprimen, <em>inventan</em> datos nuevos parecidos a los de entrenamiento. Las familias principales son los autoencoders variacionales (VAE), las redes antagónicas (GAN) y los modelos de difusión. Con autoencoders también se detectan <strong>anomalías</strong>: si una máquina falla, su señal se reconstruye mal, y esa diferencia se usa como alarma (5.4).</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Entrená un autoencoder <strong>lineal</strong> de 1 neurona oculta sobre los datos alargados de 2.11 (2 → 1 → 2) con tu autodiff de 3.5, y mostrá que la dirección que aprende coincide con la primera componente principal que calculaste con la potencia.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si el autoencoder lineal de 2 → 1 → 2 reconstruye casi perfecto, ¿qué dice eso de los datos? ¿Qué número de 2.11 lo confirma?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>Deep Learning</em> (Goodfellow), cap. 14 (autoencoders); <em>Understanding Deep Learning</em> (Prince), capítulos sobre modelos generativos y difusión</span></div>
+<div class="r"><span class="k">Antes</span><span>2.11</span></div>
+</div>
+</div>
+
+<div class="topic" id="m312" data-topic="m312">
+<div class="topichead"><h3><span class="badge ML">3.12</span> Aprendizaje por refuerzo — panorama</h3><label class="checklabel"><input type="checkbox" data-t="m312"><small class="sans">hecho</small></label></div>
+<p>Un <strong>agente</strong> actúa en un <strong>entorno</strong>; cada acción cambia el estado y puede dar una <strong>recompensa</strong>. El agente no tiene "respuestas correctas" sino que debe descubrir qué política maximiza la recompensa acumulada. Es el marco natural del control de robots y de los juegos.</p>
+<p>El algoritmo más simple es <strong>Q-learning</strong>: guardar una tabla \(Q(s,a)\) con el valor esperado de hacer la acción \(a\) en el estado \(s\) y actualizarla con \(Q(s,a) \leftarrow Q(s,a) + \alpha\,[\,r + \gamma \max_{a'} Q(s',a') - Q(s,a)\,]\). El factor \(\gamma&lt;1\) descuenta el futuro. Hay que equilibrar <strong>explorar</strong> (probar acciones nuevas, política \(\varepsilon\)-codiciosa) y <strong>explotar</strong> (usar lo que ya sabe).</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Un pasillo de 6 celdas con la recompensa en la última. Acciones: izquierda/derecha. Armá la tabla <code>Q</code> (un <code>vector</code> de pares), entrenala con \(\varepsilon\)-codicioso y verificá que la política aprendida es "siempre derecha". Después pasalo a una grilla 2D con obstáculos usando un <code>unordered_map&lt;Estado, Q&gt;</code> (tema 1b de la STL, con hash propio para el par de coordenadas).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con \(\gamma = 0.9\) y una recompensa de 1 que se recibe al dar el 3.er paso hacia la meta, ¿cuánto vale el estado inicial si desde ahí se sigue la mejor política? (Convención: la recompensa del 3.er paso se descuenta por \(\gamma^2\).)</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span>Brunton &amp; Kutz, <em>Data-Driven Science and Engineering</em>, 2.ª ed. (incluye un capítulo de aprendizaje por refuerzo); CS229 (refuerzo); Sutton y Barto, <em>Reinforcement Learning: An Introduction</em> (enlace no verificado, ver <a href="6-libros-y-cursos.html">libros</a>)</span></div>
+<div class="r"><span class="k">Después</span><span>5.8 (robótica y control)</span></div>
+</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="2-aprendizaje-clasico.html"><span>Anterior</span><b>← Aprendizaje automático clásico</b></a>
+  <a class="pn next" href="4-herramientas.html"><span>Siguiente</span><b>Herramientas: Python y el ecosistema →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

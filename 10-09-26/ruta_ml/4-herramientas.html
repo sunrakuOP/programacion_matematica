@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4 · Herramientas: Python y el ecosistema · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill active" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 4</div>
+<h1 class="hero">Herramientas: Python y el ecosistema</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> pasar de tu propio código al ecosistema profesional sin perder la comprensión. Python/NumPy/pandas/scikit-learn/PyTorch <strong>y</strong> cómo se usan desde C++ (Eigen, mlpack, modelos entrenados en Python). El truco central: usar las librerías como <strong>oráculo</strong> para verificar tu código.</p></blockquote>
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#m401">4.1 Python para quien ya sabe C++</a></li>
+<li><a href="#m402">4.2 NumPy: vectorizar en vez de hacer bucles</a></li>
+<li><a href="#m403">4.3 pandas y matplotlib: mirar los datos antes de modelar</a></li>
+<li><a href="#m404">4.4 scikit-learn: tu código C++ contra un oráculo</a></li>
+<li><a href="#m405">4.5 PyTorch: tensores y derivación automática de verdad</a></li>
+<li><a href="#m406">4.6 C++ dentro del ecosistema: Eigen, mlpack y modelos entrenados en Python</a></li>
+<li><a href="#m407">4.7 Experimentos reproducibles y puesta en marcha mínima</a></li>
+</ol>
+</div>
+<div class="topic" id="m401" data-topic="m401">
+<div class="topichead"><h3><span class="badge PY">4.1</span> Python para quien ya sabe C++</h3><label class="checklabel"><input type="checkbox" data-t="m401"><small class="sans">hecho</small></label></div>
+<p>Hasta acá todo fue C++ porque es donde entendés qué pasa por dentro. Pero el ecosistema de ML vive en <strong>Python</strong>: casi todo lo que vas a leer, bajar o comparar está escrito ahí. La buena noticia es que con tu base se aprende rápido; lo que cambia es el modelo mental:</p>
+<div class="tablewrap sans"><table><thead><tr><th>C++</th><th>Python</th></tr></thead><tbody>
+<tr><td>tipos estáticos, el compilador te frena</td><td>tipos dinámicos: los errores aparecen al <em>ejecutar</em></td></tr>
+<tr><td><code>vector&lt;double&gt;</code> = números contiguos en memoria</td><td>una <code>list</code> es una lista de <strong>punteros a objetos</strong>: flexible pero lenta para números</td></tr>
+<tr><td>un bucle <code>for</code> sobre un millón de elementos es rápido</td><td>el mismo bucle es decenas de veces más lento (en 4.2 medís unas 50 veces en una multiplicación de matrices): por eso se <em>vectoriza</em> con NumPy</td></tr>
+<tr><td>bloques con <code>{}</code></td><td>bloques con <strong>indentación</strong> (significa algo)</td></tr>
+<tr><td>compilás y obtenés un binario</td><td>se interpreta; el entorno (versiones de librerías) importa mucho</td></tr>
+</tbody></table></div>
+<p><strong>Entorno:</strong> un <em>entorno virtual</em> por proyecto, para que las versiones de las librerías no se pisen entre proyectos ni entre tus dos PCs:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">terminal</span><span class="cw-lang">shell</span></div><div class="cw-body"><pre><code><span class="c"># Mac / Linux</span>
+python3 -m venv .venv
+source .venv/bin/activate
+pip install numpy pandas matplotlib scikit-learn
+
+<span class="c"># Windows (PowerShell)</span>
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install numpy pandas matplotlib scikit-learn
+
+pip freeze &gt; requirements.txt     <span class="c"># para reproducir el entorno en la otra PC</span></code></pre></div></div>
+<div class="legal warn"><span class="tag sans">Verificá</span>Lo de arriba es el procedimiento estándar de Python, no lo ejecuté en tu Windows. En Windows puede pedirte habilitar la ejecución de scripts de PowerShell para el <code>Activate.ps1</code>; si te pasa, es un mensaje de política de ejecución, no un error de Python. Alternativa: <strong>WSL2</strong>, donde los comandos son los de Mac.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Creá el entorno virtual, instalá NumPy y reescribí en Python el programa de estadística de 1.3 (media, varianza y proporción dentro de un desvío de 100.000 normales). Contá cuántas líneas ocupa en C++ y cuántas en Python. Corré ese mismo programa en las dos PCs con la misma semilla y comprobá que da igual.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué un bucle <code>for</code> de Python que suma un millón de números es mucho más lento que el equivalente en C++? Dos razones.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Oficial</span><span>el tutorial de Python en python.org (enlace no verificado acá)</span></div>
+<div class="r"><span class="k">Para tus dos PCs</span><span>guardar <code>requirements.txt</code> en el repo y hacer <code>pip install -r requirements.txt</code></span></div>
+</div>
+</div>
+
+<div class="topic" id="m402" data-topic="m402">
+<div class="topichead"><h3><span class="badge PY">4.2</span> NumPy: vectorizar en vez de hacer bucles</h3><label class="checklabel"><input type="checkbox" data-t="m402"><small class="sans">hecho</small></label></div>
+<p>NumPy es "tu <code>Matriz</code>" hecha por expertos: arrays contiguos de números con operaciones que corren en C/Fortran optimizado por debajo. La regla de oro es <strong>no escribir bucles sobre los elementos</strong>: escribir la operación sobre el array entero (<em>vectorizar</em>). Dos conceptos:</p>
+<ul>
+<li><strong>Operaciones elemento a elemento:</strong> <code>A + B</code>, <code>A * B</code> (¡es Hadamard, no producto de matrices!), <code>np.exp(A)</code>.</li>
+<li><strong>Producto de matrices:</strong> <code>A @ B</code>. Detrás hay una librería BLAS que es lo que tu <code>matmul</code> de 1.7 intenta (mal) imitar.</li>
+<li><strong>Broadcasting:</strong> operar un array con otro de forma distinta, estirando las dimensiones. Por ejemplo, <code>(x - x.mean()) / x.std()</code> estandariza todo el vector sin un bucle (tema 1.4).</li>
+</ul>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">numpy_demo.py</span><span class="cw-lang">python</span></div><div class="cw-body"><pre><code><span class="k">import</span> time
+<span class="k">import</span> numpy <span class="k">as</span> <span class="t">np</span>
+
+n = <span class="n">120</span>
+A = <span class="t">np</span>.random.<span class="fn">default_rng</span>(<span class="n">0</span>).<span class="fn">random</span>((n, n)); B = <span class="t">np</span>.random.<span class="fn">default_rng</span>(<span class="n">1</span>).<span class="fn">random</span>((n, n))
+
+<span class="k">def</span> <span class="fn">matmul_python</span>(A, B):                                    <span class="c"># el triple bucle, igual que en C++</span>
+    n = <span class="fn">len</span>(A); C = [[<span class="n">0.0</span>] * n <span class="k">for</span> _ <span class="k">in</span> <span class="fn">range</span>(n)]
+    <span class="k">for</span> i <span class="k">in</span> <span class="fn">range</span>(n):
+        <span class="k">for</span> j <span class="k">in</span> <span class="fn">range</span>(n):
+            s = <span class="n">0.0</span>
+            <span class="k">for</span> k <span class="k">in</span> <span class="fn">range</span>(n):
+                s += A[i][k] * B[k][j]
+            C[i][j] = s
+    <span class="k">return</span> C
+
+La, Lb = A.<span class="fn">tolist</span>(), B.<span class="fn">tolist</span>()
+t = time.<span class="fn">perf_counter</span>(); C1 = <span class="fn">matmul_python</span>(La, Lb); t_py = (time.<span class="fn">perf_counter</span>() - t) * <span class="n">1000</span>
+t = time.<span class="fn">perf_counter</span>(); C2 = A @ B; t_np = (time.<span class="fn">perf_counter</span>() - t) * <span class="n">1000</span>
+<span class="fn">print</span>(f<span class="s">"n = {n}:  Python puro = {t_py:.1f} ms   NumPy (A @ B) = {t_np:.3f} ms   mismo resultado = {np.allclose(C1, C2)}"</span>)
+
+big = <span class="t">np</span>.random.<span class="fn">default_rng</span>(<span class="n">2</span>).<span class="fn">random</span>((<span class="n">400</span>, <span class="n">400</span>))
+t = time.<span class="fn">perf_counter</span>(); big @ big; t_big = (time.<span class="fn">perf_counter</span>() - t) * <span class="n">1000</span>
+<span class="fn">print</span>(f<span class="s">"n = 400:  NumPy = {t_big:.2f} ms   (mi C++ con el orden i-k-j: 16 ms)"</span>)
+
+x = <span class="t">np</span>.<span class="fn">linspace</span>(<span class="n">0</span>, <span class="n">10</span>, <span class="n">5</span>)
+<span class="fn">print</span>(<span class="s">"broadcasting:  x ="</span>, x, <span class="s">"\n               (x - x.mean()) / x.std() ="</span>, <span class="t">np</span>.<span class="fn">round</span>((x - x.<span class="fn">mean</span>()) / x.<span class="t">std</span>(), <span class="n">3</span>))</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>n = 120:  Python puro = 164.7 ms   NumPy (A @ B) = 3.269 ms   mismo resultado = True
+n = 400:  NumPy = 0.67 ms   (mi C++ con el orden i-k-j: 16 ms)
+broadcasting:  x = [ 0.   2.5  5.   7.5 10. ] 
+               (x - x.mean()) / x.std() = [-1.414 -0.707  0.     0.707  1.414]</pre></div>
+<ul>
+<li>Con \(n=120\), el triple bucle en <strong>Python puro</strong> tarda 165 ms y <code>A @ B</code> tarda 3 ms: unas 50 veces más (la primera llamada incluye algo de arranque, por eso el 3.3 ms; el valor estable es más bajo).</li>
+<li>Con \(n=400\), NumPy tarda <strong>0.67 ms</strong>. Tu C++ de 1.7 en el orden <code>i-k-j</code> tardaba 16 ms. No es que tu C++ sea "lento": es que NumPy llama a una BLAS optimizada de nivel experto, con bloques y varios núcleos. Es el motivo por el que, para producción, se usa una librería y no el bucle propio (4.6).</li>
+</ul>
+<div class="legal warn"><span class="tag sans">Medición</span>Todos los tiempos son de <strong>mi Mac</strong> (NumPy 2.0.2, con la BLAS que trae el sistema). En tu Windows va a dar números distintos, con otra BLAS. Compará la <em>relación</em>, no el valor absoluto.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Traducí a NumPy sin ningún bucle: la regresión por ecuaciones normales de 1.2 (<code>np.linalg.lstsq</code> y <code>np.linalg.solve</code>), el descenso por gradiente de 2.2 (el gradiente es una línea: <code>2/n * X.T @ (X @ w - y)</code>), y el softmax estable de 3.2. Verificá que dan lo mismo que tu C++.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span><code>A * B</code> y <code>A @ B</code> en NumPy, ¿hacen lo mismo? ¿Cuál es el producto de matrices del álgebra lineal?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Oficial</span><span>la documentación de NumPy: <em>NumPy for absolute beginners</em> y la guía de broadcasting (enlaces no verificados acá)</span></div>
+<div class="r"><span class="k">Libros</span><span>d2l.ai (capítulo de preliminares: manipulación de datos); Géron, cap. 2</span></div>
+</div>
+</div>
+
+<div class="topic" id="m403" data-topic="m403">
+<div class="topichead"><h3><span class="badge PY">4.3</span> pandas y matplotlib: mirar los datos antes de modelar</h3><label class="checklabel"><input type="checkbox" data-t="m403"><small class="sans">hecho</small></label></div>
+<p>Antes de entrenar nada hay que <strong>mirar</strong> los datos: cuántas filas, qué rangos, qué faltantes, cómo se distribuyen por clase. <strong>pandas</strong> da tablas (<code>DataFrame</code>) con carga de CSV, filtros y agrupación; <strong>matplotlib</strong> dibuja. Es el trabajo de 1.4 y 1.8, pero en tres líneas:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">pandas_demo.py</span><span class="cw-lang">python</span></div><div class="cw-body"><pre><code><span class="k">import</span> pandas <span class="k">as</span> <span class="t">pd</span>
+
+df = <span class="t">pd</span>.<span class="fn">read_csv</span>(<span class="s">"train.csv"</span>)
+<span class="fn">print</span>(df.shape, <span class="s">"filas x columnas"</span>)
+<span class="fn">print</span>(df.<span class="fn">groupby</span>(<span class="s">"clase"</span>)[[<span class="s">"x1"</span>, <span class="s">"x2"</span>]].<span class="fn">agg</span>([<span class="s">"mean"</span>, <span class="s">"std"</span>]).<span class="fn">round</span>(<span class="n">3</span>))</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>(400, 3) filas x columnas
+          x1           x2       
+        mean    std  mean    std
+clase                           
+0     -1.232  0.987 -1.13  0.931
+1      1.229  1.033  1.30  0.935</pre></div>
+<p>Con una tabla así ya se ve algo importante: las dos clases se distinguen por la <strong>media</strong> (≈ −1.2 contra ≈ +1.2) y tienen un desvío parecido (≈ 1). Es justo lo que esperabas de los datos que generaste en 2.4.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">grafico.py</span><span class="cw-lang">python</span></div><div class="cw-body"><pre><code><span class="k">import</span> matplotlib.pyplot <span class="k">as</span> <span class="t">plt</span>
+
+df = <span class="t">pd</span>.<span class="fn">read_csv</span>(<span class="s">"train.csv"</span>)
+<span class="t">plt</span>.<span class="fn">scatter</span>(df.x1, df.x2, c=df.clase, cmap=<span class="s">"coolwarm"</span>, s=<span class="n">12</span>)
+<span class="t">plt</span>.<span class="fn">xlabel</span>(<span class="s">"x1"</span>); <span class="t">plt</span>.<span class="fn">ylabel</span>(<span class="s">"x2"</span>); <span class="t">plt</span>.<span class="fn">title</span>(<span class="s">"Datos de entrenamiento"</span>)
+<span class="t">plt</span>.<span class="fn">savefig</span>(<span class="s">"datos.png"</span>, dpi=<span class="n">150</span>)      <span class="c"># sin plt.show(): se guarda a un archivo</span></code></pre></div></div>
+<div class="legal warn"><span class="tag sans">Sin ver</span>El gráfico no lo mostré acá (la prueba corrió sin pantalla): confirmé la tabla de arriba, pero el código de <code>grafico.py</code> es el uso estándar de matplotlib y conviene que lo corras vos y mires la imagen.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Cargá <code>train.csv</code> y <code>test.csv</code> (los que genera <code>exporta_datos.cpp</code>, ver 4.4), hacé un histograma de cada característica por clase y un gráfico de dispersión. Agregá encima la frontera de decisión que aprendió tu regresión logística (la recta \(w\cdot x + b = 0\)).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué mostraría un <code>describe()</code> si una columna tuviera un valor faltante cargado como <code>-999</code>? ¿Por qué eso arruina una media sin avisar?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Oficial</span><span>documentación de pandas (<em>10 minutes to pandas</em>) y de matplotlib (enlaces no verificados acá)</span></div>
+<div class="r"><span class="k">Antes</span><span>1.4 y 1.8</span></div>
+</div>
+</div>
+
+<div class="topic" id="m404" data-topic="m404">
+<div class="topichead"><h3><span class="badge PY">4.4</span> scikit-learn: tu código C++ contra un oráculo</h3><label class="checklabel"><input type="checkbox" data-t="m404"><small class="sans">hecho</small></label></div>
+<p><strong>scikit-learn</strong> tiene casi todos los algoritmos del bloque 2 con una interfaz uniforme: <code>modelo.fit(X, y)</code>, <code>modelo.predict(X)</code>, <code>modelo.score(X, y)</code>. Se usa para trabajo real, pero acá le damos un uso extra, que es el que más te sirve ahora: <strong>como oráculo para verificar tu propio código</strong>, igual que usás <code>std::sort</code> para probar tu quicksort.</p>
+<p>Hice la prueba con la regresión logística de 2.4. El programa <code>exporta_datos.cpp</code> genera los datos (los mismos de 2.4) y los guarda en CSV; scikit-learn los lee y resuelve el mismo problema sin regularizar:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">oraculo.py</span><span class="cw-lang">python</span></div><div class="cw-body"><pre><code><span class="k">import</span> numpy <span class="k">as</span> <span class="t">np</span>, pandas <span class="k">as</span> <span class="t">pd</span>
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+
+train = <span class="t">pd</span>.<span class="fn">read_csv</span>(<span class="s">"train.csv"</span>)
+test = <span class="t">pd</span>.<span class="fn">read_csv</span>(<span class="s">"test.csv"</span>)
+
+modelo = <span class="fn">LogisticRegression</span>(penalty=<span class="k">None</span>, max_iter=<span class="n">1000</span>)    <span class="c"># sin regularizar: el mismo problema que resolvio mi C++</span>
+modelo.<span class="fn">fit</span>(train[[<span class="s">"x1"</span>, <span class="s">"x2"</span>]], train[<span class="s">"clase"</span>])
+w = modelo.coef_[<span class="n">0</span>]
+<span class="fn">print</span>(f<span class="s">"scikit-learn:     w = ({w[0]:.5g}, {w[1]:.5g})  b = {modelo.intercept_[0]:.5g}  "</span>
+      f<span class="s">"exactitud test = {modelo.score(test[['x1', 'x2']], test['clase']):.5g}"</span>)</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real (C++ y scikit-learn sobre los mismos datos)</span><pre>C++ (mi codigo):  w = (2.72797, 2.65686)  b = 0.0873799  exactitud test = 0.97
+scikit-learn:     w = (3.0015, 2.8987)  b = 0.11804  exactitud test = 0.97</pre></div>
+<p>La exactitud coincide (0.97), pero <strong>los pesos no</strong>: 2.73 contra 3.00. El oráculo acaba de decirte algo que a simple vista no se veía: tu descenso por gradiente no había <strong>terminado de converger</strong> con 2.000 iteraciones. Lo comprobé subiendo las iteraciones:</p>
+<div class="tablewrap sans"><table class="numtable"><thead><tr><th>Iteraciones</th><th>w₁</th><th>w₂</th><th>b</th></tr></thead><tbody>
+<tr><td>2.000</td><td>2.728</td><td>2.657</td><td>0.0874</td></tr>
+<tr><td>20.000</td><td>2.99885</td><td>2.89797</td><td>0.11736</td></tr>
+<tr><td>200.000</td><td>2.99886</td><td>2.89797</td><td>0.11736</td></tr>
+<tr><td>scikit-learn</td><td>3.0015</td><td>2.8987</td><td>0.11804</td></tr>
+</tbody></table></div>
+<p>Con 20.000 iteraciones coincide con scikit-learn en 3 cifras (la diferencia restante viene de la tolerancia de parada de scikit-learn). El mismo criterio sirve para cualquier algoritmo de este bloque.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">pipeline_demo.py</span><span class="cw-lang">python</span></div><div class="cw-body"><pre><code><span class="k">import</span> pandas <span class="k">as</span> <span class="t">pd</span>
+<span class="k">from</span> sklearn.pipeline <span class="k">import</span> make_pipeline
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+<span class="k">from</span> sklearn.neighbors <span class="k">import</span> KNeighborsClassifier
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> cross_val_score
+
+df = <span class="t">pd</span>.<span class="fn">read_csv</span>(<span class="s">"train.csv"</span>)
+X, y = df[[<span class="s">"x1"</span>, <span class="s">"x2"</span>]], df[<span class="s">"clase"</span>]
+
+<span class="c"># El StandardScaler vive DENTRO del pipeline: en cada pliegue se ajusta solo con los datos de entrenamiento (sin fuga)</span>
+<span class="k">for</span> k <span class="k">in</span> [<span class="n">1</span>, <span class="n">5</span>, <span class="n">15</span>, <span class="n">51</span>]:
+    modelo = <span class="fn">make_pipeline</span>(<span class="fn">StandardScaler</span>(), <span class="fn">KNeighborsClassifier</span>(n_neighbors=k))
+    puntajes = <span class="fn">cross_val_score</span>(modelo, X, y, cv=<span class="n">5</span>)
+    <span class="fn">print</span>(f<span class="s">"k = {k:2d}:  exactitud 5-fold = {puntajes.mean():.3f} +/- {puntajes.std():.3f}"</span>)</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>k =  1:  exactitud 5-fold = 0.950 +/- 0.018
+k =  5:  exactitud 5-fold = 0.972 +/- 0.025
+k = 15:  exactitud 5-fold = 0.972 +/- 0.025
+k = 51:  exactitud 5-fold = 0.968 +/- 0.029</pre></div>
+<p>Esto es el <strong>pipeline</strong> y la <strong>validación cruzada</strong> de 2.12 en seis líneas. Notá que <code>StandardScaler</code> está <em>dentro</em> del pipeline: en cada pliegue se ajusta solo con los datos de entrenamiento, así que no hay fuga. En esos datos, \(k=5\) y \(k=15\) empatan en 0.972.</p>
+<div class="legal warn"><span class="tag sans">Versión</span>Probé estos scripts con <strong>scikit-learn 1.6.1</strong> instalado en un entorno virtual aparte (no en tu proyecto). Si instalás otra versión los números exactos podrían moverse unas milésimas.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>Para cada modelo del bloque 2 que implementes (ridge, k-NN, árbol, k-means, PCA), escribí un script que exporte los datos a CSV, ajuste el equivalente de scikit-learn y compare predicciones o parámetros con los tuyos. Anotá en un comentario las diferencias que no esperabas y qué descubriste de cada una.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Tu C++ y scikit-learn dan la misma exactitud pero pesos distintos. ¿Es un bug? ¿Cómo lo averiguaste (qué experimento harías primero)?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Oficial</span><span>documentación de scikit-learn: guía de usuario y API (enlace no verificado acá)</span></div>
+<div class="r"><span class="k">Libros</span><span>Géron, <em>Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow</em> (<a href="https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/">O'Reilly</a>, 2.ª ed.); <em>ISLP</em> (<em>An Introduction to Statistical Learning with Applications in Python</em>) en <a href="https://www.statlearning.com">statlearning.com</a></span></div>
+</div>
+</div>
+
+<div class="topic" id="m405" data-topic="m405">
+<div class="topichead"><h3><span class="badge PY">4.5</span> PyTorch: tensores y derivación automática de verdad</h3><label class="checklabel"><input type="checkbox" data-t="m405"><small class="sans">hecho</small></label></div>
+<p><strong>PyTorch</strong> es, en lo esencial, lo que construiste en 3.5, pero industrial: un tipo <code>Tensor</code> (como un array de NumPy) que además <strong>recuerda las operaciones</strong> que se le hicieron y puede derivar por vos con <code>loss.backward()</code>. Además trae capas (<code>nn.Linear</code>, <code>nn.Conv2d</code>), optimizadores (<code>SGD</code>, <code>Adam</code>) y la posibilidad de correr en GPU.</p>
+<p>Así quedaría tu XOR de 3.4 (el código es el esquema estándar de PyTorch; <strong>no lo pude ejecutar acá</strong>, porque PyTorch no está instalado en esta Mac):</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">xor_pytorch.py</span><span class="cw-lang">python</span></div><div class="cw-body"><pre><code><span class="k">import</span> <span class="t">torch</span>
+<span class="k">from</span> <span class="t">torch</span> <span class="k">import</span> <span class="t">nn</span>
+
+X = <span class="t">torch</span>.<span class="fn">tensor</span>([[<span class="n">0</span>., <span class="n">0</span>.], [<span class="n">0</span>., <span class="n">1</span>.], [<span class="n">1</span>., <span class="n">0</span>.], [<span class="n">1</span>., <span class="n">1</span>.]])
+y = <span class="t">torch</span>.<span class="fn">tensor</span>([[<span class="n">0</span>.], [<span class="n">1</span>.], [<span class="n">1</span>.], [<span class="n">0</span>.]])
+
+<span class="t">torch</span>.<span class="fn">manual_seed</span>(<span class="n">1</span>)
+red = <span class="t">nn</span>.<span class="fn">Sequential</span>(<span class="t">nn</span>.<span class="fn">Linear</span>(<span class="n">2</span>, <span class="n">4</span>), <span class="t">nn</span>.<span class="fn">Tanh</span>(), <span class="t">nn</span>.<span class="fn">Linear</span>(<span class="n">4</span>, <span class="n">1</span>), <span class="t">nn</span>.<span class="fn">Sigmoid</span>())   <span class="c"># la misma 2-4-1</span>
+perdida = <span class="t">nn</span>.<span class="fn">BCELoss</span>()
+opt = <span class="t">torch</span>.optim.<span class="fn">Adam</span>(red.<span class="fn">parameters</span>(), lr=<span class="n">0.05</span>)
+
+<span class="k">for</span> epoca <span class="k">in</span> <span class="fn">range</span>(<span class="n">2000</span>):
+    opt.<span class="fn">zero_grad</span>()                  <span class="c"># 1) borrar gradientes viejos</span>
+    l = <span class="fn">perdida</span>(<span class="fn">red</span>(X), y)           <span class="c"># 2) hacia adelante</span>
+    l.<span class="fn">backward</span>()                     <span class="c"># 3) hacia atras: ESTO es tu autodiff de 3.5</span>
+    opt.<span class="fn">step</span>()                       <span class="c"># 4) paso del optimizador</span>
+<span class="fn">print</span>(<span class="fn">red</span>(X).<span class="fn">detach</span>().<span class="fn">round</span>(decimals=<span class="n">3</span>))</code></pre></div></div>
+<div class="legal warn"><span class="tag sans">Sin ejecutar</span><strong>No lo ejecuté.</strong> Es el patrón estándar y lo escribí con cuidado, pero la verificación te toca a vos: instalá PyTorch (el selector oficial en pytorch.org te da el comando según tu sistema; en Windows con GPU NVIDIA el comando incluye CUDA) y comprobá que las cuatro salidas se acercan a 0, 1, 1, 0. Si algo falla, pasame el error y lo vemos.</div>
+<ul>
+<li>Las 4 líneas del bucle de entrenamiento son las <strong>mismas en casi cualquier red</strong>: <code>zero_grad</code>, forward, <code>backward</code>, <code>step</code>.</li>
+<li><code>loss.backward()</code> recorre el grafo de cómputo hacia atrás, exactamente como tu <code>backward(f)</code> de 3.5.</li>
+<li>La GPU acelera mucho el producto de matrices grandes; para el XOR no sirve de nada.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Reproducí el XOR de 3.4 y el problema del disco y el anillo de 2.5 con <code>nn.Sequential</code>. (b) Verificá con <code>torch.autograd.gradcheck</code> (o a mano) que los gradientes de PyTorch coinciden con los de tu <code>Nodo</code> de 3.5 para la misma función. (c) Entrená un MLP sobre un dataset real chico (por ejemplo dígitos de 8×8 de scikit-learn).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Si te olvidás de <code>opt.zero_grad()</code> en el bucle, ¿qué pasa con los gradientes de una iteración a la siguiente? (Pista: en tu <code>Nodo</code>, <code>grad +=</code> acumula.)</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Curso</span><span>fast.ai, <em>Practical Deep Learning for Coders</em> (<a href="https://course.fast.ai/">course.fast.ai</a>), gratis, para quien ya programa</span></div>
+<div class="r"><span class="k">Libros</span><span><em>Dive into Deep Learning</em> (<a href="https://d2l.ai/chapter_preface/index.html">d2l.ai</a>), gratis: el libro tiene versiones con NumPy/MXNet, PyTorch y TensorFlow; Zero to Hero de Karpathy (<a href="https://karpathy.ai/zero-to-hero.html">karpathy.ai</a>)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m406" data-topic="m406">
+<div class="topichead"><h3><span class="badge PY">4.6</span> C++ dentro del ecosistema: Eigen, mlpack y modelos entrenados en Python</h3><label class="checklabel"><input type="checkbox" data-t="m406"><small class="sans">hecho</small></label></div>
+<p>No tenés que elegir Python <em>o</em> C++. Un flujo típico profesional: se <strong>investiga y entrena</strong> en Python y se <strong>ejecuta en producción</strong> en C++ (por velocidad, memoria, o porque corre dentro de un robot o un sistema embebido). Lo que necesitás saber:</p>
+<ul>
+<li><strong>Eigen:</strong> biblioteca de álgebra lineal de C++, <strong>solo cabeceras</strong> (no se instala nada: le indicás al compilador dónde están, con <code>-I</code>). Tiene <code>MatrixXd</code>, <code>VectorXd</code>, descomposiciones LU, QR, Cholesky, SVD, autovalores. Guía oficial de inicio: <a href="https://eigen.googlesource.com/mirror/+/17af8c763d5aa58c40fc2c40ff6e8d6fc28a8d63/doc/C00_QuickStartGuide.dox">Quick Start Guide</a> (mirror).</li>
+<li><strong>mlpack:</strong> biblioteca de ML en C++ (sitio oficial <a href="https://www.mlpack.org">mlpack.org</a>); según los README de su repositorio, en la serie 4.x se puede usar solo con cabeceras y tiene enlaces a Python, Julia, Go y R.</li>
+<li><strong>Ejecutar modelos entrenados en Python desde C++:</strong> existen LibTorch (la versión C++ de PyTorch) y formatos de intercambio como ONNX con su runtime. <strong>No verifiqué los detalles de instalación de estos dos</strong>: buscá la documentación vigente antes de empezar.</li>
+</ul>
+<p>Eigen está instalado en esta Mac (con Homebrew), así que pude medir la diferencia que importa para tu <code>Matriz</code>:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">eigen_demo.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;chrono&gt;
+<span class="c">#</span>include &lt;Eigen/Dense&gt;
+
+<span class="k">using</span> Eigen::MatrixXd;
+<span class="k">using</span> Eigen::VectorXd;
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="c">// 1) multiplicacion 400x400</span>
+    MatrixXd A = MatrixXd::<span class="fn">Random</span>(<span class="n">400</span>, <span class="n">400</span>), B = MatrixXd::<span class="fn">Random</span>(<span class="n">400</span>, <span class="n">400</span>);
+    <span class="k">auto</span> t0 = <span class="t">std</span>::chrono::steady_clock::<span class="fn">now</span>();
+    MatrixXd C = A * B;
+    <span class="k">double</span> ms = <span class="t">std</span>::chrono::duration&lt;<span class="k">double</span>, <span class="t">std</span>::milli&gt;(<span class="t">std</span>::chrono::steady_clock::<span class="fn">now</span>() - t0).<span class="fn">count</span>();
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"A * B (400x400) con Eigen: "</span> &lt;&lt; ms &lt;&lt; <span class="s">" ms   (C[0,0] = "</span> &lt;&lt; <span class="fn">C</span>(<span class="n">0</span>, <span class="n">0</span>) &lt;&lt; <span class="s">")\n\n"</span>;
+
+    <span class="c">// 2) minimos cuadrados mal condicionado: polinomio de grado 10, 200 puntos, SIN ruido, coeficientes reales = 1</span>
+    <span class="k">const</span> <span class="k">int</span> n = <span class="n">200</span>, d = <span class="n">11</span>;
+    MatrixXd <span class="fn">X</span>(n, d);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) <span class="k">for</span> (<span class="k">int</span> j = <span class="n">0</span>; j &lt; d; ++j) <span class="fn">X</span>(i, j) = <span class="t">std</span>::<span class="fn">pow</span>(i / <span class="k">double</span>(n - <span class="n">1</span>), j);
+    VectorXd w_real = VectorXd::<span class="fn">Ones</span>(d), y = X * w_real;
+
+    VectorXd w_normales = (X.<span class="fn">transpose</span>() * X).<span class="fn">ldlt</span>().<span class="fn">solve</span>(X.<span class="fn">transpose</span>() * y);   <span class="c">// ecuaciones normales</span>
+    VectorXd w_qr = X.<span class="fn">colPivHouseholderQr</span>().<span class="fn">solve</span>(y);                             <span class="c">// QR directo sobre X</span>
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"error relativo del coeficiente recuperado (real: todos 1):\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"  ecuaciones normales: "</span> &lt;&lt; (w_normales - w_real).<span class="fn">norm</span>() / w_real.<span class="fn">norm</span>() &lt;&lt; <span class="s">"\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"  QR:                  "</span> &lt;&lt; (w_qr - w_real).<span class="fn">norm</span>() / w_real.<span class="fn">norm</span>() &lt;&lt; <span class="s">"\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>A * B (400x400) con Eigen: 8.44625 ms   (C[0,0] = 4.33037)
+
+error relativo del coeficiente recuperado (real: todos 1):
+  ecuaciones normales: 0.00108751
+  QR:                  5.67936e-11</pre></div>
+<ul>
+<li><strong>Velocidad:</strong> el <code>A * B</code> de 400×400 con Eigen tardó 8.4 ms (con <code>-O2</code>, sin otras banderas de optimización), contra los 16 ms de tu orden <code>i-k-j</code> y los 108 de <code>i-j-k</code>. Con <code>-O3 -march=native</code> baja más.</li>
+<li><strong>Precisión (lo más interesante):</strong> ajusté un polinomio de grado 10 a datos <em>sin ruido</em> cuyos coeficientes reales valen todos 1. Con <strong>ecuaciones normales</strong> (el método de 1.2) el error relativo es <strong>1.1e-3</strong>; con <strong>QR</strong> es <strong>5.7e-11</strong>. Son <strong>ocho órdenes de magnitud</strong>. Es exactamente lo que anticipé en 1.2: formar \(X^TX\) eleva al cuadrado el número de condición.</li>
+</ul>
+<div class="legal warn"><span class="tag sans">Rutas</span>Compilé con <code>-I/opt/homebrew/include/eigen3</code> porque ahí lo dejó Homebrew en mi Mac. En tu Windows (o en WSL) la ruta es otra, depende de cómo lo instales (gestor de paquetes, vcpkg, o simplemente bajar los encabezados). Los 8.4 ms son de mi Mac.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Reescribí 1.2 y 2.3 con Eigen y comprobá que coinciden con tu Gauss. (b) Reproducí la prueba de condicionamiento de arriba con tu propio <code>resolver</code> de 1.2 sobre las ecuaciones normales y mirá cuánto error da. (c) Pasá tu PCA de 2.11 a <code>Eigen::SelfAdjointEigenSolver</code> y compará con la potencia.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con datos sin ruido, ¿por qué las ecuaciones normales dan un error de 1e-3 y QR de 1e-11 si ambas "resuelven el mismo problema"? Pensá en el número de condición de \(X\) y de \(X^TX\).</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Librerías</span><span><a href="https://eigen.googlesource.com/mirror/+/17af8c763d5aa58c40fc2c40ff6e8d6fc28a8d63/doc/C00_QuickStartGuide.dox">Eigen: guía de inicio</a>; <a href="https://www.mlpack.org">mlpack</a></span></div>
+<div class="r"><span class="k">Antes</span><span>1.1, 1.2, 1.7</span></div>
+</div>
+</div>
+
+<div class="topic" id="m407" data-topic="m407">
+<div class="topichead"><h3><span class="badge PY">4.7</span> Experimentos reproducibles y puesta en marcha mínima</h3><label class="checklabel"><input type="checkbox" data-t="m407"><small class="sans">hecho</small></label></div>
+<p>Con dos PCs y varios modelos, vas a perder tiempo y confianza si no sabés <strong>qué corriste</strong>. Un hábito barato que se paga solo:</p>
+<ul>
+<li><strong>Semilla fija</strong> en todo experimento (y anotada).</li>
+<li><strong>Una carpeta por experimento</strong> o una fila por corrida en un <code>experimentos.csv</code> con: fecha, <em>hash</em> del commit (<code>git rev-parse --short HEAD</code>), hiperparámetros y métricas de validación y de prueba.</li>
+<li><strong>Entorno reproducible:</strong> <code>requirements.txt</code> en Python; en C++, <code>CMakeLists.txt</code> con las versiones de las dependencias.</li>
+<li><strong>Guardar el modelo entrenado en un archivo</strong> (pesos en binario o CSV) y poder cargarlo sin reentrenar. Es la diferencia entre un experimento y algo que usás.</li>
+<li><strong>Scripts antes que notebooks</strong> para lo que querés repetir; los notebooks son excelentes para explorar, malos para reproducir.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>Escribí un pequeño <code>registrar.hpp</code> en C++ que agregue una línea a <code>experimentos.csv</code> (fecha, hash de git leído con <code>popen</code>, nombre del modelo, hiperparámetros y métricas). Usalo en tu regresión logística y tu MLP, y armá una tabla con tres corridas distintas. Después guardá los pesos de tu MLP en un archivo y escribí un <code>main</code> que los cargue y prediga sin entrenar.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Entrenaste un modelo en tu Mac y en tu PC con Windows con "los mismos" datos y dio resultados distintos. Nombrá cuatro cosas que revisarías (semilla, versión de librería, orden de los datos, etc.).</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Antes</span><span><a href="../../CLAUDE.md"><code>CLAUDE.md</code> del repositorio</a> (protocolo para trabajar en dos PCs)</span></div>
+<div class="r"><span class="k">Libros</span><span>Géron (checklist de un proyecto de ML en un apéndice)</span></div>
+</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="3-redes-neuronales.html"><span>Anterior</span><b>← Redes neuronales y aprendizaje profundo</b></a>
+  <a class="pn next" href="5-ml-mecanica.html"><span>Siguiente</span><b>ML aplicado a ingeniería mecánica →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

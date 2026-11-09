@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2 · Aprendizaje automático clásico · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill active" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Fase 2</div>
+<h1 class="hero">Aprendizaje automático clásico</h1>
+<blockquote class="obj"><p><strong>Objetivo:</strong> programar desde cero, en C++, los algoritmos clásicos (regresión, regularización, logística, k-NN, árboles, bosques, boosting, k-means, PCA) y aprender a <strong>evaluarlos</strong> sin engañarte: sobreajuste, validación cruzada, fuga de datos. Cada algoritmo usa una estructura que ya tenés (árboles, recursión, lambdas, hash).</p></blockquote>
+<div class="mini-toc sans">
+<span class="k">En esta fase</span>
+<ol>
+<li><a href="#m201">2.1 Qué es "aprender": generalizar, no memorizar</a></li>
+<li><a href="#m202">2.2 Regresión lineal: fórmula cerrada y descenso por gradiente</a></li>
+<li><a href="#m203">2.3 Regularización: ridge y lasso</a></li>
+<li><a href="#m204">2.4 Regresión logística y clasificación</a></li>
+<li><a href="#m205">2.5 k vecinos más cercanos (k-NN) y búsqueda espacial</a></li>
+<li><a href="#m206">2.6 Árboles de decisión (CART)</a></li>
+<li><a href="#m207">2.7 Bagging y bosques aleatorios (random forest)</a></li>
+<li><a href="#m208">2.8 Boosting: corregir los errores del anterior</a></li>
+<li><a href="#m209">2.9 SVM y el truco del kernel (panorama)</a></li>
+<li><a href="#m210">2.10 k-means: agrupar sin respuestas</a></li>
+<li><a href="#m211">2.11 PCA: comprimir quedándose con lo que varía</a></li>
+<li><a href="#m212">2.12 Validación y selección de modelos</a></li>
+<li><a href="#m213">2.13 Modelos probabilísticos: Naive Bayes y mezclas gaussianas (panorama)</a></li>
+</ol>
+</div>
+<div class="topic" id="m201" data-topic="m201">
+<div class="topichead"><h3><span class="badge ML">2.1</span> Qué es "aprender": generalizar, no memorizar</h3><label class="checklabel"><input type="checkbox" data-t="m201"><small class="sans">hecho</small></label></div>
+<p>Un modelo <strong>aprende</strong> cuando funciona bien con datos que nunca vio. Si solo funciona con los datos con que se entrenó, memorizó. Todo el aprendizaje automático clásico gira alrededor de esa diferencia. Tres ideas para tener claras:</p>
+<ul>
+<li><strong>Supervisado</strong> (hay respuesta correcta en los datos: regresión si es un número, clasificación si es una categoría), <strong>no supervisado</strong> (no hay respuesta: agrupar, comprimir) y <strong>por refuerzo</strong> (aprender de recompensas, 3.12).</li>
+<li><strong>Subajuste</strong> (<em>underfitting</em>): el modelo es tan simple que ni siquiera ajusta los datos de entrenamiento. <strong>Sobreajuste</strong> (<em>overfitting</em>): es tan flexible que ajusta hasta el ruido y falla con datos nuevos. Es el compromiso <strong>sesgo-varianza</strong>.</li>
+<li><strong>Tres conjuntos:</strong> entrenamiento (ajusta los parámetros), validación (elige el modelo e hiperparámetros) y prueba (se mira <em>una sola vez</em>, al final).</li>
+</ul>
+<p>Un experimento que lo muestra con números. Datos: \(y = \sin(2\pi x)\) más ruido de desvío 0.2, <strong>12 puntos</strong> de entrenamiento y 300 de prueba. Ajustamos polinomios de grado 1, 3 y 9 con las ecuaciones normales del tema 1.2:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">sobreajuste.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include &lt;utility&gt;
+
+<span class="k">using</span> <span class="t">Matriz</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;&gt;;
+<span class="k">using</span> <span class="t">Vector</span> = <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt;;
+
+<span class="t">Vector</span> <span class="fn">resolver</span>(<span class="t">Matriz</span> A, <span class="t">Vector</span> b) {                       <span class="c">// Gauss con pivoteo parcial</span>
+    <span class="k">int</span> n = A.<span class="fn">size</span>();
+    <span class="k">for</span> (<span class="k">int</span> c = <span class="n">0</span>; c &lt; n; ++c) {
+        <span class="k">int</span> p = c;
+        <span class="k">for</span> (<span class="k">int</span> f = c + <span class="n">1</span>; f &lt; n; ++f) <span class="k">if</span> (<span class="t">std</span>::<span class="fn">fabs</span>(A[f][c]) &gt; <span class="t">std</span>::<span class="fn">fabs</span>(A[p][c])) p = f;
+        <span class="t">std</span>::<span class="fn">swap</span>(A[c], A[p]); <span class="t">std</span>::<span class="fn">swap</span>(b[c], b[p]);
+        <span class="k">for</span> (<span class="k">int</span> f = c + <span class="n">1</span>; f &lt; n; ++f) {
+            <span class="k">double</span> m = A[f][c] / A[c][c];
+            <span class="k">for</span> (<span class="k">int</span> k = c; k &lt; n; ++k) A[f][k] -= m * A[c][k];
+            b[f] -= m * b[c];
+        }
+    }
+    <span class="t">Vector</span> <span class="fn">x</span>(n);
+    <span class="k">for</span> (<span class="k">int</span> i = n - <span class="n">1</span>; i &gt;= <span class="n">0</span>; --i) {
+        <span class="k">double</span> s = b[i];
+        <span class="k">for</span> (<span class="k">int</span> j = i + <span class="n">1</span>; j &lt; n; ++j) s -= A[i][j] * x[j];
+        x[i] = s / A[i][i];
+    }
+    <span class="k">return</span> x;
+}
+
+<span class="c">// ajusta un polinomio de grado d con penalizacion ridge lambda:  (X^T X + lambda I) w = X^T y</span>
+<span class="t">Vector</span> <span class="fn">ajustar</span>(<span class="k">const</span> <span class="t">Vector</span>&amp; x, <span class="k">const</span> <span class="t">Vector</span>&amp; y, <span class="k">int</span> d, <span class="k">double</span> <span class="k">lambda</span>) {
+    <span class="k">int</span> m = d + <span class="n">1</span>, n = x.<span class="fn">size</span>();
+    <span class="t">Matriz</span> <span class="fn">A</span>(m, <span class="t">Vector</span>(m, <span class="n">0.0</span>));
+    <span class="t">Vector</span> <span class="fn">r</span>(m, <span class="n">0.0</span>);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i)
+        <span class="k">for</span> (<span class="k">int</span> a = <span class="n">0</span>; a &lt; m; ++a) {
+            r[a] += <span class="t">std</span>::<span class="fn">pow</span>(x[i], a) * y[i];
+            <span class="k">for</span> (<span class="k">int</span> b = <span class="n">0</span>; b &lt; m; ++b) A[a][b] += <span class="t">std</span>::<span class="fn">pow</span>(x[i], a + b);
+        }
+    <span class="k">for</span> (<span class="k">int</span> a = <span class="n">0</span>; a &lt; m; ++a) A[a][a] += <span class="k">lambda</span>;
+    <span class="k">return</span> <span class="fn">resolver</span>(A, r);
+}
+
+<span class="k">double</span> <span class="fn">rmse</span>(<span class="k">const</span> <span class="t">Vector</span>&amp; w, <span class="k">const</span> <span class="t">Vector</span>&amp; x, <span class="k">const</span> <span class="t">Vector</span>&amp; y) {
+    <span class="k">double</span> s = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="t">size_t</span> i = <span class="n">0</span>; i &lt; x.<span class="fn">size</span>(); ++i) {
+        <span class="k">double</span> p = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="t">size_t</span> a = <span class="n">0</span>; a &lt; w.<span class="fn">size</span>(); ++a) p += w[a] * <span class="t">std</span>::<span class="fn">pow</span>(x[i], a);
+        s += (p - y[i]) * (p - y[i]);
+    }
+    <span class="k">return</span> <span class="t">std</span>::<span class="fn">sqrt</span>(s / x.<span class="fn">size</span>());
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">3</span>);
+    <span class="t">std</span>::uniform_real_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ux</span>(<span class="n">0</span>, <span class="n">1</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ruido</span>(<span class="n">0</span>, <span class="n">0.2</span>);
+    <span class="k">auto</span> verdad = [](<span class="k">double</span> x) { <span class="k">return</span> <span class="t">std</span>::<span class="fn">sin</span>(<span class="n">2</span> * M_PI * x); };
+
+    <span class="t">Vector</span> <span class="fn">xt</span>(<span class="n">12</span>), <span class="fn">yt</span>(<span class="n">12</span>), <span class="fn">xs</span>(<span class="n">300</span>), <span class="fn">ys</span>(<span class="n">300</span>);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; <span class="n">12</span>; ++i) { xt[i] = <span class="fn">ux</span>(gen); yt[i] = <span class="fn">verdad</span>(xt[i]) + <span class="fn">ruido</span>(gen); }
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; <span class="n">300</span>; ++i) { xs[i] = <span class="fn">ux</span>(gen); ys[i] = <span class="fn">verdad</span>(xs[i]) + <span class="fn">ruido</span>(gen); }
+
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"grado   error train   error test\n"</span>;
+    <span class="k">for</span> (<span class="k">int</span> d : {<span class="n">1</span>, <span class="n">3</span>, <span class="n">9</span>}) {
+        <span class="t">Vector</span> w = <span class="fn">ajustar</span>(xt, yt, d, <span class="n">0.0</span>);
+        <span class="t">std</span>::cout &lt;&lt; <span class="s">"  "</span> &lt;&lt; d &lt;&lt; <span class="s">"       "</span> &lt;&lt; <span class="fn">rmse</span>(w, xt, yt) &lt;&lt; <span class="s">"         "</span> &lt;&lt; <span class="fn">rmse</span>(w, xs, ys) &lt;&lt; <span class="s">"\n"</span>;
+    }
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"\ngrado 9 con ridge:\nlambda    error train   error test\n"</span>;
+    <span class="k">for</span> (<span class="k">double</span> lam : {<span class="n">0.0</span>, <span class="n">1e-6</span>, <span class="n">1e-3</span>, <span class="n">1e-1</span>}) {
+        <span class="t">Vector</span> w = <span class="fn">ajustar</span>(xt, yt, <span class="n">9</span>, lam);
+        <span class="t">std</span>::cout &lt;&lt; lam &lt;&lt; <span class="s">"      "</span> &lt;&lt; <span class="fn">rmse</span>(w, xt, yt) &lt;&lt; <span class="s">"         "</span> &lt;&lt; <span class="fn">rmse</span>(w, xs, ys) &lt;&lt; <span class="s">"\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real (primera tabla)</span><pre>grado   error train   error test
+  1       0.521754         0.521168
+  3       0.221552         0.214575
+  9       0.0928816         2.16634</pre></div>
+<ul>
+<li><strong>Grado 1:</strong> error alto en train <em>y</em> en test (0.52 y 0.52). Subajuste: una recta no puede seguir un seno.</li>
+<li><strong>Grado 3:</strong> 0.22 y 0.21, casi igual en los dos. Es lo mejor posible: el ruido que pusimos tiene desvío 0.2, o sea que ahí ya no se puede bajar más (error irreducible).</li>
+<li><strong>Grado 9:</strong> train 0.093 (¡mejor que antes!) pero test <strong>2.17</strong>. Con 10 parámetros y 12 puntos, el polinomio pasa casi por todos los puntos, incluido el ruido. Memorizó.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>Barré el grado de 0 a 11 y dibujá (con tu SVG de 1.8) las dos curvas, error de train y error de test, contra el grado. Marcá el grado con menor error de prueba. Después fijá el grado 9 y variá la cantidad de puntos de entrenamiento (12, 30, 100, 1000) para dibujar la <strong>curva de aprendizaje</strong>: ¿a partir de cuántos datos el grado 9 deja de sobreajustar?</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>El grado 9 tiene el menor error de entrenamiento y es el peor modelo. Explicalo con tus palabras en dos frases, usando los números de la tabla.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 2; <em>MML</em> cap. 8 ("When models meet data"); CS229, notas introductorias</span></div>
+<div class="r"><span class="k">Después</span><span>2.3 (regularización, la cura del sobreajuste) y 2.12 (validación)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m202" data-topic="m202">
+<div class="topichead"><h3><span class="badge ML">2.2</span> Regresión lineal: fórmula cerrada y descenso por gradiente</h3><label class="checklabel"><input type="checkbox" data-t="m202"><small class="sans">hecho</small></label></div>
+<p>El mismo modelo se puede resolver de dos maneras, y es importante tener las dos: la fórmula cerrada (ecuaciones normales, tema 1.2) y el <strong>descenso por gradiente</strong> (1.6). La segunda es la que escala a modelos que no tienen fórmula cerrada, que son todos los interesantes (logística, redes).</p>
+<p>La pérdida es el error cuadrático medio, \(L = \frac{1}{n}\sum_i (w x_i + b - y_i)^2\), y sus derivadas son \(\partial L/\partial w = \frac{2}{n}\sum e_i x_i\) y \(\partial L/\partial b = \frac{2}{n}\sum e_i\), con \(e_i\) el error de cada predicción. (El factor 2 se absorbe en la tasa de aprendizaje.)</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">regresion_gd.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">42</span>);
+    <span class="t">std</span>::uniform_real_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ux</span>(<span class="n">0</span>, <span class="n">10</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ruido</span>(<span class="n">0</span>, <span class="n">0.5</span>);
+    <span class="k">const</span> <span class="k">int</span> n = <span class="n">200</span>;
+    <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt; <span class="fn">x</span>(n), <span class="fn">y</span>(n);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) { x[i] = <span class="fn">ux</span>(gen); y[i] = <span class="n">3.0</span> * x[i] + <span class="n">2.0</span> + <span class="fn">ruido</span>(gen); }
+
+    <span class="c">// (a) forma cerrada para y = w*x + b</span>
+    <span class="k">double</span> sx = <span class="n">0</span>, sy = <span class="n">0</span>, sxx = <span class="n">0</span>, sxy = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) { sx += x[i]; sy += y[i]; sxx += x[i] * x[i]; sxy += x[i] * y[i]; }
+    <span class="k">double</span> w = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+    <span class="k">double</span> b = (sy - w * sx) / n;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"forma cerrada:     w = "</span> &lt;&lt; w &lt;&lt; <span class="s">"  b = "</span> &lt;&lt; b &lt;&lt; <span class="s">"\n"</span>;
+
+    <span class="c">// (b) descenso por gradiente sobre el error cuadratico medio</span>
+    <span class="k">double</span> wg = <span class="n">0</span>, bg = <span class="n">0</span>, lr = <span class="n">0.01</span>;
+    <span class="k">for</span> (<span class="k">int</span> it = <span class="n">1</span>; it &lt;= <span class="n">20000</span>; ++it) {
+        <span class="k">double</span> dw = <span class="n">0</span>, db = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) {
+            <span class="k">double</span> e = wg * x[i] + bg - y[i];               <span class="c">// error de la prediccion</span>
+            dw += e * x[i];
+            db += e;
+        }
+        wg -= lr * dw / n;
+        bg -= lr * db / n;
+        <span class="k">if</span> (it == <span class="n">100</span> || it == <span class="n">1000</span> || it == <span class="n">20000</span>)
+            <span class="t">std</span>::cout &lt;&lt; <span class="s">"descenso, iter "</span> &lt;&lt; it &lt;&lt; <span class="s">":  w = "</span> &lt;&lt; wg &lt;&lt; <span class="s">"  b = "</span> &lt;&lt; bg &lt;&lt; <span class="s">"\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>forma cerrada:     w = 2.99335  b = 2.05733
+descenso, iter 100:  w = 3.17922  b = 0.821419
+descenso, iter 1000:  w = 3.01473  b = 1.91518
+descenso, iter 20000:  w = 2.99335  b = 2.05733</pre></div>
+<ul>
+<li>Después de 20.000 iteraciones el descenso converge <strong>exactamente</strong> a la solución cerrada (2.99335 y 2.05733).</li>
+<li>Fijate en la iteración 100: <code>w</code> ya está cerca de 3.18 pero <code>b</code> va por 0.82 (le falta llegar a 2.06). <code>b</code> tarda más porque \(x\) vale entre 0 y 10: la función de pérdida es un valle largo y angosto, justo como el \(x^2 + 10y^2\) de 1.6. <strong>Estandarizar \(x\) (tema 1.4) lo arregla.</strong></li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Estandarizá <code>x</code> y verificá que llegás a la solución en muchísimas menos iteraciones. (b) Implementá el descenso <strong>estocástico</strong> (un ejemplo por paso) y el de <strong>mini-lotes</strong>; comparalos en costo por época. (c) Generalizá a \(d\) características usando tu <code>Matriz</code> (el gradiente es \(\frac{2}{n}X^T(Xw-y)\)) y comprobalo con el <em>gradient check</em> de 1.5.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué <code>b</code> converge más lento que <code>w</code> en este problema, y qué preprocesamiento del tema 1.4 lo arregla?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 3; <em>MML</em> cap. 9; Géron (capítulo "Training Models"); CS229 notas de regresión lineal</span></div>
+<div class="r"><span class="k">Después</span><span>2.3 (regularización) y 3.6 (otros optimizadores)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m203" data-topic="m203">
+<div class="topichead"><h3><span class="badge ML">2.3</span> Regularización: ridge y lasso</h3><label class="checklabel"><input type="checkbox" data-t="m203"><small class="sans">hecho</small></label></div>
+<p>La cura clásica del sobreajuste es <strong>penalizar los pesos grandes</strong>. Un polinomio de grado 9 que pasa por todo el ruido necesita coeficientes enormes que se compensan entre sí. Si se le pone un precio a los coeficientes grandes, el modelo prefiere curvas suaves.</p>
+<p><strong>Ridge</strong> minimiza \(\|Xw-y\|^2 + \lambda\|w\|^2\). Derivando, la solución son las mismas ecuaciones normales con un cambio mínimo: se suma \(\lambda\) a la diagonal, \((X^TX + \lambda I)\,w = X^Ty\). Es una sola línea en el programa de 2.1 (<code>A[a][a] += lambda</code>). Y de regalo mejora el condicionamiento de la matriz.</p>
+<div class="ejemplo"><span class="lbl">Salida real: grado 9 con ridge (mismo programa de 2.1, segunda tabla)</span><pre>lambda    error train   error test
+0      0.0928816         2.16634
+1e-06      0.16318         0.345153
+0.001      0.234362         0.223597
+0.1      0.432124         0.402893</pre></div>
+<ul>
+<li>\(\lambda = 0\) (sin regularizar): train 0.09, test 2.17. Sobreajuste total.</li>
+<li>\(\lambda = 10^{-3}\): train 0.23, test <strong>0.22</strong>. El de entrenamiento <em>sube</em> (ya no memoriza) y el de prueba <em>baja</em> diez veces. Es el punto dulce.</li>
+<li>\(\lambda = 0.1\): train 0.43, test 0.40. Ahora el modelo está demasiado rígido: subajuste. Un \(\lambda\) demasiado grande lo aplana.</li>
+</ul>
+<p><strong>Lasso</strong> usa \(\lambda\|w\|_1\) (suma de valores absolutos) en vez de la suma de cuadrados. Tiene una propiedad útil: lleva varios coeficientes <strong>exactamente a cero</strong>, o sea que selecciona características. No tiene fórmula cerrada y se resuelve con descenso por coordenadas o subgradiente.</p>
+<div class="legal warn"><span class="tag sans">Ojo</span>Mi programa penaliza <strong>todos</strong> los coeficientes, incluida la ordenada \(w_0\). Es una simplificación; en la práctica no se penaliza el término constante. Tenelo en cuenta cuando lo hagas vos.</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Implementá ridge sin penalizar la ordenada. (b) Elegí \(\lambda\) con un conjunto de <strong>validación</strong> (no con el de prueba) probando 20 valores en escala logarítmica. (c) Implementá lasso con descenso por coordenadas (umbral suave) y mostrá que a \(\lambda\) grande varios coeficientes valen 0 exactos.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Al subir \(\lambda\), ¿por qué el error de entrenamiento siempre sube pero el de prueba primero baja y después vuelve a subir?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 6; <em>MML</em> cap. 9 (regularización); CS229 notas de regularización</span></div>
+<div class="r"><span class="k">Después</span><span>2.12 (validación cruzada para elegir \(\lambda\)) y 3.7 (weight decay en redes, que es ridge)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m204" data-topic="m204">
+<div class="topichead"><h3><span class="badge ML">2.4</span> Regresión logística y clasificación</h3><label class="checklabel"><input type="checkbox" data-t="m204"><small class="sans">hecho</small></label></div>
+<p>Para predecir una categoría (sí/no) se pasa el resultado lineal \(z = w\cdot x + b\) por la <strong>sigmoide</strong> \(\sigma(z) = 1/(1+e^{-z})\), que lo convierte en una probabilidad entre 0 y 1. La pérdida natural es la <strong>entropía cruzada</strong> y, sorpresa agradable, su gradiente tiene la misma forma que el de la regresión lineal: \(\partial L/\partial w = \frac{1}{n}\sum (\sigma(z_i) - y_i)\,x_i\). Por eso el código es casi idéntico al de 2.2.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">logistica.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+
+<span class="k">struct</span> Punto { <span class="k">double</span> x, y; <span class="k">int</span> clase; };
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">5</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">r</span>(<span class="n">0</span>, <span class="n">1.0</span>);
+    <span class="k">auto</span> datos = [&amp;](<span class="k">int</span> n) {
+        <span class="t">std</span>::<span class="t">vector</span>&lt;Punto&gt; v;
+        <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) { <span class="k">int</span> c = i % <span class="n">2</span>; <span class="k">double</span> mu = c ? <span class="n">1.2</span> : -<span class="n">1.2</span>; v.<span class="fn">push_back</span>({mu + <span class="fn">r</span>(gen), mu + <span class="fn">r</span>(gen), c}); }
+        <span class="k">return</span> v;
+    };
+    <span class="k">auto</span> train = <span class="fn">datos</span>(<span class="n">400</span>), test = <span class="fn">datos</span>(<span class="n">400</span>);
+
+    <span class="k">double</span> w1 = <span class="n">0</span>, w2 = <span class="n">0</span>, b = <span class="n">0</span>, lr = <span class="n">0.1</span>;
+    <span class="k">auto</span> sigmoide = [](<span class="k">double</span> z) { <span class="k">return</span> <span class="n">1.0</span> / (<span class="n">1.0</span> + <span class="t">std</span>::<span class="fn">exp</span>(-z)); };
+    <span class="k">for</span> (<span class="k">int</span> it = <span class="n">0</span>; it &lt; <span class="n">2000</span>; ++it) {
+        <span class="k">double</span> g1 = <span class="n">0</span>, g2 = <span class="n">0</span>, gb = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">const</span> <span class="k">auto</span>&amp; p : train) {
+            <span class="k">double</span> e = <span class="fn">sigmoide</span>(w1 * p.x + w2 * p.y + b) - p.clase;   <span class="c">// (prediccion - real)</span>
+            g1 += e * p.x; g2 += e * p.y; gb += e;
+        }
+        <span class="k">int</span> n = train.<span class="fn">size</span>();
+        w1 -= lr * g1 / n; w2 -= lr * g2 / n; b -= lr * gb / n;
+    }
+
+    <span class="k">int</span> tp = <span class="n">0</span>, fp = <span class="n">0</span>, fn = <span class="n">0</span>, tn = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">const</span> <span class="k">auto</span>&amp; p : test) {
+        <span class="k">int</span> pred = <span class="fn">sigmoide</span>(w1 * p.x + w2 * p.y + b) &gt; <span class="n">0.5</span>;
+        <span class="k">if</span> (pred &amp;&amp; p.clase) ++tp; <span class="k">else</span> <span class="k">if</span> (pred &amp;&amp; !p.clase) ++fp; <span class="k">else</span> <span class="k">if</span> (!pred &amp;&amp; p.clase) ++fn; <span class="k">else</span> ++tn;
+    }
+    <span class="k">double</span> prec = <span class="k">double</span>(tp) / (tp + fp), rec = <span class="k">double</span>(tp) / (tp + fn);
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"w = ("</span> &lt;&lt; w1 &lt;&lt; <span class="s">", "</span> &lt;&lt; w2 &lt;&lt; <span class="s">")  b = "</span> &lt;&lt; b &lt;&lt; <span class="s">"\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"matriz de confusion (test):  TP="</span> &lt;&lt; tp &lt;&lt; <span class="s">" FP="</span> &lt;&lt; fp &lt;&lt; <span class="s">" FN="</span> &lt;&lt; fn &lt;&lt; <span class="s">" TN="</span> &lt;&lt; tn &lt;&lt; <span class="s">"\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"exactitud = "</span> &lt;&lt; <span class="k">double</span>(tp + tn) / test.<span class="fn">size</span>() &lt;&lt; <span class="s">"  precision = "</span> &lt;&lt; prec &lt;&lt; <span class="s">"  recall = "</span> &lt;&lt; rec
+              &lt;&lt; <span class="s">"  F1 = "</span> &lt;&lt; <span class="n">2</span> * prec * rec / (prec + rec) &lt;&lt; <span class="s">"\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>w = (2.72797, 2.65686)  b = 0.0873799
+matriz de confusion (test):  TP=192 FP=4 FN=8 TN=196
+exactitud = 0.97  precision = 0.979592  recall = 0.96  F1 = 0.969697</pre></div>
+<p>Los datos son dos nubes gaussianas que se solapan un poco (centradas en (−1.2, −1.2) y (1.2, 1.2)). Con 400 ejemplos de prueba:</p>
+<div class="tablewrap sans"><table><thead><tr><th></th><th>predijo 1</th><th>predijo 0</th></tr></thead><tbody>
+<tr><td><strong>realmente 1</strong></td><td>TP = 192</td><td>FN = 8</td></tr>
+<tr><td><strong>realmente 0</strong></td><td>FP = 4</td><td>TN = 196</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>Exactitud</strong> (<em>accuracy</em>) = (TP+TN)/total = 388/400 = 0.97.</li>
+<li><strong>Precisión</strong> = TP/(TP+FP): de los que dije "1", cuántos eran 1. <strong>Recall</strong> = TP/(TP+FN): de los que eran 1, cuántos encontré. <strong>F1</strong> es su media armónica.</li>
+<li>La exactitud engaña con clases desbalanceadas: si solo el 1% son positivos, un modelo que siempre dice "no" tiene 99% de exactitud y es inútil. Mirá siempre precisión y recall.</li>
+<li>La frontera de decisión es la recta \(w\cdot x + b = 0\); con \(w=(2.73, 2.66)\) es casi \(x+y=0\), que es justo la frontera ideal de los datos.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Dibujá la frontera aprendida en tu SVG de 1.8 sobre los puntos de prueba. (b) Cambiá el umbral de 0.5 a otros valores (0.1 … 0.9) y calculá precisión y recall para cada uno: eso es la curva precisión-recall. (c) Generalizá a <strong>softmax</strong> con 3 clases.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con TP = 192, FP = 4, FN = 8, calculá a mano la precisión y el recall. ¿Cuál de las dos bajaría si exigieras que el modelo dé "1" solo cuando la probabilidad supere 0.9?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 4; <em>MML</em> cap. 8; CS229 (regresión logística, Newton)</span></div>
+<div class="r"><span class="k">Después</span><span>3.1 (una neurona es exactamente esto) y 3.2 (softmax)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m205" data-topic="m205">
+<div class="topichead"><h3><span class="badge DSA">2.5</span> k vecinos más cercanos (k-NN) y búsqueda espacial</h3><label class="checklabel"><input type="checkbox" data-t="m205"><small class="sans">hecho</small></label></div>
+<p>El algoritmo más simple que existe: para clasificar un punto nuevo, buscá los \(k\) ejemplos de entrenamiento más cercanos y votá. <strong>No hay entrenamiento</strong>: el modelo <em>es</em> el conjunto de datos. Funciona cuando una frontera recta no alcanza, como en este problema (una clase en un disco central, la otra en un anillo alrededor):</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">datos2d.hpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>pragma once
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="k">struct</span> Punto { <span class="k">double</span> x, y; <span class="k">int</span> clase; };
+<span class="c">// clase 0: disco de radio ~1.5 en el centro; clase 1: anillo de radio 2.5 a 4</span>
+<span class="k">inline</span> <span class="t">std</span>::<span class="t">vector</span>&lt;Punto&gt; <span class="fn">anillo</span>(<span class="k">int</span> n, <span class="k">unsigned</span> semilla) {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">g</span>(semilla);
+    <span class="t">std</span>::uniform_real_distribution&lt;<span class="k">double</span>&gt; <span class="fn">ang</span>(<span class="n">0</span>, <span class="n">2</span> * M_PI), <span class="fn">r0</span>(<span class="n">0</span>, <span class="n">1.5</span>), <span class="fn">r1</span>(<span class="n">2.5</span>, <span class="n">4.0</span>);
+    <span class="t">std</span>::<span class="t">vector</span>&lt;Punto&gt; v;
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) {
+        <span class="k">double</span> a = <span class="fn">ang</span>(g);
+        <span class="k">int</span> c = i % <span class="n">2</span>;
+        <span class="k">double</span> r = c == <span class="n">0</span> ? <span class="fn">r0</span>(g) : <span class="fn">r1</span>(g);
+        v.<span class="fn">push_back</span>({r * <span class="t">std</span>::<span class="fn">cos</span>(a), r * <span class="t">std</span>::<span class="fn">sin</span>(a), c});
+    }
+    <span class="k">return</span> v;
+}</code></pre></div></div>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">knn_vs_logistica.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;algorithm&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include <span class="s">"datos2d.hpp"</span>
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">auto</span> train = <span class="fn">anillo</span>(<span class="n">400</span>, <span class="n">1</span>), test = <span class="fn">anillo</span>(<span class="n">400</span>, <span class="n">2</span>);
+
+    <span class="c">// --- regresion logistica (frontera RECTA)</span>
+    <span class="k">double</span> w1 = <span class="n">0</span>, w2 = <span class="n">0</span>, b = <span class="n">0</span>;
+    <span class="k">auto</span> sig = [](<span class="k">double</span> z) { <span class="k">return</span> <span class="n">1.0</span> / (<span class="n">1.0</span> + <span class="t">std</span>::<span class="fn">exp</span>(-z)); };
+    <span class="k">for</span> (<span class="k">int</span> it = <span class="n">0</span>; it &lt; <span class="n">3000</span>; ++it) {
+        <span class="k">double</span> g1 = <span class="n">0</span>, g2 = <span class="n">0</span>, gb = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">auto</span>&amp; p : train) { <span class="k">double</span> e = <span class="fn">sig</span>(w1 * p.x + w2 * p.y + b) - p.clase; g1 += e * p.x; g2 += e * p.y; gb += e; }
+        w1 -= <span class="n">0.1</span> * g1 / train.<span class="fn">size</span>(); w2 -= <span class="n">0.1</span> * g2 / train.<span class="fn">size</span>(); b -= <span class="n">0.1</span> * gb / train.<span class="fn">size</span>();
+    }
+    <span class="k">int</span> okLog = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">auto</span>&amp; p : test) okLog += (<span class="fn">sig</span>(w1 * p.x + w2 * p.y + b) &gt; <span class="n">0.5</span>) == p.clase;
+
+    <span class="c">// --- k-NN por fuerza bruta: O(n) por consulta</span>
+    <span class="k">auto</span> knn = [&amp;](<span class="k">const</span> Punto&amp; q, <span class="k">int</span> k) {
+        <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="t">std</span>::pair&lt;<span class="k">double</span>, <span class="k">int</span>&gt;&gt; d;
+        <span class="k">for</span> (<span class="k">auto</span>&amp; p : train) d.<span class="fn">push_back</span>({(p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y), p.clase});
+        <span class="t">std</span>::<span class="fn">partial_sort</span>(d.<span class="fn">begin</span>(), d.<span class="fn">begin</span>() + k, d.<span class="fn">end</span>());
+        <span class="k">int</span> votos = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; k; ++i) votos += d[i].second;
+        <span class="k">return</span> votos * <span class="n">2</span> &gt; k ? <span class="n">1</span> : <span class="n">0</span>;
+    };
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"regresion logistica: exactitud = "</span> &lt;&lt; <span class="k">double</span>(okLog) / test.<span class="fn">size</span>() &lt;&lt; <span class="s">"\n"</span>;
+    <span class="k">for</span> (<span class="k">int</span> k : {<span class="n">1</span>, <span class="n">5</span>, <span class="n">15</span>, <span class="n">51</span>}) {
+        <span class="k">int</span> ok = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">auto</span>&amp; p : test) ok += <span class="fn">knn</span>(p, k) == p.clase;
+        <span class="t">std</span>::cout &lt;&lt; <span class="s">"k-NN con k = "</span> &lt;&lt; k &lt;&lt; <span class="s">":  exactitud = "</span> &lt;&lt; <span class="k">double</span>(ok) / test.<span class="fn">size</span>() &lt;&lt; <span class="s">"\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>regresion logistica: exactitud = 0.5725
+k-NN con k = 1:  exactitud = 1
+k-NN con k = 5:  exactitud = 1
+k-NN con k = 15:  exactitud = 1
+k-NN con k = 51:  exactitud = 1</pre></div>
+<ul>
+<li>La regresión logística llega a <strong>0.5725</strong>, apenas mejor que tirar una moneda: ninguna recta separa un disco de un anillo.</li>
+<li>k-NN saca 1.0 para todos los \(k\) probados. <strong>Ojo:</strong> esto es porque mis datos están perfectamente separados (hay un hueco entre el disco y el anillo). Con datos reales con ruido, un \(k\) chico sobreajusta (sigue el ruido) y uno grande suaviza demasiado: hay que elegirlo con validación (2.12).</li>
+</ul>
+<p><strong>El costo:</strong> cada consulta recorre todos los \(n\) ejemplos, \(O(nd)\). Con millones de ejemplos es lento. Acá entran tus árboles: un <strong>kd-tree</strong> (el quad-tree del <a href="../ruta_codigo/2-arboles-grafos.html">tema 2.4 de la Ruta de Código</a>, generalizado a \(d\) dimensiones) busca el vecino más cercano en \(O(\log n)\) en promedio cuando \(d\) es chica. Cuando \(d\) crece (decenas de dimensiones) la ventaja se pierde: es la <strong>maldición de la dimensionalidad</strong>.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Hacé que los datos se solapen (más ruido) y mostrá cómo cambia la exactitud con \(k\) = 1, 5, 15, 51. (b) Implementá un <strong>kd-tree 2D</strong> (construcción recursiva por mediana, búsqueda del vecino más cercano con poda) y compará su tiempo con la fuerza bruta para \(n = 10^5\) consultas. (c) Probá qué pasa si una característica está en metros y otra en milímetros, y estandarizá.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué hay que estandarizar las características antes de usar k-NN, pero no hace falta para un árbol de decisión (2.6)?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 2 y 4 (k-NN); Géron; CS229 (métodos no paramétricos)</span></div>
+<div class="r"><span class="k">Antes en tu ruta</span><span><a href="../ruta_codigo/2-arboles-grafos.html#c204">Ruta de Código 2.4</a> (quad-tree) y 2.1 (BST); conviene hacer este tema justo después de árboles</span></div>
+</div>
+</div>
+
+<div class="topic" id="m206" data-topic="m206">
+<div class="topichead"><h3><span class="badge DSA">2.6</span> Árboles de decisión (CART)</h3><label class="checklabel"><input type="checkbox" data-t="m206"><small class="sans">hecho</small></label></div>
+<p>Un árbol de decisión es exactamente lo que ya estudiás: un <strong>árbol binario</strong> construido por <strong>recursión</strong>. Cada nodo interno hace una pregunta sobre una característica ("¿x ≤ 1.7?") y manda el ejemplo a la izquierda o a la derecha; las hojas dan la clase. La pregunta se elige para que los dos hijos queden lo más "puros" posible.</p>
+<p>La impureza se mide con el índice de <strong>Gini</strong>: \(G = 1 - \sum_k p_k^2\), donde \(p_k\) es la proporción de la clase \(k\) en el nodo. Un nodo puro vale 0; uno mitad y mitad (con 2 clases) vale 0.5. Se prueba cada característica y cada umbral y se elige el que minimice el Gini medio de los hijos.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">arbol_cart.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;memory&gt;
+<span class="c">#</span>include &lt;algorithm&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include <span class="s">"datos2d.hpp"</span>
+
+<span class="k">struct</span> Nodo {
+    <span class="k">int</span> campo = -<span class="n">1</span>;            <span class="c">// 0 = x, 1 = y ; -1 = hoja</span>
+    <span class="k">double</span> umbral = <span class="n">0</span>;
+    <span class="k">int</span> clase = <span class="n">0</span>;
+    <span class="t">std</span>::<span class="t">unique_ptr</span>&lt;Nodo&gt; izq, der;
+};
+
+<span class="k">double</span> <span class="fn">gini</span>(<span class="k">int</span> n0, <span class="k">int</span> n1) {                               <span class="c">// 1 - sum p^2</span>
+    <span class="k">double</span> n = n0 + n1;
+    <span class="k">if</span> (n == <span class="n">0</span>) <span class="k">return</span> <span class="n">0</span>;
+    <span class="k">double</span> p0 = n0 / n, p1 = n1 / n;
+    <span class="k">return</span> <span class="n">1</span> - p0 * p0 - p1 * p1;
+}
+<span class="k">double</span> <span class="fn">valor</span>(<span class="k">const</span> Punto&amp; p, <span class="k">int</span> campo) { <span class="k">return</span> campo == <span class="n">0</span> ? p.x : p.y; }
+
+<span class="t">std</span>::<span class="t">unique_ptr</span>&lt;Nodo&gt; <span class="fn">construir</span>(<span class="k">const</span> <span class="t">std</span>::<span class="t">vector</span>&lt;Punto&gt;&amp; d, <span class="k">int</span> prof, <span class="k">int</span> maxProf) {
+    <span class="k">auto</span> nodo = <span class="t">std</span>::make_unique&lt;Nodo&gt;();
+    <span class="k">int</span> c1 = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">auto</span>&amp; p : d) c1 += p.clase;
+    <span class="k">int</span> c0 = d.<span class="fn">size</span>() - c1;
+    nodo-&gt;clase = c1 &gt; c0;
+    <span class="k">if</span> (prof == maxProf || c0 == <span class="n">0</span> || c1 == <span class="n">0</span> || d.<span class="fn">size</span>() &lt; <span class="n">2</span>) <span class="k">return</span> nodo;
+
+    <span class="k">double</span> mejor = <span class="fn">gini</span>(c0, c1), mejorUmbral = <span class="n">0</span>; <span class="k">int</span> mejorCampo = -<span class="n">1</span>;
+    <span class="k">for</span> (<span class="k">int</span> campo = <span class="n">0</span>; campo &lt; <span class="n">2</span>; ++campo)
+        <span class="k">for</span> (<span class="k">auto</span>&amp; cand : d) {                              <span class="c">// cada valor es un umbral candidato</span>
+            <span class="k">double</span> u = <span class="fn">valor</span>(cand, campo);
+            <span class="k">int</span> l0 = <span class="n">0</span>, l1 = <span class="n">0</span>, r0 = <span class="n">0</span>, r1 = <span class="n">0</span>;
+            <span class="k">for</span> (<span class="k">auto</span>&amp; p : d) { <span class="k">bool</span> izq = <span class="fn">valor</span>(p, campo) &lt;= u; (izq ? (p.clase ? l1 : l0) : (p.clase ? r1 : r0))++; }
+            <span class="k">if</span> (l0 + l1 == <span class="n">0</span> || r0 + r1 == <span class="n">0</span>) <span class="k">continue</span>;
+            <span class="k">double</span> g = (<span class="fn">gini</span>(l0, l1) * (l0 + l1) + <span class="fn">gini</span>(r0, r1) * (r0 + r1)) / d.<span class="fn">size</span>();
+            <span class="k">if</span> (g &lt; mejor - <span class="n">1e-12</span>) { mejor = g; mejorUmbral = u; mejorCampo = campo; }
+        }
+    <span class="k">if</span> (mejorCampo &lt; <span class="n">0</span>) <span class="k">return</span> nodo;
+
+    <span class="t">std</span>::<span class="t">vector</span>&lt;Punto&gt; izq, der;
+    <span class="k">for</span> (<span class="k">auto</span>&amp; p : d) (<span class="fn">valor</span>(p, mejorCampo) &lt;= mejorUmbral ? izq : der).<span class="fn">push_back</span>(p);
+    nodo-&gt;campo = mejorCampo; nodo-&gt;umbral = mejorUmbral;
+    nodo-&gt;izq = <span class="fn">construir</span>(izq, prof + <span class="n">1</span>, maxProf);          <span class="c">// recursion: el mismo problema, mas chico</span>
+    nodo-&gt;der = <span class="fn">construir</span>(der, prof + <span class="n">1</span>, maxProf);
+    <span class="k">return</span> nodo;
+}
+<span class="k">int</span> <span class="fn">predecir</span>(<span class="k">const</span> Nodo* n, <span class="k">const</span> Punto&amp; p) {
+    <span class="k">while</span> (n-&gt;campo &gt;= <span class="n">0</span>) n = <span class="fn">valor</span>(p, n-&gt;campo) &lt;= n-&gt;umbral ? n-&gt;izq.<span class="fn">get</span>() : n-&gt;der.<span class="fn">get</span>();
+    <span class="k">return</span> n-&gt;clase;
+}
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="k">auto</span> train = <span class="fn">anillo</span>(<span class="n">400</span>, <span class="n">1</span>), test = <span class="fn">anillo</span>(<span class="n">400</span>, <span class="n">2</span>);
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"profundidad   exactitud train   exactitud test\n"</span>;
+    <span class="k">for</span> (<span class="k">int</span> prof : {<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">5</span>, <span class="n">8</span>, <span class="n">20</span>}) {
+        <span class="k">auto</span> raiz = <span class="fn">construir</span>(train, <span class="n">0</span>, prof);
+        <span class="k">int</span> okT = <span class="n">0</span>, okS = <span class="n">0</span>;
+        <span class="k">for</span> (<span class="k">auto</span>&amp; p : train) okT += <span class="fn">predecir</span>(raiz.<span class="fn">get</span>(), p) == p.clase;
+        <span class="k">for</span> (<span class="k">auto</span>&amp; p : test) okS += <span class="fn">predecir</span>(raiz.<span class="fn">get</span>(), p) == p.clase;
+        <span class="t">std</span>::cout &lt;&lt; <span class="s">"    "</span> &lt;&lt; prof &lt;&lt; <span class="s">"              "</span> &lt;&lt; <span class="k">double</span>(okT) / train.<span class="fn">size</span>() &lt;&lt; <span class="s">"             "</span> &lt;&lt; <span class="k">double</span>(okS) / test.<span class="fn">size</span>() &lt;&lt; <span class="s">"\n"</span>;
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>profundidad   exactitud train   exactitud test
+    1              0.6925             0.665
+    2              0.8825             0.86
+    3              0.945             0.91
+    5              1             0.9975
+    8              1             0.9975
+    20              1             0.9975</pre></div>
+<ul>
+<li>Con <strong>profundidad 1</strong> (un solo corte, un "stump") llega a 0.665 en test: un corte recto no separa un anillo.</li>
+<li>Con <strong>profundidad 5</strong> llega a 0.9975 en test. Cada nivel agrega cortes que van rodeando el anillo con rectángulos.</li>
+<li>A partir de 5 no cambia: las hojas ya son puras, el árbol deja de dividir. <strong>Ojo:</strong> con etiquetas ruidosas un árbol profundo sí sobreajusta (memoriza el ruido), y por eso se limita la profundidad o se "poda".</li>
+</ul>
+<p><strong>Complejidad:</strong> mi búsqueda de cortes prueba cada valor como umbral y recorre todos los datos: \(O(n^2)\) por nodo. Con los datos ordenados por característica se baja a \(O(n\log n)\) (es la mejora clásica).</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Hacé que el árbol imprima su estructura como texto indentado. (b) Cambiá a split por <strong>ordenamiento</strong> para bajar el costo. (c) Metele 10% de etiquetas equivocadas y graficá train/test contra la profundidad: tiene que verse el sobreajuste. (d) Hacé la versión de <strong>regresión</strong> (la impureza es la varianza y la hoja da la media).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Un nodo tiene 30 ejemplos de la clase 0 y 10 de la clase 1. ¿Cuánto vale su Gini? (Mostrá la cuenta.)</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 8; Géron (capítulo "Decision Trees"); CS229 (árboles de decisión, 2025)</span></div>
+<div class="r"><span class="k">Antes en tu ruta</span><span>Recursión y árboles: <a href="../ruta_codigo/2-arboles-grafos.html#c201">Ruta de Código 2.1</a>. Este tema se escribe casi solo después de BST</span></div>
+</div>
+</div>
+
+<div class="topic" id="m207" data-topic="m207">
+<div class="topichead"><h3><span class="badge ML">2.7</span> Bagging y bosques aleatorios (random forest)</h3><label class="checklabel"><input type="checkbox" data-t="m207"><small class="sans">hecho</small></label></div>
+<p>Un árbol profundo tiene poco sesgo pero mucha <strong>varianza</strong>: cambia mucho si cambian un poco los datos. La idea de <strong>bagging</strong>: entrenar muchos árboles, cada uno con una muestra <em>con reemplazo</em> de los datos (<em>bootstrap</em>), y promediar o votar. Los errores de cada uno se compensan y la varianza baja.</p>
+<p>El <strong>random forest</strong> agrega un truco: en cada corte, cada árbol solo considera un subconjunto al azar de las características. Eso hace que los árboles sean distintos entre sí (decorrelacionados), y promediar árboles distintos reduce más la varianza que promediar copias parecidas.</p>
+<ul>
+<li><strong>Bootstrap:</strong> una muestra de tamaño \(n\) con reemplazo deja afuera cerca del 36.8% de los ejemplos (\((1-1/n)^n \to e^{-1}\)). Esos ejemplos "fuera de la bolsa" sirven como validación gratuita: el <strong>error OOB</strong> (<em>out-of-bag</em>).</li>
+<li><strong>Importancia de características:</strong> cuánto baja la impureza (o sube el error al barajar esa columna) en promedio entre los árboles.</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>Con tu árbol de 2.6 y datos con 10% de ruido, armá un bosque de 25 árboles sobre muestras bootstrap y comparalo con un solo árbol profundo. Calculá el error OOB y verificá que se parece al error de test. Usá <code>std::mt19937</code> con semilla fija (tema 1.3) para que sea reproducible.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué el 36.8%? Calculá \((1 - 1/n)^n\) para \(n=10\) y \(n=1000\) y compará con \(1/e\).</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 8; Géron (capítulo "Ensemble Learning and Random Forests")</span></div>
+<div class="r"><span class="k">Antes</span><span>2.6 y 1.3</span></div>
+</div>
+</div>
+
+<div class="topic" id="m208" data-topic="m208">
+<div class="topichead"><h3><span class="badge ML">2.8</span> Boosting: corregir los errores del anterior</h3><label class="checklabel"><input type="checkbox" data-t="m208"><small class="sans">hecho</small></label></div>
+<p>Si el bagging reduce la <strong>varianza</strong> promediando árboles independientes, el <strong>boosting</strong> reduce el <strong>sesgo</strong> construyendo árboles en secuencia: cada uno corrige los errores del conjunto anterior. En <strong>gradient boosting</strong> para regresión es casi un descenso por gradiente en el espacio de funciones: el siguiente árbol se ajusta a los <strong>residuos</strong> (\(y\) menos la predicción actual) y se suma con un factor chico (la tasa de aprendizaje).</p>
+<p>Con árboles muy chicos (de profundidad 1, <em>stumps</em>) y cientos de rondas se llega a modelos muy potentes. Las implementaciones de producción más usadas (XGBoost, LightGBM, CatBoost) son este mismo algoritmo con muchísima ingeniería; las vas a encontrar en Python (tema 4.4).</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Implementá gradient boosting para regresión con <em>stumps</em> sobre los datos \(y = \sin(2\pi x)\) + ruido de 2.1: (1) predicción inicial = media de \(y\); (2) repetir 200 veces: calcular residuos, ajustar un stump a los residuos, sumar \(\eta \cdot\) stump con \(\eta = 0.1\). Graficá error de train y de test contra el número de rondas y observá cuándo conviene parar (<em>early stopping</em>).</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Explicá con una frase por qué el bagging ataca la varianza y el boosting ataca el sesgo.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 8 (boosting); CS229 (2025: <em>boosting</em>); Géron (capítulo de ensembles)</span></div>
+<div class="r"><span class="k">Después</span><span>4.4 (scikit-learn: <code>GradientBoosting</code>)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m209" data-topic="m209">
+<div class="topichead"><h3><span class="badge ML">2.9</span> SVM y el truco del kernel (panorama)</h3><label class="checklabel"><input type="checkbox" data-t="m209"><small class="sans">hecho</small></label></div>
+<p>Una <strong>máquina de vectores de soporte</strong> busca, entre todas las rectas (o hiperplanos) que separan las clases, la que deja el <strong>mayor margen</strong> a ambos lados. Los pocos ejemplos que tocan el margen son los <em>vectores de soporte</em>, y son los únicos que definen el modelo. La pérdida es la <strong>bisagra</strong> (<em>hinge</em>): \(\max(0,\ 1 - y\,(w\cdot x + b))\) con \(y \in \{-1, +1\}\).</p>
+<p>El <strong>truco del kernel</strong>: si los datos no son separables con una recta (como el anillo de 2.5), se calculan productos punto como si estuvieran en un espacio de más dimensiones, sin construirlo. Con el kernel gaussiano (RBF) se obtienen fronteras curvas.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Implementá una SVM lineal por descenso de <strong>subgradiente</strong> sobre la pérdida bisagra más \(\lambda\|w\|^2\), con los datos de 2.4. Compará frontera y exactitud con la regresión logística. (El kernel RBF queda para Python, tema 4.4.)</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Cuántos puntos de entrenamiento determinan la frontera de una SVM? Si borrás un punto lejos del margen, ¿cambia el modelo?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 9; <em>MML</em> cap. 12; CS229 (SVM y kernels); Géron (capítulo de SVM)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m210" data-topic="m210">
+<div class="topichead"><h3><span class="badge ML">2.10</span> k-means: agrupar sin respuestas</h3><label class="checklabel"><input type="checkbox" data-t="m210"><small class="sans">hecho</small></label></div>
+<p>Sin etiquetas, el problema es encontrar estructura. <strong>k-means</strong> parte los datos en \(k\) grupos con el <strong>algoritmo de Lloyd</strong>: (1) asignar cada punto al centroide más cercano; (2) mover cada centroide al promedio de sus puntos; repetir hasta que no cambie nada. Cada vuelta baja (o mantiene) la <strong>inercia</strong>, la suma de distancias al cuadrado a su centroide, así que siempre converge, aunque a un mínimo <em>local</em>.</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">kmeans.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+<span class="c">#</span>include &lt;algorithm&gt;
+
+<span class="k">struct</span> P { <span class="k">double</span> x, y; };
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">11</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">r</span>(<span class="n">0</span>, <span class="n">0.8</span>);
+    P centros[<span class="n">3</span>] = {{<span class="n">0</span>, <span class="n">0</span>}, {<span class="n">6</span>, <span class="n">0</span>}, {<span class="n">3</span>, <span class="n">5</span>}};
+    <span class="t">std</span>::<span class="t">vector</span>&lt;P&gt; datos;
+    <span class="k">for</span> (<span class="k">auto</span>&amp; c : centros) <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; <span class="n">100</span>; ++i) datos.<span class="fn">push_back</span>({c.x + <span class="fn">r</span>(gen), c.y + <span class="fn">r</span>(gen)});
+
+    <span class="k">const</span> <span class="k">int</span> K = <span class="n">3</span>;
+    <span class="t">std</span>::<span class="t">vector</span>&lt;P&gt; mu = {datos[<span class="n">0</span>], datos[<span class="n">150</span>], datos[<span class="n">250</span>]};   <span class="c">// inicializacion simple: 3 puntos cualquiera</span>
+    <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">int</span>&gt; <span class="fn">asign</span>(datos.<span class="fn">size</span>(), -<span class="n">1</span>);
+    <span class="k">for</span> (<span class="k">int</span> iter = <span class="n">1</span>; iter &lt;= <span class="n">100</span>; ++iter) {
+        <span class="k">bool</span> cambio = <span class="k">false</span>;
+        <span class="k">for</span> (<span class="t">size_t</span> i = <span class="n">0</span>; i &lt; datos.<span class="fn">size</span>(); ++i) {           <span class="c">// 1) asignar al centroide mas cercano</span>
+            <span class="k">int</span> mejor = <span class="n">0</span>; <span class="k">double</span> dm = <span class="n">1e18</span>;
+            <span class="k">for</span> (<span class="k">int</span> k = <span class="n">0</span>; k &lt; K; ++k) {
+                <span class="k">double</span> d = <span class="t">std</span>::<span class="fn">pow</span>(datos[i].x - mu[k].x, <span class="n">2</span>) + <span class="t">std</span>::<span class="fn">pow</span>(datos[i].y - mu[k].y, <span class="n">2</span>);
+                <span class="k">if</span> (d &lt; dm) { dm = d; mejor = k; }
+            }
+            <span class="k">if</span> (asign[i] != mejor) { asign[i] = mejor; cambio = <span class="k">true</span>; }
+        }
+        P suma[K] = {}; <span class="k">int</span> cuenta[K] = {};
+        <span class="k">for</span> (<span class="t">size_t</span> i = <span class="n">0</span>; i &lt; datos.<span class="fn">size</span>(); ++i) { suma[asign[i]].x += datos[i].x; suma[asign[i]].y += datos[i].y; ++cuenta[asign[i]]; }
+        <span class="k">for</span> (<span class="k">int</span> k = <span class="n">0</span>; k &lt; K; ++k) <span class="k">if</span> (cuenta[k]) mu[k] = {suma[k].x / cuenta[k], suma[k].y / cuenta[k]};   <span class="c">// 2) mover</span>
+        <span class="k">if</span> (!cambio) {
+            <span class="k">double</span> inercia = <span class="n">0</span>;
+            <span class="k">for</span> (<span class="t">size_t</span> i = <span class="n">0</span>; i &lt; datos.<span class="fn">size</span>(); ++i) inercia += <span class="t">std</span>::<span class="fn">pow</span>(datos[i].x - mu[asign[i]].x, <span class="n">2</span>) + <span class="t">std</span>::<span class="fn">pow</span>(datos[i].y - mu[asign[i]].y, <span class="n">2</span>);
+            <span class="t">std</span>::<span class="fn">sort</span>(mu.<span class="fn">begin</span>(), mu.<span class="fn">end</span>(), [](<span class="k">const</span> P&amp; a, <span class="k">const</span> P&amp; b) { <span class="k">return</span> a.x &lt; b.x; });
+            <span class="t">std</span>::cout &lt;&lt; <span class="s">"convergio en "</span> &lt;&lt; iter &lt;&lt; <span class="s">" iteraciones, inercia = "</span> &lt;&lt; inercia &lt;&lt; <span class="s">"\n"</span>;
+            <span class="k">for</span> (<span class="k">auto</span>&amp; m : mu) <span class="t">std</span>::cout &lt;&lt; <span class="s">"centroide ("</span> &lt;&lt; m.x &lt;&lt; <span class="s">", "</span> &lt;&lt; m.y &lt;&lt; <span class="s">")\n"</span>;
+            <span class="k">break</span>;
+        }
+    }
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>convergio en 2 iteraciones, inercia = 392.276
+centroide (-0.046482, 0.0533596)
+centroide (3.05431, 4.9938)
+centroide (6.0218, 0.0261197)</pre></div>
+<p>Tres nubes gaussianas centradas en (0,0), (6,0) y (3,5): los centroides encontrados (−0.05, 0.05), (6.02, 0.03) y (3.05, 4.99) están a menos de 0.1 de los reales. Convergió en 2 vueltas porque inicializé con un punto de cada nube; con una mala inicialización puede quedar atascado en una partición mala.</p>
+<ul>
+<li><strong>k-means++</strong> elige los centroides iniciales lejos unos de otros y suele evitar esos mínimos malos.</li>
+<li><strong>Elegir \(k\):</strong> se grafica la inercia contra \(k\) y se busca el "codo". No hay una respuesta única.</li>
+<li>Supone grupos más o menos esféricos y del mismo tamaño. Con formas raras (como el disco y el anillo de 2.5) falla; ahí hay otros métodos (DBSCAN, jerárquicos).</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Corré el algoritmo 20 veces con inicialización al azar y quedate con la partición de menor inercia. (b) Implementá k-means++. (c) Graficá la inercia contra \(k = 1 \ldots 8\) y ubicá el codo. (d) Pasalo a SVG coloreando cada punto por su grupo.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Por qué la inercia nunca sube de una vuelta a la siguiente? Pensá qué hace cada uno de los dos pasos.</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 12; CS229 (k-means); Géron (aprendizaje no supervisado)</span></div>
+<div class="r"><span class="k">Después</span><span>2.13 (mezclas gaussianas: un k-means "suave")</span></div>
+</div>
+</div>
+
+<div class="topic" id="m211" data-topic="m211">
+<div class="topichead"><h3><span class="badge ML">2.11</span> PCA: comprimir quedándose con lo que varía</h3><label class="checklabel"><input type="checkbox" data-t="m211"><small class="sans">hecho</small></label></div>
+<p>Si los datos tienen muchas características correlacionadas, la mayor parte de la información está en pocas direcciones. <strong>PCA</strong> (análisis de componentes principales) encuentra esas direcciones: son los <strong>autovectores de la matriz de covarianza</strong>, ordenados por autovalor. La primera componente es la dirección de mayor varianza; el cociente \(\lambda_1/\sum\lambda\) es la fracción de la varianza que explica.</p>
+<p>Y ya tenés la herramienta: el <strong>método de la potencia</strong> de Chapra (tema 3.4 de la Ruta de Código) calcula justamente el autovector dominante:</p>
+<div class="cw"><div class="cw-bar"><span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span><span class="cw-tab">pca_potencia.cpp</span><span class="cw-lang">c++</span></div><div class="cw-body"><pre><code><span class="c">#</span>include &lt;iostream&gt;
+<span class="c">#</span>include &lt;<span class="t">vector</span>&gt;
+<span class="c">#</span>include &lt;random&gt;
+<span class="c">#</span>include &lt;cmath&gt;
+
+<span class="k">int</span> <span class="fn">main</span>() {
+    <span class="t">std</span>::<span class="t">mt19937</span> <span class="fn">gen</span>(<span class="n">8</span>);
+    <span class="t">std</span>::normal_distribution&lt;<span class="k">double</span>&gt; <span class="fn">a</span>(<span class="n">0</span>, <span class="n">3.0</span>), <span class="fn">b</span>(<span class="n">0</span>, <span class="n">0.5</span>);
+    <span class="k">const</span> <span class="k">int</span> n = <span class="n">1000</span>;
+    <span class="t">std</span>::<span class="t">vector</span>&lt;<span class="k">double</span>&gt; <span class="fn">X</span>(n), <span class="fn">Y</span>(n);
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) { <span class="k">double</span> t = <span class="fn">a</span>(gen); X[i] = t + <span class="fn">b</span>(gen); Y[i] = <span class="n">0.5</span> * t + <span class="fn">b</span>(gen); }   <span class="c">// datos alargados en una direccion</span>
+
+    <span class="k">double</span> mx = <span class="n">0</span>, my = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) { mx += X[i] / n; my += Y[i] / n; }
+    <span class="k">double</span> cxx = <span class="n">0</span>, cxy = <span class="n">0</span>, cyy = <span class="n">0</span>;                       <span class="c">// matriz de covarianza 2x2</span>
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; n; ++i) { cxx += (X[i] - mx) * (X[i] - mx); cxy += (X[i] - mx) * (Y[i] - my); cyy += (Y[i] - my) * (Y[i] - my); }
+    cxx /= n - <span class="n">1</span>; cxy /= n - <span class="n">1</span>; cyy /= n - <span class="n">1</span>;
+
+    <span class="k">double</span> v[<span class="n">2</span>] = {<span class="n">1</span>, <span class="n">0</span>}, <span class="k">lambda</span> = <span class="n">0</span>;                       <span class="c">// metodo de la potencia (el de Chapra, tema 3.4)</span>
+    <span class="k">for</span> (<span class="k">int</span> it = <span class="n">0</span>; it &lt; <span class="n">100</span>; ++it) {
+        <span class="k">double</span> w0 = cxx * v[<span class="n">0</span>] + cxy * v[<span class="n">1</span>], w1 = cxy * v[<span class="n">0</span>] + cyy * v[<span class="n">1</span>];
+        <span class="k">lambda</span> = <span class="t">std</span>::<span class="fn">sqrt</span>(w0 * w0 + w1 * w1);
+        v[<span class="n">0</span>] = w0 / <span class="k">lambda</span>; v[<span class="n">1</span>] = w1 / <span class="k">lambda</span>;
+    }
+    <span class="k">double</span> traza = cxx + cyy, lambda2 = traza - <span class="k">lambda</span>;     <span class="c">// la traza es la suma de los autovalores</span>
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"covarianza: ["</span> &lt;&lt; cxx &lt;&lt; <span class="s">" "</span> &lt;&lt; cxy &lt;&lt; <span class="s">"; "</span> &lt;&lt; cxy &lt;&lt; <span class="s">" "</span> &lt;&lt; cyy &lt;&lt; <span class="s">"]\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"autovalor 1 = "</span> &lt;&lt; <span class="k">lambda</span> &lt;&lt; <span class="s">"  direccion = ("</span> &lt;&lt; v[<span class="n">0</span>] &lt;&lt; <span class="s">", "</span> &lt;&lt; v[<span class="n">1</span>] &lt;&lt; <span class="s">")\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"autovalor 2 = "</span> &lt;&lt; lambda2 &lt;&lt; <span class="s">"\n"</span>;
+    <span class="t">std</span>::cout &lt;&lt; <span class="s">"varianza explicada por la 1ra componente = "</span> &lt;&lt; <span class="k">lambda</span> / traza &lt;&lt; <span class="s">"\n"</span>;
+}</code></pre></div></div>
+<div class="ejemplo"><span class="lbl">Salida real</span><pre>covarianza: [9.0552 4.5188; 4.5188 2.56424]
+autovalor 1 = 11.3732  direccion = (0.889761, 0.456426)
+autovalor 2 = 0.246206
+varianza explicada por la 1ra componente = 0.978811</pre></div>
+<p>Los datos son una nube alargada: casi todo el movimiento está sobre una dirección, la de (0.89, 0.46), y la primera componente explica <strong>97.9%</strong> de la varianza. Si proyectás cada punto sobre esa recta (de 2 números a 1) perdés apenas el 2%.</p>
+<div class="legal warn"><span class="tag sans">Límite</span>La traza de la matriz (suma de la diagonal) es la suma de los autovalores; por eso saqué el segundo como <code>traza − λ₁</code>. Eso solo sirve en 2×2. Para más dimensiones necesitás todos los pares autovalor-autovector (<strong>deflación</strong>, o el algoritmo QR / <strong>SVD</strong>; Eigen los trae, 4.6).</div>
+<div class="obra"><span class="tag sans">Ejercicio</span>(a) Hacé la <strong>deflación</strong>: restá \(\lambda_1 v_1 v_1^T\) de la covarianza y repetí la potencia para sacar la segunda componente; verificá que es perpendicular a la primera. (b) Generalizá a 3 dimensiones. (c) Proyectá, reconstruí y calculá el error de reconstrucción para 1, 2 y 3 componentes.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>La primera componente explica 97.9%. ¿Qué pierdo si represento cada punto solo con su proyección sobre ella, y para qué sirve eso en la práctica (compresión, visualización, ruido)?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>MML</em> cap. 10 (PCA); <em>ISLR</em> cap. 12; CS229 (PCA)</span></div>
+<div class="r"><span class="k">Antes en tu ruta</span><span><a href="../ruta_codigo/3-metodos-numericos.html#c304">Ruta de Código 3.4</a> (método de la potencia)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m212" data-topic="m212">
+<div class="topichead"><h3><span class="badge ML">2.12</span> Validación y selección de modelos</h3><label class="checklabel"><input type="checkbox" data-t="m212"><small class="sans">hecho</small></label></div>
+<p>¿Cómo sabés si tu modelo sirve? Con una sola partición train/test el número depende de la suerte de esa partición. La <strong>validación cruzada de \(k\) pliegues</strong> (<em>k-fold</em>) divide los datos en \(k\) partes, entrena \(k\) veces dejando una parte afuera cada vez, y promedia: da una estimación más estable y su desvío.</p>
+<p>Con ella se eligen los <strong>hiperparámetros</strong> (\(\lambda\) de ridge, \(k\) de k-NN, profundidad del árbol) y se compara entre modelos. Reglas que evitan los errores más comunes:</p>
+<ul>
+<li><strong>Un baseline primero:</strong> predecir siempre la media (regresión) o la clase más frecuente (clasificación). Si tu modelo no le gana, no aprendió nada.</li>
+<li><strong>Todo el preprocesamiento va <em>dentro</em> de cada pliegue</strong> (la media y el desvío de 1.4 se calculan con los datos de entrenamiento de ese pliegue). Si estandarizás antes de dividir, hay fuga de datos.</li>
+<li><strong>El conjunto de prueba se toca una vez.</strong> Si lo usás para decidir, deja de ser de prueba.</li>
+<li>Métricas: regresión (RMSE, MAE, \(R^2\)); clasificación (exactitud, precisión, recall, F1, área bajo la curva ROC).</li>
+</ul>
+<div class="obra"><span class="tag sans">Ejercicio</span>Escribí una función genérica <code>validacionCruzada(datos, k, entrenar, error)</code> donde <code>entrenar</code> es una <strong>lambda</strong> que recibe los índices de entrenamiento y devuelve un predictor (otra lambda), y <code>error</code> mide el error en los de validación. Devolvé la media y el desvío. Usala para elegir \(\lambda\) en 2.3, \(k\) en 2.5 y la profundidad en 2.6, siempre contra el baseline.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>Con 100 datos y validación cruzada de 5 pliegues: ¿cuántos ejemplos entrenan y cuántos validan en cada vuelta? ¿Cuántos modelos entrenás en total si probás 10 valores de \(\lambda\)?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>ISLR</em> cap. 5; Géron (proyecto de punta a punta); CS229 (teoría del aprendizaje: sesgo-varianza)</span></div>
+<div class="r"><span class="k">Antes en tu ruta</span><span>Lambdas (<a href="../ruta_codigo/1-estructuras-de-datos.html">Ruta de Código 1.11</a>, STL 1c)</span></div>
+</div>
+</div>
+
+<div class="topic" id="m213" data-topic="m213">
+<div class="topichead"><h3><span class="badge ML">2.13</span> Modelos probabilísticos: Naive Bayes y mezclas gaussianas (panorama)</h3><label class="checklabel"><input type="checkbox" data-t="m213"><small class="sans">hecho</small></label></div>
+<p>Hasta acá los modelos predicen directamente. Los <strong>probabilísticos</strong> modelan cómo se generaron los datos y usan la regla de Bayes para clasificar. <strong>Naive Bayes</strong> supone que las características son independientes dado la clase (lo cual casi nunca es cierto, y aun así anda sorprendentemente bien), así que el modelo se reduce a <strong>contar</strong>: cuántas veces aparece cada palabra en cada clase. Es el clasificador de spam clásico, y se implementa con un <code>unordered_map&lt;string,int&gt;</code> por clase.</p>
+<p>Una <strong>mezcla gaussiana</strong> (GMM) es un k-means "suave": cada punto pertenece a cada grupo con cierta probabilidad. Se ajusta con el algoritmo <strong>EM</strong> (esperanza-maximización), que alterna estimar las pertenencias y re-estimar las gaussianas; en k-means esas pertenencias eran 0 o 1.</p>
+<div class="obra"><span class="tag sans">Ejercicio</span>Hacé un clasificador de spam/no-spam con Naive Bayes sobre 20 mensajes cortos que escribas a mano: contá palabras por clase con <code>unordered_map</code>, usá logaritmos para no multiplicar probabilidades diminutas, y aplicá <strong>suavizado de Laplace</strong> (sumar 1 a cada cuenta). Probalo con un mensaje que tenga una palabra nunca vista.</div>
+<div class="checkpoint"><span class="tag sans">Autoevaluación</span>¿Qué pasaría con la probabilidad de un mensaje si una palabra no aparece nunca en la clase "spam" y no usás suavizado? ¿Y por qué se suman logaritmos en vez de multiplicar?</div>
+<div class="recursos sans">
+<div class="r"><span class="k">Libros</span><span><em>MML</em> cap. 11 (GMM); CS229 (modelos generativos, EM); <em>Probabilistic Machine Learning</em> (Murphy), enlace no verificado, ver <a href="6-libros-y-cursos.html">libros</a></span></div>
+<div class="r"><span class="k">Antes en tu ruta</span><span>Hash y <code>unordered_map</code> (<a href="../ruta_codigo/1-estructuras-de-datos.html">Ruta de Código fase 1</a>)</span></div>
+</div>
+</div>
+
+<div class="prevnext">
+  <a class="pn" href="1-base-numerica.html"><span>Anterior</span><b>← Base numérica y datos</b></a>
+  <a class="pn next" href="3-redes-neuronales.html"><span>Siguiente</span><b>Redes neuronales y aprendizaje profundo →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>

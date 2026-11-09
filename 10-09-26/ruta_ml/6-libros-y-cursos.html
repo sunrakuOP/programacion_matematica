@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>6 · Libros, cursos y fuentes · Ruta de ML</title>
+<link rel="stylesheet" href="../ruta-fem/estilo.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<style>
+.mini-toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:1.4em 0 2.2em}
+.mini-toc .k{font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:8px}
+.mini-toc ol{margin:0;padding-left:1.2em;columns:2;column-gap:24px}
+.mini-toc li{margin:2px 0;font-size:.92rem}
+.mini-toc a{border-bottom:none}
+@media(max-width:560px){.mini-toc ol{columns:1}}
+.ejemplo{margin:1em 0 1.5em;padding:11px 16px;background:#1b1a18;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 8px 8px 0}
+.ejemplo .lbl{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--good);margin-bottom:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+.ejemplo pre{margin:0;font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.84rem;line-height:1.55;overflow-x:auto;color:var(--ink-soft)}
+.badge.ML{color:#6fc3c9;border-color:#2f5d62}
+.badge.PY{color:#e0c168;border-color:#6b5a35}
+.cov td:nth-child(3){white-space:nowrap}
+.ok{color:var(--good);font-weight:700}.par{color:#e0c168;font-weight:700}.no{color:#c97b7b;font-weight:700}
+.fase{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:1.4em 0}
+.fase h4{margin:.2em 0 .3em;color:var(--accent-soft)}
+</style>
+</head><body>
+<header class="topbar"><div class="topbar-inner sans">
+  <div class="brand"><a href="0-indice.html"><span class="accent">◆</span> Ruta de ML</a></div>
+  <nav class="phasenav"><a class="pill" href="0-indice.html" title="Índice y mapa de cobertura">0</a><a class="pill" href="1-base-numerica.html" title="Base numérica y datos">1</a><a class="pill" href="2-aprendizaje-clasico.html" title="Aprendizaje automático clásico">2</a><a class="pill" href="3-redes-neuronales.html" title="Redes neuronales y aprendizaje profundo">3</a><a class="pill" href="4-herramientas.html" title="Herramientas: Python y el ecosistema">4</a><a class="pill" href="5-ml-mecanica.html" title="ML aplicado a ingeniería mecánica">5</a><a class="pill active" href="6-libros-y-cursos.html" title="Libros, cursos y fuentes">6</a><a class="pill" href="7-ruta-combinada.html" title="La ruta combinada">7</a></nav>
+  <div class="progresschip mono-num"><b id="global-frac">0/0</b> temas</div>
+</div></header>
+
+<main class="wrap"><article>
+<div class="eyebrow sans">Referencias</div>
+<h1 class="hero">Libros, cursos y fuentes</h1>
+<blockquote class="obj"><p>Qué leer y en qué orden, con lo que pude verificar de cada recurso. Los libros de referencia son gratuitos en su mayoría, pero conviene bajarlos del sitio oficial del autor.</p></blockquote>
+<p>Esta página junta todos los libros, cursos y fuentes que usa la ruta. Para cada uno aviso <strong>qué verifiqué</strong> y qué no: busqué cada recurso en la web y anoté solo lo que los resultados confirmaron. Cuando un enlace o un detalle no lo pude confirmar, lo digo.</p>
+<div class="legal warn"><span class="tag sans">Descargas</span>Las páginas de descarga cambian de lugar. Si un enlace no abre, buscá el título; <strong>descargá solo desde el sitio oficial del autor o de la editorial</strong>. Los PDFs en sitios de terceros pueden ser copias no autorizadas o contener basura.</div>
+<h2 class="withrule">Primero: los dos caminos de lectura</h2>
+<p>No hace falta leer todo. Elegí por fase entre un <strong>camino mínimo</strong> (lo justo para hacer los ejercicios y entender lo que programás) y un <strong>camino a fondo</strong> (para dominarlo). Mi recomendación es empezar con el mínimo en todas las fases y volver al "a fondo" donde un tema te apasione.</p>
+<div class="tablewrap sans"><table><thead><tr><th>Fase</th><th>Camino mínimo</th><th>Camino a fondo</th></tr></thead><tbody>
+<tr><td><strong>1. Base numérica</strong></td><td><em>Mathematics for Machine Learning</em> (MML): cap. 2 (álgebra lineal), 5 (cálculo vectorial), 6 (probabilidad), 7 (optimización) en modo repaso + tu Chapra</td><td>MML completo hasta cap. 9, y los capítulos de álgebra lineal y optimización de <em>Deep Learning</em> (Goodfellow, Parte I)</td></tr>
+<tr><td><strong>2. Aprendizaje clásico</strong></td><td><em>An Introduction to Statistical Learning</em> (ISLR / ISLP): cap. 2 al 6, 8 y 12; notas de CS229 para lo que quieras ver con más matemática</td><td><em>Pattern Recognition and Machine Learning</em> (Bishop) en los capítulos de modelos lineales, kernels y mezclas; MML cap. 8 al 12</td></tr>
+<tr><td><strong>3. Redes neuronales</strong></td><td>Nielsen, <em>Neural Networks and Deep Learning</em> + las primeras lecciones de <em>Zero to Hero</em> de Karpathy (micrograd y siguientes)</td><td><em>Deep Learning</em> (Goodfellow, Parte II), <em>Dive into Deep Learning</em> (d2l), <em>Understanding Deep Learning</em> (Prince) y CS231n para visión</td></tr>
+<tr><td><strong>4. Herramientas</strong></td><td>curso fast.ai y la documentación oficial de NumPy, pandas y scikit-learn</td><td><em>Hands-On Machine Learning</em> (Géron), completo, con los proyectos</td></tr>
+<tr><td><strong>5. ML en ingeniería</strong></td><td>las reseñas citadas en 5.1 y el libro de Thuerey (<em>Physics-based Deep Learning</em>)</td><td>Brunton y Kutz, <em>Data-Driven Science and Engineering</em>, y los artículos de PINNs (Raissi et al.)</td></tr>
+</tbody></table></div>
+<h2 class="withrule">Los recursos, uno por uno</h2>
+<div class="tablewrap sans"><table><thead><tr><th>Recurso</th><th>Tipo</th><th>Qué cubre</th><th>Acceso y qué verifiqué</th><th>Se usa en</th></tr></thead><tbody>
+<tr><td><strong>Mathematics for Machine Learning</strong> (Deisenroth, Faisal, Ong)</td><td>libro, nivel intermedio de matemática</td><td>álgebra lineal, geometría analítica, descomposiciones, cálculo vectorial, probabilidad, optimización, y luego regresión, PCA, mezclas gaussianas y SVM. 12 capítulos, unas 400 páginas</td><td><a href="https://mml-book.com">mml-book.com</a> (sitio de los autores; los autores se comprometieron a mantener el PDF gratis). <strong>No pude confirmar el enlace directo del PDF</strong> en la búsqueda; bajalo desde ahí</td><td>1.x, 2.x</td></tr>
+<tr><td><strong>An Introduction to Statistical Learning</strong> (James, Witten, Hastie, Tibshirani; ISLR / ISLP)</td><td>libro, nivel introductorio con rigor</td><td>2.ª ed. (R): aprendizaje estadístico, regresión lineal, clasificación, remuestreo, selección de modelos y regularización, no linealidad, árboles, SVM, aprendizaje profundo, análisis de supervivencia, no supervisado, pruebas múltiples. Existe una edición con <strong>Python</strong> (ISLP)</td><td><a href="https://www.statlearning.com">statlearning.com</a>: según la búsqueda, el sitio de los autores tiene el enlace de descarga del PDF (<strong>no lo abrí</strong>, no sé qué edición ofrece). La edición impresa es de pago (Springer)</td><td>2.x</td></tr>
+<tr><td><strong>Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow</strong> (Géron)</td><td>libro práctico, muy usado</td><td>parte 1: fundamentos de ML con scikit-learn (entrenamiento de modelos, árboles, ensambles, reducción de dimensión); parte 2: redes neuronales y aprendizaje profundo; apéndices de checklist de proyecto y autodiff</td><td><a href="https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/">O'Reilly</a> (libro <strong>de pago</strong>; ahí figura la tabla de contenidos de la 2.ª ed. y los capítulos de la 3.ª no los pude confirmar)</td><td>2.x, 4.x</td></tr>
+<tr><td><strong>Machine Learning Specialization</strong> (Andrew Ng; Stanford Online y DeepLearning.AI)</td><td>curso en video, nivel introductorio</td><td>tres cursos: aprendizaje supervisado, avanzado (redes, árboles, buenas prácticas) y no supervisado con recomendadores y refuerzo. Se enseña en <strong>Python</strong> (no en Octave)</td><td><a href="https://www.coursera.org/specializations/machine-learning-introduction">Coursera</a> y <a href="https://www.deeplearning.ai/courses/machine-learning-specialization">DeepLearning.AI</a>. <strong>No verifiqué condiciones de acceso ni costo</strong>; las páginas lo dirán</td><td>2.x, 3.x</td></tr>
+<tr><td><strong>CS229: Machine Learning</strong> (Stanford)</td><td>curso universitario, matemática más exigente</td><td>aprendizaje supervisado, no supervisado, teoría del aprendizaje y refuerzo. Notas: regresión lineal y logística, modelos generativos, SVM, teoría del aprendizaje, regularización, perceptrón, k-means, EM, PCA, refuerzo</td><td><a href="https://cs229.stanford.edu">cs229.stanford.edu</a> (y por ejemplo <a href="https://cs229.stanford.edu/syllabus-fall2022.html">el temario de 2022</a>). <strong>Parte del material es solo para afiliados de Stanford</strong>; las notas públicas varían según el período</td><td>2.x, 3.12</td></tr>
+<tr><td><strong>Pattern Recognition and Machine Learning</strong> (Bishop)</td><td>libro de referencia, nivel avanzado</td><td>enfoque probabilístico y bayesiano de ML</td><td><a href="https://www.microsoft.com/en-us/research/publication/pattern-recognition-machine-learning/">página de Microsoft Research</a>: según la búsqueda, el libro está disponible para bajar completo en PDF desde la página del autor en Microsoft. <strong>No verifiqué que el enlace siga activo</strong></td><td>2.x (a fondo)</td></tr>
+<tr><td><strong>Deep Learning</strong> (Goodfellow, Bengio, Courville)</td><td>libro de referencia de aprendizaje profundo</td><td>Parte I: matemática aplicada y fundamentos de ML; Parte II: redes profundas (redes feedforward, convolucionales, recurrentes, autoencoders, etc.)</td><td><a href="https://www.deeplearningbook.org">deeplearningbook.org</a>: la versión web es gratuita según el propio sitio. Hay copias no oficiales en GitHub: evitalas</td><td>3.x</td></tr>
+<tr><td><strong>Dive into Deep Learning</strong> (Zhang, Lipton, Li, Smola)</td><td>libro interactivo con código</td><td>preliminares, redes lineales y MLP, componentes computacionales, convolucionales, recurrentes, atención y transformers. Viene con código en NumPy/MXNet, PyTorch y TensorFlow</td><td><a href="https://d2l.ai/chapter_preface/index.html">d2l.ai</a>, gratuito en línea. Los resultados mostraron licencias contradictorias en sitios de terceros: <strong>verificá la licencia en el repositorio oficial</strong></td><td>3.x, 4.x</td></tr>
+<tr><td><strong>Understanding Deep Learning</strong> (Simon Prince)</td><td>libro moderno, con muchas figuras</td><td>aprendizaje supervisado, redes profundas, funciones de pérdida, transformers, modelos de difusión, refuerzo, entre otros</td><td><a href="http://udlbook.com">udlbook.com</a> y <a href="https://udlbook.github.io">udlbook.github.io</a>: gratis según los resultados. <strong>No pude confirmar cuál licencia aplica</strong>; MIT Press lo publicó en diciembre de 2023 (496 páginas)</td><td>3.x (a fondo)</td></tr>
+<tr><td><strong>Neural Networks and Deep Learning</strong> (Michael Nielsen)</td><td>libro online gratuito, muy didáctico</td><td>redes neuronales desde cero, con derivación detallada de backpropagation; código en Python</td><td><a href="https://neuralnetworksanddeeplearning.com/">neuralnetworksanddeeplearning.com</a> (sitio oficial). El código original es de Python 2.7: hay que adaptarlo</td><td>3.1 a 3.4</td></tr>
+<tr><td><strong>Neural Networks: Zero to Hero</strong> (Andrej Karpathy)</td><td>serie de videos gratis, programando en vivo</td><td>parte de un motor de derivación automática (<em>micrograd</em>), sigue con modelos de lenguaje por caracteres y llega a un GPT</td><td><a href="https://karpathy.ai/zero-to-hero.html">karpathy.ai/zero-to-hero</a> y <a href="https://github.com/karpathy/nn-zero-to-hero">repositorio</a>. La duración total varía según la fuente (de 10 a unas 19 horas): mirá la lista de reproducción</td><td>3.3, 3.5, 3.10</td></tr>
+<tr><td><strong>Practical Deep Learning for Coders</strong> (fast.ai)</td><td>curso gratis, enfoque práctico</td><td>visión por computadora, lenguaje, datos tabulares, filtrado colaborativo, bosques aleatorios y despliegue. Pensado para quien ya programa</td><td><a href="https://course.fast.ai/">course.fast.ai</a> (oficial). Hay una 2.ª parte (de fundamentos hasta <em>stable diffusion</em>)</td><td>3.x, 4.5</td></tr>
+<tr><td><strong>CS231n: Convolutional Neural Networks for Visual Recognition</strong> (Stanford)</td><td>curso universitario de visión</td><td>redes convolucionales y entrenamiento de redes profundas</td><td>sitio oficial citado por varias fuentes: <a href="https://cs231n.stanford.edu">cs231n.stanford.edu</a>. <strong>No lo abrí</strong>: la búsqueda solo devolvió espejos y notas de terceros</td><td>3.8</td></tr>
+<tr><td><strong>Data-Driven Science and Engineering</strong> (Brunton y Kutz)</td><td>libro para ciencia e ingeniería, nivel de grado avanzado</td><td>ML aplicado a sistemas dinámicos y control. La 2.ª ed. (2022) suma capítulos de <strong>aprendizaje por refuerzo</strong> y de <strong>ML informado por la física</strong>, y trae ejercicios</td><td><a href="https://www.cambridge.org/brunton-kutz">Cambridge University Press</a> (de pago). El sitio <a href="https://databookuw.com">databookuw.com</a> tiene videos, datos y código en Python, MATLAB, Julia y R (según la editorial). Una reseña de la 1.ª ed. nota que el fondo de sistemas dinámicos es breve</td><td>5.x</td></tr>
+<tr><td><strong>Physics-based Deep Learning</strong> (Thuerey y colaboradores, TUM)</td><td>libro gratuito con notebooks</td><td>aprendizaje profundo en el contexto de simulaciones físicas: PINNs, física diferenciable</td><td><a href="https://arxiv.org/abs/2109.05237">arXiv:2109.05237</a> (la versión indexada es la v0.3). Una publicación comunitaria menciona el sitio physicsbaseddeeplearning.org: <strong>no lo abrí</strong></td><td>5.6</td></tr>
+<tr><td><strong>Physics-Informed Neural Networks and Extensions</strong> (Raissi, Perdikaris, Ahmadi, Karniadakis)</td><td>artículo de revisión</td><td>resume las PINNs y sus extensiones; el trabajo original es de Raissi, Perdikaris y Karniadakis, <em>J. Comput. Phys.</em> 378 (2019), 686-707</td><td><a href="https://arxiv.org/html/2408.16806v1">arXiv:2408.16806</a></td><td>5.6</td></tr>
+<tr><td><strong>Eigen</strong> (librería C++)</td><td>herramienta</td><td>álgebra lineal: matrices, descomposiciones, solvers. Solo cabeceras</td><td><a href="https://eigen.googlesource.com/mirror/+/17af8c763d5aa58c40fc2c40ff6e8d6fc28a8d63/doc/C00_QuickStartGuide.dox">guía de inicio</a> (espejo del archivo de la guía oficial). <strong>No verifiqué la versión vigente</strong>. En mi Mac funcionó (ver 4.6)</td><td>4.6</td></tr>
+<tr><td><strong>mlpack</strong> (librería C++)</td><td>herramienta</td><td>biblioteca de ML en C++ con enlaces a Python y otros lenguajes</td><td><a href="https://www.mlpack.org">mlpack.org</a>, según los README de sus repositorios. <strong>No abrí la documentación actual</strong>; los README mencionan que las versiones 4.x se usan solo con cabeceras</td><td>4.6</td></tr>
+</tbody></table></div>
+<h2 class="withrule">Libros que conozco pero NO verifiqué</h2>
+<p>Estos tres los conozco como referencias muy citadas, pero <strong>no los busqué en esta investigación</strong>, así que no te doy enlaces ni afirmo nada sobre su acceso:</p>
+<ul>
+<li><em>Probabilistic Machine Learning: An Introduction</em> (Kevin Murphy): referencia moderna y amplia, con enfoque probabilístico.</li>
+<li><em>The Elements of Statistical Learning</em> (Hastie, Tibshirani, Friedman): la versión avanzada de ISLR.</li>
+<li><em>Reinforcement Learning: An Introduction</em> (Sutton y Barto): el texto clásico de aprendizaje por refuerzo.</li>
+</ul>
+<p>Si te interesan, buscalos por título y autor y fijate en el sitio oficial de cada uno.</p>
+<h2 class="withrule">Cómo armé el temario</h2>
+<p>Para decidir qué temas debe cubrir un "experto en ML" y no quedarme con mi propia lista, comparé la estructura de estas fuentes: CS229 (supervisado, no supervisado, teoría del aprendizaje y refuerzo), la especialización de Andrew Ng (tres cursos), los 13 capítulos de ISLR, la estructura de <em>Dive into Deep Learning</em> (preliminares, redes lineales, convolucionales, recurrentes, atención), las dos partes de Goodfellow (fundamentos y redes profundas), las dos partes de Géron (ML clásico y redes) y el enfoque de Brunton y Kutz para ingeniería. El mapa de cobertura del <a href="0-indice.html">índice</a> cruza ese temario con lo que ya tenés programado.</p>
+<div class="legal warn"><span class="tag sans">Alcance</span>Los resúmenes de contenido de cada fuente salen de los <strong>resultados de búsqueda</strong> (páginas oficiales o descripciones), no de haber leído los libros enteros. Si vas a basar una decisión importante en el contenido exacto de un capítulo, abrí el índice del libro.</div>
+<div class="prevnext">
+  <a class="pn" href="5-ml-mecanica.html"><span>Anterior</span><b>← ML aplicado a ingeniería mecánica</b></a>
+  <a class="pn next" href="7-ruta-combinada.html"><span>Siguiente</span><b>La ruta combinada →</b></a>
+</div>
+</article></main>
+<script src="progreso.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "\\(", right: "\\)", display: false}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body></html>
